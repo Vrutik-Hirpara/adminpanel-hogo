@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+:root {
+  --primary: #D20000;
+  --bg-dark: #0f0f1a;
+  --bg-black: #00001a;
+  --text-white: #ffffff;
+  --hover: #ED3434;
+}
+
+body {
+  font-family: "Oxanium", sans-serif;
+}
