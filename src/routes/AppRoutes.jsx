@@ -61,7 +61,8 @@ import Roles from "../modules/Roles";
 import OfficeBranches from "../modules/OfficeBranches";
 import Login from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
-import Blogs from "../modules/Blogs";
+// import Blogs from "../modules/Blogs";
+import Employee from "../modules/Employee";
 
 export default function AppRoutes() {
   return (
@@ -93,6 +94,8 @@ export default function AppRoutes() {
 
         <Route path="/officebranches" element={<OfficeBranches />} />
                 {/* <Route path="/blog" element={<Blogs />} /> */}
+
+                <Route path="/employee" element={<Employee />} />
 
       </Route>
 

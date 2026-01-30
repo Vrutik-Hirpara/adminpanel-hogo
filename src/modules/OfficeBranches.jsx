@@ -397,7 +397,7 @@ const fetchBranches = async () => {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Office Branches" />
-          <ActionButtons showAdd addText="+ Add Office Branch" onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
         <Table header={<TableHeader columns={["Name","Address","City","State","Country","Action"]} />}>

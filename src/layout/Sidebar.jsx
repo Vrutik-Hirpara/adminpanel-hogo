@@ -116,7 +116,7 @@ import {
   BuildingOffice2Icon,
   IdentificationIcon,
   GlobeAltIcon,
-  ChatBubbleLeftRightIcon,
+  UserGroupIcon ,
 } from "@heroicons/react/24/solid";
 
 const menus = [
@@ -150,6 +150,13 @@ const menus = [
   //   icon: GlobeAltIcon,
   //   color: "text-orange-500",
   // },
+{
+  label: "Employee",
+  path: "/employee",
+  icon: UserGroupIcon,
+  color: "text-blue-500",
+}
+
 ];
 
 const Sidebar = () => {
