@@ -119,11 +119,14 @@ import {
   UserGroupIcon ,
 } from "@heroicons/react/24/solid";
 
+import { BarChart3 } from "lucide-react";
+
+
 const menus = [
   {
     label: "Dashboard",
     path: "/dashboard",
-    icon: Squares2X2Icon,
+    icon: BarChart3,
     color: "text-blue-500",
   },
   {
