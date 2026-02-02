@@ -299,6 +299,200 @@
 // }
 
 
+// import { useEffect, useState } from "react";
+// import PageContainer from "../layout/PageContainer";
+// import Table from "../components/table/Table";
+// import TableHeader from "../components/table/TableHeader";
+// import ActionButtons from "../components/form/ActionButton";
+// import SectionTitle from "../components/form/SectionTitle";
+// import EntityPageLayout from "../layout/EntityPageLayout";
+// import EntityForm from "../components/form/EntityForm";
+// import EmployeePersonalDetailsRow from "../components/table/EmployeePersonalDetailsRow";
+// import EmployeePersonalDetailsViewCard from "../components/view/EmployeePersonalDetailsViewCard";
+
+// import { getEmployees } from "../services/employee.service";
+// import axios from "axios";
+
+// const DETAILS_API = "https://hogofilm.pythonanywhere.com/Employeepersonaldetails/";
+
+// export default function EmployeePersonalDetails() {
+//   const [details, setDetails] = useState([]);
+//   const [employees, setEmployees] = useState([]);
+//   const [mode, setMode] = useState("list");
+//   const [selectedItem, setSelectedItem] = useState(null);
+
+//   const fetchDetails = async () => {
+//     const res = await axios.get(DETAILS_API);
+//     setDetails(res.data.data || []);
+//   };
+
+//   const fetchEmployees = async () => {
+//     const res = await getEmployees();
+//     setEmployees(res.data.data || []);
+//   };
+
+//   useEffect(() => {
+//     fetchDetails();
+//     fetchEmployees();
+//   }, []);
+
+//   // const onSubmit = async (data) => {
+//   //   data.employee_id = Number(data.employee_id);  // 🔥 important
+
+//   //   const exists = details.find(d => d.employee_id === data.employee_id);
+
+//   //   if (!selectedItem && exists) {
+//   //     alert("Already exists");
+//   //     return;
+//   //   }
+
+//   //   selectedItem
+//   //     ? await axios.patch(`${DETAILS_API}${selectedItem.id}/`, data)
+//   //     : await axios.post(DETAILS_API, data);
+
+//   //   setMode("list");
+//   //   fetchDetails();
+//   // };
+
+//   const onSubmit = async (data) => {
+//     try {
+//       const payload = {
+//         ...data,
+//         employee_id: Number(data.employee_id),   // ensure number
+//       };
+
+//       const exists = details.find(d => d.employee_id === payload.employee_id);
+
+//       if (!selectedItem && exists) {
+//         alert("Already exists");
+//         return;
+//       }
+
+//       if (selectedItem) {
+//         await axios.patch(`${DETAILS_API}${selectedItem.id}/`, payload);
+//       } else {
+//         await axios.post(DETAILS_API, payload);
+//       }
+
+//       alert("Saved successfully");  // 🟢 so you see response
+//       setMode("list");
+//       fetchDetails();
+
+//     } catch (err) {
+//       console.error("SAVE ERROR:", err.response?.data || err.message);
+//       alert("Save failed — check console");
+//     }
+//   };
+
+//   const handleDelete = async (id) => {
+//     await axios.delete(`${DETAILS_API}${id}/`);
+//     fetchDetails();
+//   };
+
+
+//   if (mode === "list") {
+//     return (
+//       <PageContainer>
+//         <div className="flex justify-between items-center mb-4">
+//           <SectionTitle title="Employee Personal Details" />
+//           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+//         </div>
+
+//         <Table
+//           header={
+//             <TableHeader
+//               columns={[
+//                 "Employee",
+//                 "Father Name",
+//                 "Mother Name",
+//                 "Marital Status",
+//                 "Emergency Contact",
+//                 "Action",
+//               ]}
+//             />
+//           }
+//         >
+//           {details.map(d => {
+//             const emp = employees.find(e => e.id === d.employee_id);
+
+//             return (
+//               <EmployeePersonalDetailsRow
+//                 key={d.id}
+//                 row={d}
+//   employeeName={
+//     emp
+//       ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+//       : "—"
+//   }                onView={(r) => {
+//                   console.log("VIEW CLICK", r);
+//                   setSelectedItem(r);
+//                   setMode("view");
+//                 }}
+//                 onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+//                 onDelete={(id) => handleDelete(id)}
+//               />
+
+//             );
+//           })}
+//         </Table>
+
+//       </PageContainer>
+//     );
+//   }
+//   if (mode === "view" && selectedItem) {
+//     const emp = employees.find(e => e.id === selectedItem.employee_id);
+
+//     return (
+//       <EntityPageLayout
+//         title="Personal Details"
+//         showBack
+//         onBack={() => setMode("list")}
+//       >
+//         <EmployeePersonalDetailsViewCard
+//           details={selectedItem}
+// employeeName={
+//   emp
+//     ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+//     : "Employee"
+// }
+//         />
+//       </EntityPageLayout>
+//     );
+//   }
+
+
+
+//   return (
+//     <EntityPageLayout title="Employee Personal Details" showBack onBack={() => setMode("list")}>
+//       <EntityForm
+//         title={selectedItem ? "Edit Personal Details" : "Create Personal Details"}
+//         selectedItem={selectedItem}
+//         onSubmit={onSubmit}
+//         setMode={setMode}
+//         fields={[
+//           {
+//             label: "Employee",
+//             name: "employee_id",
+//             type: "select",
+//            options: employees.map(e => ({
+//   label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+//   value: e.id,
+// }))
+// ,
+//             required: true,
+//           },
+//           { label: "Father Name", name: "father_name" },
+//           { label: "Mother Name", name: "mother_name" },
+//           { label: "Marital Status", name: "marital_status" },
+//           { label: "Spouse Name", name: "spouse_name" },
+//           { label: "Address", name: "address", type: "textarea" },
+//           { label: "Emergency Contact Name", name: "emergency_contact_name" },
+//           { label: "Emergency Contact Phone", name: "emergency_contact_phone" },
+//         ]}
+//       />
+//     </EntityPageLayout>
+//   );
+// }
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -311,9 +505,13 @@ import EmployeePersonalDetailsRow from "../components/table/EmployeePersonalDeta
 import EmployeePersonalDetailsViewCard from "../components/view/EmployeePersonalDetailsViewCard";
 
 import { getEmployees } from "../services/employee.service";
-import axios from "axios";
 
-const DETAILS_API = "https://hogofilm.pythonanywhere.com/Employeepersonaldetails/";
+import {
+  getEmployeePersonalDetails,
+  createEmployeePersonalDetails,
+  updateEmployeePersonalDetails,
+  deleteEmployeePersonalDetails,
+} from "../services/employeepersonaldetails.service";
 
 export default function EmployeePersonalDetails() {
   const [details, setDetails] = useState([]);
@@ -321,8 +519,9 @@ export default function EmployeePersonalDetails() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // ================= FETCH DATA =================
   const fetchDetails = async () => {
-    const res = await axios.get(DETAILS_API);
+    const res = await getEmployeePersonalDetails();
     setDetails(res.data.data || []);
   };
 
@@ -336,30 +535,10 @@ export default function EmployeePersonalDetails() {
     fetchEmployees();
   }, []);
 
-  // const onSubmit = async (data) => {
-  //   data.employee_id = Number(data.employee_id);  // 🔥 important
-
-  //   const exists = details.find(d => d.employee_id === data.employee_id);
-
-  //   if (!selectedItem && exists) {
-  //     alert("Already exists");
-  //     return;
-  //   }
-
-  //   selectedItem
-  //     ? await axios.patch(`${DETAILS_API}${selectedItem.id}/`, data)
-  //     : await axios.post(DETAILS_API, data);
-
-  //   setMode("list");
-  //   fetchDetails();
-  // };
-
+  // ================= SAVE =================
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        ...data,
-        employee_id: Number(data.employee_id),   // ensure number
-      };
+      const payload = { ...data, employee_id: Number(data.employee_id) };
 
       const exists = details.find(d => d.employee_id === payload.employee_id);
 
@@ -369,12 +548,12 @@ export default function EmployeePersonalDetails() {
       }
 
       if (selectedItem) {
-        await axios.patch(`${DETAILS_API}${selectedItem.id}/`, payload);
+        await updateEmployeePersonalDetails(selectedItem.id, payload);
       } else {
-        await axios.post(DETAILS_API, payload);
+        await createEmployeePersonalDetails(payload);
       }
 
-      alert("Saved successfully");  // 🟢 so you see response
+      alert("Saved successfully");
       setMode("list");
       fetchDetails();
 
@@ -384,12 +563,13 @@ export default function EmployeePersonalDetails() {
     }
   };
 
+  // ================= DELETE =================
   const handleDelete = async (id) => {
-    await axios.delete(`${DETAILS_API}${id}/`);
+    await deleteEmployeePersonalDetails(id);
     fetchDetails();
   };
 
-
+  // ================= LIST PAGE =================
   if (mode === "list") {
     return (
       <PageContainer>
@@ -419,49 +599,47 @@ export default function EmployeePersonalDetails() {
               <EmployeePersonalDetailsRow
                 key={d.id}
                 row={d}
-  employeeName={
-    emp
-      ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-      : "—"
-  }                onView={(r) => {
-                  console.log("VIEW CLICK", r);
+                employeeName={
+                  emp
+                    ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+                    : "—"
+                }
+                onView={(r) => {
                   setSelectedItem(r);
                   setMode("view");
                 }}
-                onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+                onEdit={(r) => {
+                  setSelectedItem(r);
+                  setMode("form");
+                }}
                 onDelete={(id) => handleDelete(id)}
               />
-
             );
           })}
         </Table>
-
       </PageContainer>
     );
   }
+
+  // ================= VIEW PAGE =================
   if (mode === "view" && selectedItem) {
     const emp = employees.find(e => e.id === selectedItem.employee_id);
 
     return (
-      <EntityPageLayout
-        title="Personal Details"
-        showBack
-        onBack={() => setMode("list")}
-      >
+      <EntityPageLayout title="Personal Details" showBack onBack={() => setMode("list")}>
         <EmployeePersonalDetailsViewCard
           details={selectedItem}
-employeeName={
-  emp
-    ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-    : "Employee"
-}
+          employeeName={
+            emp
+              ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+              : "Employee"
+          }
         />
       </EntityPageLayout>
     );
   }
 
-
-
+  // ================= FORM PAGE =================
   return (
     <EntityPageLayout title="Employee Personal Details" showBack onBack={() => setMode("list")}>
       <EntityForm
@@ -474,11 +652,10 @@ employeeName={
             label: "Employee",
             name: "employee_id",
             type: "select",
-           options: employees.map(e => ({
-  label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
-  value: e.id,
-}))
-,
+            options: employees.map(e => ({
+              label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+              value: e.id,
+            })),
             required: true,
           },
           { label: "Father Name", name: "father_name" },

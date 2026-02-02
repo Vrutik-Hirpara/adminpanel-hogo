@@ -1,6 +1,10 @@
 import api from "./api";
 
-// CREATE (upload documents)
+/* ===============================
+   EMPLOYEE DOCUMENTS SERVICE
+================================ */
+
+// CREATE (Upload documents)
 export const createEmployeeDocuments = (data) => {
   return api.post("employee-documents/", data, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -8,7 +12,14 @@ export const createEmployeeDocuments = (data) => {
 };
 
 // READ ALL
-export const getEmployeeDocuments = () => api.get("employee-documents/");
+export const getEmployeeDocuments = () => {
+  return api.get("employee-documents/");
+};
+
+// READ SINGLE (optional)
+export const getEmployeeDocumentById = (id) => {
+  return api.get(`employee-documents/${id}/`);
+};
 
 // UPDATE
 export const updateEmployeeDocuments = (id, data) => {
@@ -18,5 +29,6 @@ export const updateEmployeeDocuments = (id, data) => {
 };
 
 // DELETE
-export const deleteEmployeeDocuments = (id) =>
-  api.delete(`employee-documents/${id}/`);
+export const deleteEmployeeDocuments = (id) => {
+  return api.delete(`employee-documents/${id}/`);
+};

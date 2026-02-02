@@ -399,7 +399,7 @@ export default function Users() {
     const res = await api.get("users/");
 
     // 🔥 MAP is_active → status (for reusable TableRow)
-    const formatted = (res.data.data || []).map(u => ({
+   const formatted = (res.data.data || res.data || []).map(u => ({
       ...u,
       name: u.username,          // for table column
       description: u.role,       // reuse column slot
@@ -475,7 +475,11 @@ const onSubmit = async (data) => {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Users" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add" onAdd={() => {
+  setSelectedItem(null);
+  setMode("form");
+}}
+ />
         </div>
 
         <Table
@@ -498,7 +502,9 @@ const onSubmit = async (data) => {
 
   // ================= VIEW =================
   if (mode === "view" && selectedItem) {
-    const emp = employees.find(e => e.id === selectedItem.employee_id);
+const emp = employees.find(
+  e => e.id === (selectedItem.employee_id || selectedItem.employee)
+);
 
     return (
       <EntityPageLayout title="User Details" showBack onBack={() => setMode("list")}>

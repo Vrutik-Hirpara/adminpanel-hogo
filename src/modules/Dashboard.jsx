@@ -792,6 +792,7 @@ export default function Dashboard() {
           { id: 2, action: "Role updated", department: "HR", time: "4 hours ago", icon: "🎯", type: "role" },
           { id: 3, action: "Office branch added", department: "Operations", time: "1 day ago", icon: "🏢", type: "office" },
           { id: 4, action: "Department restructured", department: "Management", time: "2 days ago", icon: "📊", type: "department" },
+          
         ]);
       } catch (err) {
         console.error("Dashboard error:", err);

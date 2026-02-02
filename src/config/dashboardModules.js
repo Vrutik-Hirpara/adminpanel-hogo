@@ -136,41 +136,69 @@ import { getRoles } from "../services/roles.service";
 import { getEmployees } from "../services/employee.service";
 import { getOfficeBranches } from "../services/officebranches.service";
 
-import { BarChart3 } from "lucide-react";
-import {
-  BuildingOffice2Icon,
-  IdentificationIcon,
-  GlobeAltIcon,
-  UserGroupIcon,
-} from "@heroicons/react/24/solid";
+import { BarChart3, Briefcase, Building2, FileText, ShieldCheck, UserCircle2, Users, Wallet } from "lucide-react";
+
+import { getEmployeePersonalDetails } from "../services/employeepersonaldetails.service";
+import { getEmployeeSalary } from "../services/employeesalary.service";
+import { getDocumentsOfEmployee } from "../services/documentsofemployee.service";
+import { getUsers } from "../services/user.service";
+
+// export const dashboardModules = [
+//   {
+//     title: "Departments",
+//     api: getDepartments,
+//     color: themes.cardDepartment,
+//     path: "/department",
+//     icon: BuildingOffice2Icon,
+//   },
+//   {
+//     title: "Roles",
+//     api: getRoles,
+//     color: themes.cardDonation,
+//     path: "/role",
+//     icon: IdentificationIcon,
+//   },
+//   {
+//     title: "Office Branches",
+//     api: getOfficeBranches,
+//     color: themes.cardEvent,
+//     path: "/officebranches",
+//     icon: GlobeAltIcon,
+//   },
+//   {
+//     title: "Employees",
+//     api: getEmployees,
+//     color: themes.cardContact,
+//     path: "/employee",
+//     icon: UserGroupIcon,
+//   },
+// {
+//   title: "Personal Details",
+//   api: getEmployeePersonalDetails,
+//   color: "#6366F1",   // 🔥 Indigo
+//   path: "/employee-personal-details",
+//   icon: UserCircle2,
+// }
+
+
+// ];
+
+
 
 export const dashboardModules = [
-  {
-    title: "Departments",
-    api: getDepartments,
-    color: themes.cardDepartment,
-    path: "/department",
-    icon: BuildingOffice2Icon,
-  },
-  {
-    title: "Roles",
-    api: getRoles,
-    color: themes.cardDonation,
-    path: "/role",
-    icon: IdentificationIcon,
-  },
-  {
-    title: "Office Branches",
-    api: getOfficeBranches,
-    color: themes.cardEvent,
-    path: "/officebranches",
-    icon: GlobeAltIcon,
-  },
-  {
-    title: "Employees",
-    api: getEmployees,
-    color: themes.cardContact,
-    path: "/employee",
-    icon: UserGroupIcon,
-  },
+  { title: "Departments", api: getDepartments, color: "#8B5CF6", path: "/department", icon: Building2 },
+  { title: "Roles", api: getRoles, color: "#22C55E", path: "/role", icon: ShieldCheck },
+  { title: "Office Branches", api: getOfficeBranches, color: "#F59E0B", path: "/officebranches", icon: Briefcase },
+  { title: "Employees", api: getEmployees, color: "#3B82F6", path: "/employee", icon: Users },
+
+  { title: "Personal Details", api: getEmployeePersonalDetails, color: "#6366F1", path: "/employee-personal-details", icon: UserCircle2 },
+{
+  title: "Employee Salary",
+  api: getEmployeeSalary,
+  color: "#10B981",
+  path: "/employee-salary",
+  icon: Wallet,
+},
+  { title: "Employee Documents", api: getDocumentsOfEmployee, color: "#F43F5E", path: "/employee-documents", icon: FileText },
+  { title: "Users", api: getUsers, color: "#06B6D4", path: "/users", icon: Users },
 ];
