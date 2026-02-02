@@ -738,7 +738,9 @@
 
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
-import { dashboardModules } from "../../src/config/dashboardModules";
+import { dashboardModules } from "../config/dashboardModules";
+import { themes } from "../config/theme.config";
+
 import {
   Calendar,
   ChevronRight,
@@ -755,12 +757,7 @@ import {
   Users
 } from "lucide-react";
 
-const iconComponents = {
-  Building2,
-  Briefcase,
-  MapPin,
-  Users,
-};
+
 
 export default function Dashboard() {
   const [stats, setStats] = useState([]);
