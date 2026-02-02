@@ -63,6 +63,10 @@ import Login from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 // import Blogs from "../modules/Blogs";
 import Employee from "../modules/Employee";
+import EmployeePersonalDetails from "../modules/EmployeePersonalDetails";
+import EmployeeSalary from "../modules/EmployeeSalary";
+import EmployeeDocuments from "../modules/EmployeeDocuments";
+import Users from "../modules/Users";
 
 export default function AppRoutes() {
   return (
@@ -93,9 +97,14 @@ export default function AppRoutes() {
         <Route path="/role" element={<Roles />} />
 
         <Route path="/officebranches" element={<OfficeBranches />} />
-                {/* <Route path="/blog" element={<Blogs />} /> */}
+        {/* <Route path="/blog" element={<Blogs />} /> */}
 
-                <Route path="/employee" element={<Employee />} />
+        <Route path="/employee" element={<Employee />} />
+        <Route path="/employee-personal-details" element={<EmployeePersonalDetails />} />
+        <Route path="/employee-salary" element={<EmployeeSalary />} />
+        
+        <Route path="/employee-documents" element={<EmployeeDocuments />} />
+        <Route path="/users" element={<Users />} />
 
       </Route>
 

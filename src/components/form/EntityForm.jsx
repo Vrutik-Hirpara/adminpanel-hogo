@@ -128,6 +128,144 @@
 
 
 
+// import { useEffect } from "react";
+// import FormWrapper from "../form/FormWrapper";
+// import FormContainer from "../form/FormContainer";
+// import FormInput from "../form/FormInput";
+// import FormSelect from "../form/FormSelect";
+// import FormTextarea from "../form/FormTextarea";
+// import FormActions from "../form/FormActions";
+// import api from "../../services/api";
+
+// export default function EntityForm({
+//   title,
+//   fields,
+//   selectedItem,
+//   onSubmit,
+//   setMode,
+// }) {
+//   return (
+//     <FormWrapper onSubmit={onSubmit}>
+//       {(methods) => {
+//         const { register, reset, watch } = methods;
+
+//         /* 🔁 Reset Form */
+//         useEffect(() => {
+//           if (selectedItem) {
+//             const data = { ...selectedItem };
+//             delete data.image; // ⚠️ Prevent image reset issue
+//             reset(data);
+//           } else {
+//             const empty = {};
+//             fields.forEach((f) => (empty[f.name] = ""));
+//             reset(empty);
+//           }
+//         }, [selectedItem, reset, fields]);
+
+//         return (
+//           <FormContainer title={title}>
+
+//             {/* 🔥 RESPONSIVE GRID */}
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+//               {fields.map((field) => {
+//                 /* TEXTAREA */
+//                 if (field.type === "textarea") {
+//                   return (
+//                     <div key={field.name}>
+//                       <FormTextarea
+//                         label={field.label}
+//                         name={field.name}
+//                         register={register}
+//                       />
+//                     </div>
+//                   );
+//                 }
+
+//                 /* SELECT */
+//                 if (field.type === "select") {
+//                   return (
+//                     <div key={field.name}>
+//                       <FormSelect
+//                         label={field.label}
+//                         name={field.name}
+//                         register={register}
+//                         options={field.options}
+//                       />
+//                     </div>
+//                   );
+//                 }
+
+//                 /* FILE INPUT */
+//                 if (field.type === "file") {
+//                   const previewUrl = selectedItem?.image
+//                     ? `${api.defaults.baseURL}${selectedItem.image}`
+//                     : null;
+
+//                   return (
+//                     <div key={field.name} className="flex flex-col gap-2">
+//                       <label className="text-sm font-medium text-gray-700">
+//                         {field.label}
+//                       </label>
+
+//                       {/* IMAGE PREVIEW */}
+//                       {previewUrl && (
+//                         <img
+//                           src={previewUrl}
+//                           alt="preview"
+//                           className="h-20 w-28 object-cover rounded border"
+//                         />
+//                       )}
+
+//                       {/* FILE BUTTON */}
+//                       <label className="flex items-center gap-4">
+//                         <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
+//                           Choose Image
+//                         </span>
+
+//                         <span className="text-sm text-gray-500">
+//                           {watch(field.name)?.[0]?.name || "No file chosen"}
+//                         </span>
+
+//                         <input
+//                           type="file"
+//                           {...register(field.name)}
+//                           className="hidden"
+//                         />
+//                       </label>
+//                     </div>
+//                   );
+//                 }
+
+//                 /* DEFAULT INPUT */
+//                 return (
+//                   <div key={field.name}>
+//                     <FormInput
+//                       label={field.label}
+//                       name={field.name}
+//                       type={field.type || "text"}
+//                       register={register}
+//                       required={field.required}
+//                     />
+//                   </div>
+//                 );
+//               })}
+
+//             </div>
+
+//             <FormActions onCancel={() => setMode("list")} />
+
+//           </FormContainer>
+//         );
+//       }}
+//     </FormWrapper>
+//   );
+// }
+
+
+
+
+
 import { useEffect } from "react";
 import FormWrapper from "../form/FormWrapper";
 import FormContainer from "../form/FormContainer";
@@ -135,7 +273,6 @@ import FormInput from "../form/FormInput";
 import FormSelect from "../form/FormSelect";
 import FormTextarea from "../form/FormTextarea";
 import FormActions from "../form/FormActions";
-import api from "../../services/api";
 
 export default function EntityForm({
   title,
@@ -149,11 +286,13 @@ export default function EntityForm({
       {(methods) => {
         const { register, reset, watch } = methods;
 
-        /* 🔁 Reset Form */
+        /* 🔁 RESET FORM DATA */
         useEffect(() => {
           if (selectedItem) {
             const data = { ...selectedItem };
-            delete data.image; // ⚠️ Prevent image reset issue
+            fields.forEach(f => {
+              if (f.type === "file") delete data[f.name]; // prevent file reset bug
+            });
             reset(data);
           } else {
             const empty = {};
@@ -164,12 +303,12 @@ export default function EntityForm({
 
         return (
           <FormContainer title={title}>
-
             {/* 🔥 RESPONSIVE GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
               {fields.map((field) => {
-                /* TEXTAREA */
+
+                /* 🔹 TEXTAREA */
                 if (field.type === "textarea") {
                   return (
                     <div key={field.name}>
@@ -182,7 +321,7 @@ export default function EntityForm({
                   );
                 }
 
-                /* SELECT */
+                /* 🔹 SELECT */
                 if (field.type === "select") {
                   return (
                     <div key={field.name}>
@@ -196,11 +335,9 @@ export default function EntityForm({
                   );
                 }
 
-                /* FILE INPUT */
+                /* 🔹 FILE INPUT WITH PREVIEW */
                 if (field.type === "file") {
-                  const previewUrl = selectedItem?.image
-                    ? `${api.defaults.baseURL}${selectedItem.image}`
-                    : null;
+                  const previewUrl = field.preview || null;
 
                   return (
                     <div key={field.name} className="flex flex-col gap-2">
@@ -208,19 +345,19 @@ export default function EntityForm({
                         {field.label}
                       </label>
 
-                      {/* IMAGE PREVIEW */}
+                      {/* 🖼 IMAGE PREVIEW */}
                       {previewUrl && (
                         <img
                           src={previewUrl}
-                          alt="preview"
-                          className="h-20 w-28 object-cover rounded border"
+                          alt={field.label}
+                          className="h-24 w-32 object-cover rounded border shadow"
                         />
                       )}
 
                       {/* FILE BUTTON */}
                       <label className="flex items-center gap-4">
                         <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
-                          Choose Image
+                          Choose File
                         </span>
 
                         <span className="text-sm text-gray-500">
@@ -237,7 +374,7 @@ export default function EntityForm({
                   );
                 }
 
-                /* DEFAULT INPUT */
+                /* 🔹 DEFAULT INPUT */
                 return (
                   <div key={field.name}>
                     <FormInput
@@ -250,11 +387,10 @@ export default function EntityForm({
                   </div>
                 );
               })}
-
             </div>
 
+            {/* ACTION BUTTONS */}
             <FormActions onCancel={() => setMode("list")} />
-
           </FormContainer>
         );
       }}

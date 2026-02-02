@@ -200,7 +200,6 @@
 // }
 
 
-
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -220,12 +219,19 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EmployeeViewCard from "../components/view/EmployeeViewCard";
 
+import axios from "axios";
+
+const DEPT_API = "https://hogofilm.pythonanywhere.com/departments/";
+const ROLE_API = "https://hogofilm.pythonanywhere.com/roles/";
+
 export default function Employee() {
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-  // FETCH
+  // FETCH EMPLOYEES
   const fetchEmployees = async () => {
     const res = await getEmployees();
     const data = res.data?.data || [];
@@ -235,7 +241,6 @@ export default function Employee() {
       employee_code: e.employee_code,
       first_name: e.first_name,
       last_name: e.last_name,
-      gender: e.gender,
       date_of_birth: e.date_of_birth,
       email: e.email,
       phone: e.phone,
@@ -248,84 +253,64 @@ export default function Employee() {
     setEmployees(formatted);
   };
 
-  useEffect(() => { fetchEmployees(); }, []);
+  // FETCH DEPARTMENTS & ROLES
+  const fetchMeta = async () => {
+    const deptRes = await axios.get(DEPT_API);
+    const roleRes = await axios.get(ROLE_API);
 
-  // STATUS TOGGLE (already correct)
-const handleStatusToggle = async (emp) => {
-  const newStatus = !emp.status;
+    setDepartments(deptRes.data.data || []);
+    setRoles(roleRes.data.data || []);
+  };
 
-  // Optimistic UI update
-  setEmployees(prev =>
-    prev.map(e =>
-      e.id === emp.id
-        ? {
-            ...e,
-            status: newStatus,
-            raw: {
-              ...e.raw,
-              status: newStatus ? "Active" : "Inactive", // 🔥 sync raw
-            },
-          }
-        : e
-    )
-  );
+  useEffect(() => {
+    fetchEmployees();
+    fetchMeta();
+  }, []);
 
-  try {
-    await updateEmployee(emp.id, {
-      status: newStatus ? "Active" : "Inactive",
-    });
-  } catch {
-    // revert
+  // STATUS TOGGLE
+  const handleStatusToggle = async (emp) => {
+    const newStatus = !emp.status;
+
     setEmployees(prev =>
       prev.map(e =>
         e.id === emp.id
-          ? {
-              ...e,
-              status: !newStatus,
-              raw: {
-                ...e.raw,
-                status: !newStatus ? "Active" : "Inactive",
-              },
-            }
+          ? { ...e, status: newStatus, raw: { ...e.raw, status: newStatus ? "Active" : "Inactive" } }
           : e
       )
     );
-  }
-};
 
-
-
-  // 🔥 ONLY FIX: CREATE / UPDATE PAYLOAD
-const onSubmit = async (data) => {
-  try {
-    const payload = {
-      ...data,
-      department_id: data.department_id
-        ? Number(data.department_id)
-        : 6,  // 🔥 default
-      role_id: data.role_id
-        ? Number(data.role_id)
-        : 2,  // 🔥 default
-      status: data.status,
-    };
-
-    // remove password on edit
-    if (selectedEmployee) {
-      delete payload.password;
-      await updateEmployee(selectedEmployee.id, payload);
-    } else {
-      await createEmployee(payload);
+    try {
+      await updateEmployee(emp.id, { status: newStatus ? "Active" : "Inactive" });
+    } catch {
+      fetchEmployees();
     }
+  };
 
-    setMode("list");
-    fetchEmployees();
-  } catch (error) {
-    console.error("Employee Save Error:", error.response?.data);
-  }
-};
+  // CREATE / UPDATE
+  const onSubmit = async (data) => {
+    try {
+      const payload = {
+        ...data,
+        department_id: Number(data.department_id),
+        role_id: Number(data.role_id),
+        status: data.status,
+      };
 
+      if (selectedEmployee) {
+        delete payload.password;
+        await updateEmployee(selectedEmployee.id, payload);
+      } else {
+        await createEmployee(payload);
+      }
 
-  // LIST PAGE
+      setMode("list");
+      fetchEmployees();
+    } catch (error) {
+      console.error("Employee Save Error:", error.response?.data);
+    }
+  };
+
+  // LIST
   if (mode === "list") {
     return (
       <PageContainer>
@@ -334,25 +319,7 @@ const onSubmit = async (data) => {
           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
-        <Table
-          header={
-            <TableHeader
-              columns={[
-                "Code",
-                "First Name",
-                "Last Name",
-                // "Gender",
-                "DOB",
-                "Email",
-                "Phone",
-                "Joining",
-                // "Type",
-                "Status",
-                "Action",
-              ]}
-            />
-          }
-        >
+        <Table header={<TableHeader columns={["Code","First Name","Last Name","DOB","Email","Phone","Joining","Status","Action"]} />}>
           {employees.map(emp => (
             <EmployeeTableRow
               key={emp.id}
@@ -385,60 +352,40 @@ const onSubmit = async (data) => {
         selectedItem={selectedEmployee}
         onSubmit={onSubmit}
         setMode={setMode}
-   fields={[
-  { label: "Employee Code", name: "employee_code", required: true },
-  { label: "First Name", name: "first_name", required: true },
-  { label: "Last Name", name: "last_name", required: true },
+        fields={[
+          { label: "Employee Code", name: "employee_code", required: true },
+          { label: "First Name", name: "first_name", required: true },
+          { label: "Last Name", name: "last_name", required: true },
 
-  {
-    label: "Gender",
-    name: "gender",
-    type: "select",
-    options: [
-      { label: "Male", value: "Male" },
-      { label: "Female", value: "Female" }
-    ]
-  },
+          { label: "Gender", name: "gender", type: "select", options: [
+            { label: "Male", value: "Male" },
+            { label: "Female", value: "Female" }
+          ]},
 
-  { label: "Date of Birth", name: "date_of_birth", type: "date" },
-  { label: "Email", name: "email", type: "email" },
-  { label: "Phone", name: "phone" },
-  { label: "Joining Date", name: "joining_date", type: "date" },
+          { label: "Date of Birth", name: "date_of_birth", type: "date" },
+          { label: "Email", name: "email", type: "email" },
+          { label: "Phone", name: "phone" },
+          { label: "Joining Date", name: "joining_date", type: "date" },
 
-  {
-    label: "Employment Type",
-    name: "employment_type",
-    type: "select",
-    options: [
-      { label: "Permanent", value: "Permanent" },
-      { label: "Contract", value: "Contract" },
-      { label: "Intern", value: "Intern" }
-    ]
-  },
+          { label: "Department", name: "department_id", type: "select", required: true,
+            options: departments.map(d => ({ label: d.name, value: d.id })) },
 
-  {
-    label: "Status",
-    name: "status",
-    type: "select",
-    options: [
-      { label: "Active", value: "Active" },
-      { label: "Inactive", value: "Inactive" }
-    ]
-  },
+          { label: "Role", name: "role_id", type: "select", required: true,
+            options: roles.map(r => ({ label: r.name, value: r.id })) },
 
-  // 🔥 SHOW ONLY WHEN CREATING
-  ...(selectedEmployee
-    ? []
-    : [
-        {
-          label: "Password",
-          name: "password",
-          type: "password",
-          required: true,
-        },
-      ]),
-]}
+          { label: "Employment Type", name: "employment_type", type: "select", options: [
+            { label: "Permanent", value: "Permanent" },
+            { label: "Contract", value: "Contract" },
+            { label: "Intern", value: "Intern" }
+          ]},
 
+          { label: "Status", name: "status", type: "select", options: [
+            { label: "Active", value: "Active" },
+            { label: "Inactive", value: "Inactive" }
+          ]},
+
+          ...(selectedEmployee ? [] : [{ label: "Password", name: "password", type: "password", required: true }]),
+        ]}
       />
     </EntityPageLayout>
   );
