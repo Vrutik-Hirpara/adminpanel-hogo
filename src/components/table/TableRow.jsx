@@ -6,7 +6,7 @@
 import TableActions from "./TableActions";
 import { themes } from "../../config/theme.config";
 
-export default function TableRow({ row, onView, onEdit, onDelete, onToggleStatus }) {
+export default function TableRow({ row, onView,index, onEdit, onDelete, onToggleStatus }) {
   return (
     <tr
       className="border-t"

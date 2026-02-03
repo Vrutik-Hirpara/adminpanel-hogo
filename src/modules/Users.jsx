@@ -387,6 +387,7 @@ import UsersViewCard from "../components/view/UserViewCard";
 
 import { getEmployees } from "../services/employee.service";
 import api from "../services/api";
+import UserRow from "../components/table/UserRow";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -485,10 +486,11 @@ const onSubmit = async (data) => {
         <Table
           header={<TableHeader columns={["Name", "Role", "Status", "Action"]} />}
         >
-          {users.map(u => (
-            <TableRow
+          {users.map((u,index) => (
+            <UserRow
               key={u.id}
               row={u}
+              index={index}
               onToggleStatus={handleStatusToggle}
               onView={(r) => { setSelectedItem(r.raw); setMode("view"); }}
               onEdit={(r) => { setSelectedItem(r.raw); setMode("form"); }}

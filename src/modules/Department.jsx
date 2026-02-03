@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
+import DepartmentRow from "../components/table/DepartmentRow";
+
 import TableHeader from "../components/table/TableHeader";
 import TableRow from "../components/table/TableRow";
 
@@ -85,18 +87,21 @@ const onSubmit = async (data) => {
           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
-        <Table header={<TableHeader columns={["Name","Description","Status","Action"]} />}>
-          {departments.map(d => (
-            <TableRow
-              key={d.id}
-              row={d}
-              onToggleStatus={handleStatusToggle}   // 🔥 CLICK STATUS FROM LIST
-              onView={() => { setSelectedDept(d); setMode("view"); }}
-              onEdit={() => { setSelectedDept(d); setMode("form"); }}
-              onDelete={() => deleteDepartment(d.id).then(fetchDepartments)}
-            />
-          ))}
-        </Table>
+     <Table header={<TableHeader columns={["Name","Description","Status","Action"]} />}>
+{departments.map((d, index) => (
+  <DepartmentRow
+    key={d.id}
+    row={d}
+    index={index}
+    onToggleStatus={handleStatusToggle}   // ⭐ THIS ENABLES BUTTON
+    onView={() => { setSelectedDept(d); setMode("view"); }}
+    onEdit={() => { setSelectedDept(d); setMode("form"); }}
+    onDelete={() => deleteDepartment(d.id).then(fetchDepartments)}
+  />
+))}
+
+</Table>
+
       </PageContainer>
     );
   }

@@ -320,10 +320,11 @@ export default function Employee() {
         </div>
 
         <Table header={<TableHeader columns={["Code","First Name","Last Name","DOB","Email","Phone","Joining","Status","Action"]} />}>
-          {employees.map(emp => (
+          {employees.map((emp,index) => (
             <EmployeeTableRow
               key={emp.id}
               row={emp}
+              index={index}
               onToggleStatus={handleStatusToggle}
               onView={(r) => { setSelectedEmployee(r.raw); setMode("view"); }}
               onEdit={(r) => { setSelectedEmployee(r.raw); setMode("form"); }}

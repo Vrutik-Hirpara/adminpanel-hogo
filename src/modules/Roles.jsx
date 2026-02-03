@@ -242,6 +242,7 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import RoleViewCard from "../components/view/RoleViewCard";
 import EntityForm from "../components/form/EntityForm";
+import RolesRow from "../components/table/RolesRow";
 
 export default function Roles() {
   const [roles, setRoles] = useState([]);
@@ -303,10 +304,11 @@ export default function Roles() {
         </div>
 
         <Table header={<TableHeader columns={["Name", "Description", "Status", "Action"]} />}>
-          {roles?.map?.((r) => (
-            <TableRow
+          {roles?.map?.((r,index) => (
+            <RolesRow
               key={r.id}
               row={r}
+              index={index}
               onToggleStatus={handleStatusToggle}
               onView={(role) => {
                 setSelectedRole(role);

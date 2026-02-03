@@ -42,6 +42,7 @@ export default function BlogTableRow({ row, onView, onEdit, onDelete }) {
 
   return (
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
+      
       {/* IMAGE */}
       <td className="px-3 py-3 text-center">
         {imageUrl && (

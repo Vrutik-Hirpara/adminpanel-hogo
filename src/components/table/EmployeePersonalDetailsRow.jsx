@@ -3,6 +3,7 @@ import { themes } from "../../config/theme.config";
 
 export default function EmployeePersonalDetailsRow({
   row,
+  index,
   employeeName,
   onView,
   onEdit,
@@ -10,7 +11,10 @@ export default function EmployeePersonalDetailsRow({
 }) {
   return (
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
-      
+<td className="px-4 py-3 text-center w-[5%] font-medium">
+  {index + 1}
+</td>
+
       <td className="px-3 py-3 text-center text-sm">{employeeName}</td>
 
       <td className="px-3 py-3 text-center text-sm">{row.father_name}</td>

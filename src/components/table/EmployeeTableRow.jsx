@@ -4,12 +4,17 @@ import { themes } from "../../config/theme.config";
 export default function EmployeeTableRow({
   row,
   onView,
+  index,
   onEdit,
   onDelete,
   onToggleStatus,
 }) {
   return (
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
+<td className="px-4 py-3 text-center w-[5%] font-medium">
+  {index + 1}
+</td>
+
       <td className="px-3 py-3 text-center text-sm">{row.employee_code}</td>
 
       <td className="px-3 py-3 text-center text-sm">{row.first_name}</td>

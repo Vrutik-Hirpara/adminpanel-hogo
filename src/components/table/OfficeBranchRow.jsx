@@ -40,9 +40,15 @@
 import TableActions from "./TableActions";
 import { themes } from "../../config/theme.config";
 
-export default function OfficeBranchRow({ row, onView, onEdit, onDelete }) {
+export default function OfficeBranchRow({ row, onView,index, onEdit, onDelete }) {
   return (
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
+
+
+<td className="w-[5%] px-4 py-3 text-center font-medium">
+  {index + 1}
+</td>
+
       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
         {row.name}
       </td>

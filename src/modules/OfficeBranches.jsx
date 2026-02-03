@@ -401,10 +401,12 @@ const fetchBranches = async () => {
         </div>
 
         <Table header={<TableHeader columns={["Name","Address","City","State","Country","Action"]} />}>
-          {branches.map(b => (
+          {branches.map((b,index) => (
             <OfficeBranchRow
+          
               key={b.id}
               row={b}
+                index={index}   
               onView={() => { setSelectedBranch(b); setMode("view"); }}
               onEdit={() => { setSelectedBranch(b); setMode("form"); }}
               onDelete={() => deleteOfficeBranch(b.id).then(fetchBranches)}

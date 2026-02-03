@@ -493,6 +493,7 @@
 //     </EntityPageLayout>
 //   );
 // }
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -536,32 +537,38 @@ export default function EmployeePersonalDetails() {
   }, []);
 
   // ================= SAVE =================
-  const onSubmit = async (data) => {
-    try {
-      const payload = { ...data, employee_id: Number(data.employee_id) };
+const onSubmit = async (data) => {
+  try {
+    const payload = { ...data, employee_id: Number(data.employee_id), marital_status: data.marital_status?.toLowerCase(), };
 
-      const exists = details.find(d => d.employee_id === payload.employee_id);
+    // 🔥 UNIQUE CHECK
+    const exists = details.find(
+      d =>
+        d.employee_id === payload.employee_id &&
+        (!selectedItem || d.id !== selectedItem.id)
+    );
 
-      if (!selectedItem && exists) {
-        alert("Already exists");
-        return;
-      }
-
-      if (selectedItem) {
-        await updateEmployeePersonalDetails(selectedItem.id, payload);
-      } else {
-        await createEmployeePersonalDetails(payload);
-      }
-
-      alert("Saved successfully");
-      setMode("list");
-      fetchDetails();
-
-    } catch (err) {
-      console.error("SAVE ERROR:", err.response?.data || err.message);
-      alert("Save failed — check console");
+    if (exists) {
+      alert("This employee already has personal details!");
+      return;
     }
-  };
+
+    if (selectedItem) {
+      await updateEmployeePersonalDetails(selectedItem.id, payload);
+    } else {
+      await createEmployeePersonalDetails(payload);
+    }
+
+    alert("Saved successfully");
+    setMode("list");
+    fetchDetails();
+
+  } catch (err) {
+    console.error("SAVE ERROR:", err.response?.data || err.message);
+    alert("Save failed — check console");
+  }
+};
+
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
@@ -641,10 +648,33 @@ export default function EmployeePersonalDetails() {
 
   // ================= FORM PAGE =================
   return (
-    <EntityPageLayout title="Employee Personal Details" showBack onBack={() => setMode("list")}>
+    <EntityPageLayout title="Employee Personal Dfetails" showBack onBack={() => setMode("list")}>
       <EntityForm
         title={selectedItem ? "Edit Personal Details" : "Create Personal Details"}
-        selectedItem={selectedItem}
+selectedItem={
+  selectedItem
+    ? {
+        ...selectedItem,
+      marital_status:
+  (selectedItem.marital_status ||
+    selectedItem.maritalStatus ||
+    "")
+    .toString()
+    .trim()
+    .toLowerCase() === "married"
+    ? "married"
+    : (selectedItem.marital_status ||
+       selectedItem.maritalStatus ||
+       "")
+       .toString()
+       .trim()
+       .toLowerCase() === "single"
+    ? "single"
+    : "",
+
+      }
+    : null
+}
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[
@@ -660,7 +690,15 @@ export default function EmployeePersonalDetails() {
           },
           { label: "Father Name", name: "father_name" },
           { label: "Mother Name", name: "mother_name" },
-          { label: "Marital Status", name: "marital_status" },
+{
+  label: "Marital Status",
+  name: "marital_status",
+  type: "select",
+  options: [
+    { label: "Single", value: "Single" },
+    { label: "Married", value: "Married" },
+  ],
+},
           { label: "Spouse Name", name: "spouse_name" },
           { label: "Address", name: "address", type: "textarea" },
           { label: "Emergency Contact Name", name: "emergency_contact_name" },

@@ -273,7 +273,9 @@ import FormInput from "../form/FormInput";
 import FormSelect from "../form/FormSelect";
 import FormTextarea from "../form/FormTextarea";
 import FormActions from "../form/FormActions";
+import api from "../../services/api"; // adjust path
 
+const baseURL = api.defaults.baseURL;
 export default function EntityForm({
   title,
   fields,
@@ -336,43 +338,90 @@ export default function EntityForm({
                 }
 
                 /* 🔹 FILE INPUT WITH PREVIEW */
-                if (field.type === "file") {
-                  const previewUrl = field.preview || null;
+            /* 🔹 FILE INPUT WITH SIDE PREVIEW */
+// if (field.type === "file") {
+//   const existingFile = selectedItem?.[field.name];
 
-                  return (
-                    <div key={field.name} className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        {field.label}
-                      </label>
+//   return (
+//     <div key={field.name} className="flex items-center gap-4">
 
-                      {/* 🖼 IMAGE PREVIEW */}
-                      {previewUrl && (
-                        <img
-                          src={previewUrl}
-                          alt={field.label}
-                          className="h-24 w-32 object-cover rounded border shadow"
-                        />
-                      )}
+//       {/* LEFT SIDE: FILE INPUT */}
+//       <div className="flex flex-col flex-1">
+//         <label className="text-sm font-medium text-gray-700 mb-1">
+//           {field.label}
+//         </label>
 
-                      {/* FILE BUTTON */}
-                      <label className="flex items-center gap-4">
-                        <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
-                          Choose File
-                        </span>
+//         <label className="flex items-center gap-3">
+//           <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
+//             Choose File
+//           </span>
 
-                        <span className="text-sm text-gray-500">
-                          {watch(field.name)?.[0]?.name || "No file chosen"}
-                        </span>
+//           <span className="text-sm text-gray-500">
+//             {watch(field.name)?.[0]?.name || "No file chosen"}
+//           </span>
 
-                        <input
-                          type="file"
-                          {...register(field.name)}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  );
-                }
+//           <input
+//             type="file"
+//             {...register(field.name)}
+//             className="hidden"
+//           />
+//         </label>
+//       </div>
+
+//       {/* RIGHT SIDE: EXISTING IMAGE */}
+//       {existingFile && (
+//         <img
+// src={`${baseURL}${existingFile}`}
+//           alt={field.label}
+//           className="h-16 w-16 object-cover rounded border shadow"
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
+/* 🔹 FILE INPUT WITH TOP PREVIEW */
+if (field.type === "file") {
+  const existingFile = selectedItem?.[field.name];
+
+  return (
+    <div key={field.name} className="flex flex-col gap-2">
+
+      {/* LABEL */}
+      <label className="text-sm font-medium text-gray-700">
+        {field.label}
+      </label>
+
+      {/* 🖼 IMAGE ON TOP */}
+      {existingFile && (
+        <img
+          src={`${api.defaults.baseURL}${existingFile}`}
+          alt={field.label}
+          className="h-24 w-24 object-cover rounded border shadow"
+        />
+      )}
+
+      {/* FILE BUTTON */}
+      <label className="flex items-center gap-3">
+        <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
+          Choose File
+        </span>
+
+        <span className="text-sm text-gray-500">
+          {watch(field.name)?.[0]?.name || "No file chosen"}
+        </span>
+
+        <input
+          type="file"
+          {...register(field.name)}
+          className="hidden"
+        />
+      </label>
+    </div>
+  );
+}
+
 
                 /* 🔹 DEFAULT INPUT */
                 return (

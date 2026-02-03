@@ -11,15 +11,33 @@ export default function TableHeader({ columns }) {
       }}
     >
       <tr>
+  {/* SERIAL NUMBER HEADER */}
+  <th className="px-4 py-3 text-center font-semibold whitespace-nowrap w-[5%]">
+    No
+  </th>
+
+  {columns.map((col) => (
+    <th
+      key={col}
+      className="px-4 py-3 text-center align-middle font-semibold whitespace-nowrap"
+    >
+      {col}
+    </th>
+  ))}
+</tr>
+
+      {/* <tr>
         {columns.map((col) => (
+          
           <th
             key={col}
             className="px-4 py-3 text-center align-middle font-semibold whitespace-nowrap"
           >
             {col}
           </th>
+          
         ))}
-      </tr>
+      </tr> */}
     </thead>
   );
 }
