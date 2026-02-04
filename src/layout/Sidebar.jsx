@@ -374,10 +374,18 @@ const menus = [
   { label: "Employee Salary", path: "/employee-salary", icon: Wallet, color: "text-emerald-500" },
   { label: "Employee Documents", path: "/employee-documents", icon: FileText, color: "text-rose-500" },
   { label: "Users", path: "/users", icon: Users, color: "text-cyan-500" },
-    { label: "Leads",
-       path: "/leads",
-        icon: Users,
-         color: "text-cyan-500" },
+  {
+    label: "Leads",
+    path: "/leads",
+    icon: Users,
+    color: "text-cyan-500"
+  },
+    {
+    label: "Visits",
+    path: "/visits",
+    icon: Users,
+    color: "text-cyan-500"
+  },
 
 ];
 

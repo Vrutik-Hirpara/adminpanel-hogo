@@ -338,89 +338,101 @@ export default function EntityForm({
                 }
 
                 /* 🔹 FILE INPUT WITH PREVIEW */
-            /* 🔹 FILE INPUT WITH SIDE PREVIEW */
-// if (field.type === "file") {
-//   const existingFile = selectedItem?.[field.name];
+                /* 🔹 FILE INPUT WITH SIDE PREVIEW */
+                // if (field.type === "file") {
+                //   const existingFile = selectedItem?.[field.name];
 
-//   return (
-//     <div key={field.name} className="flex items-center gap-4">
+                //   return (
+                //     <div key={field.name} className="flex items-center gap-4">
 
-//       {/* LEFT SIDE: FILE INPUT */}
-//       <div className="flex flex-col flex-1">
-//         <label className="text-sm font-medium text-gray-700 mb-1">
-//           {field.label}
-//         </label>
+                //       {/* LEFT SIDE: FILE INPUT */}
+                //       <div className="flex flex-col flex-1">
+                //         <label className="text-sm font-medium text-gray-700 mb-1">
+                //           {field.label}
+                //         </label>
 
-//         <label className="flex items-center gap-3">
-//           <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
-//             Choose File
-//           </span>
+                //         <label className="flex items-center gap-3">
+                //           <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
+                //             Choose File
+                //           </span>
 
-//           <span className="text-sm text-gray-500">
-//             {watch(field.name)?.[0]?.name || "No file chosen"}
-//           </span>
+                //           <span className="text-sm text-gray-500">
+                //             {watch(field.name)?.[0]?.name || "No file chosen"}
+                //           </span>
 
-//           <input
-//             type="file"
-//             {...register(field.name)}
-//             className="hidden"
-//           />
-//         </label>
-//       </div>
+                //           <input
+                //             type="file"
+                //             {...register(field.name)}
+                //             className="hidden"
+                //           />
+                //         </label>
+                //       </div>
 
-//       {/* RIGHT SIDE: EXISTING IMAGE */}
-//       {existingFile && (
-//         <img
-// src={`${baseURL}${existingFile}`}
-//           alt={field.label}
-//           className="h-16 w-16 object-cover rounded border shadow"
-//         />
-//       )}
-//     </div>
-//   );
-// }
+                //       {/* RIGHT SIDE: EXISTING IMAGE */}
+                //       {existingFile && (
+                //         <img
+                // src={`${baseURL}${existingFile}`}
+                //           alt={field.label}
+                //           className="h-16 w-16 object-cover rounded border shadow"
+                //         />
+                //       )}
+                //     </div>
+                //   );
+                // }
 
 
-/* 🔹 FILE INPUT WITH TOP PREVIEW */
-if (field.type === "file") {
-  const existingFile = selectedItem?.[field.name];
+                /* 🔹 FILE INPUT WITH TOP PREVIEW */
+                if (field.type === "file") {
+                  const existingFile = selectedItem?.[field.name];
 
-  return (
-    <div key={field.name} className="flex flex-col gap-2">
+                  return (
+                    <div key={field.name} className="flex flex-col gap-2">
 
-      {/* LABEL */}
-      <label className="text-sm font-medium text-gray-700">
-        {field.label}
-      </label>
+                      {/* LABEL */}
+                      <label className="text-sm font-medium text-gray-700">
+                        {field.label}
+                      </label>
 
-      {/* 🖼 IMAGE ON TOP */}
-      {existingFile && (
-        <img
-          src={`${api.defaults.baseURL}${existingFile}`}
-          alt={field.label}
-          className="h-24 w-24 object-cover rounded border shadow"
-        />
-      )}
+                      {/* 🖼 IMAGE ON TOP */}
+                      {/* {existingFile && (
+                        <img
+                          src={`${api.defaults.baseURL}${existingFile}`}
+                          alt={field.label}
+                          className="h-24 w-24 object-cover rounded border shadow"
+                        />
+                      )} */}
+                      {existingFile && (
+  <img
+    src={
+      existingFile.startsWith("http")
+        ? existingFile
+        : `${api.defaults.baseURL}${existingFile}`
+    }
+    alt={field.label}
+    className="h-24 w-24 object-cover rounded border shadow"
+  />
+)}
 
-      {/* FILE BUTTON */}
-      <label className="flex items-center gap-3">
-        <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
-          Choose File
-        </span>
 
-        <span className="text-sm text-gray-500">
-          {watch(field.name)?.[0]?.name || "No file chosen"}
-        </span>
+                      {/* FILE BUTTON */}
+                      <label className="flex items-center gap-3">
+                        <span className="px-4 py-2 rounded text-white bg-red-600 cursor-pointer">
+                          Choose File
+                        </span>
 
-        <input
-          type="file"
-          {...register(field.name)}
-          className="hidden"
-        />
-      </label>
-    </div>
-  );
-}
+                        <span className="text-sm text-gray-500">
+                          {watch(field.name)?.[0]?.name || "No file chosen"}
+                        </span>
+
+                        <input
+                          type="file"
+                          {...register(field.name)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  );
+                }
 
 
                 /* 🔹 DEFAULT INPUT */

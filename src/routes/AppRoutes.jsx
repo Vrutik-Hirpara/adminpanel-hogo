@@ -68,6 +68,7 @@ import EmployeeSalary from "../modules/EmployeeSalary";
 import EmployeeDocuments from "../modules/EmployeeDocuments";
 import Users from "../modules/Users";
 import Leads from "../modules/Leads";
+import Visit from "../modules/Visit";
 
 export default function AppRoutes() {
   return (
@@ -107,6 +108,7 @@ export default function AppRoutes() {
         <Route path="/employee-documents" element={<EmployeeDocuments />} />
         <Route path="/users" element={<Users />} />
         <Route path="/leads" element={<Leads />} />
+        <Route path="/visits" element={<Visit />} />
 
       </Route>
 

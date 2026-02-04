@@ -114,15 +114,38 @@ export default function LeadsRow({
   onAssignUpdate
 }) {
 
-  const handleAssignChange = async (e) => {
-    const newEmpId = e.target.value;
+  // const handleAssignChange = async (e) => {
+  //   const newEmpId = e.target.value;
 
+  //   await updateLead(row.id, {
+  //     assigned_to: newEmpId
+  //   });
+
+  //   onAssignUpdate(); // refresh list
+  // };
+const handleAssignChange = async (e) => {
+  const newEmpId = e.target.value;
+
+  try {
     await updateLead(row.id, {
-      assigned_to: newEmpId
+      assigned_to: newEmpId || null,
     });
 
+    // 🔥 Find employee code for message
+    const emp = employees.find(emp => emp.id == newEmpId);
+
+    if (newEmpId) {
+      alert(`Lead assigned to ${emp?.employee_code}`);
+    } else {
+      alert("Assignment removed");
+    }
+
     onAssignUpdate(); // refresh list
-  };
+
+  } catch (err) {
+    alert("Assignment update failed");
+  }
+};
 
   return (
   <tr className="border-t text-sm">

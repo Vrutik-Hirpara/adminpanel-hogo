@@ -244,6 +244,7 @@
 //     </div>
 //   );
 // }
+
 import { themes } from "../../config/theme.config";
 
 export default function LeadsViewCard({ lead }) {
