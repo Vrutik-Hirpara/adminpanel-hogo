@@ -43,9 +43,16 @@ export default function VisitsViewCard({ visit }) {
           color: themes.textWhite,
         }}
       >
-        <h3 className="text-lg font-semibold">
-          Visit #{visit.id}
-        </h3>
+      <h3 className="text-lg font-semibold">
+  Visit Date: {visit.visit_date 
+    ? new Date(visit.visit_date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "-"}
+</h3>
+
         <p className="text-sm opacity-90">Visit Details</p>
       </div>
 
@@ -105,7 +112,7 @@ function Detail({ label, value }) {
       <p className="text-xs mb-1" style={{ color: themes.backgroundGray }}>
         {label}
       </p>
-      <p className="font-medium text-sm" style={{ color: themes.backgroundDark }}>
+      <p className="font-medium text-sm break-words" style={{ color: themes.backgroundDark }}>
         {value || "-"}
       </p>
     </div>

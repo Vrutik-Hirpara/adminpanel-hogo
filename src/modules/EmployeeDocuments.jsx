@@ -329,16 +329,16 @@ import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import EmployeeDocumentsRow from "../components/table/EmployeeDocumentsRow";
+import EntityTableRow from "../components/table/EntityTableRow";
 import EmployeeDocumentsViewCard from "../components/view/EmployeeDocumentsViewCard";
 
-import { getEmployees } from "../services/employee.service";
-import {
-  getDocumentsOfEmployee,
-  createDocumentsOfEmployee,
-  updateDocumentsOfEmployee,
-  deleteDocumentsOfEmployee
-} from "../services/documentsofemployee.service";
+import { EmployeeAPI,EmployeeDocsAPI } from "../services/apiService";
+// import {
+//   getDocumentsOfEmployee,
+//   createDocumentsOfEmployee,
+//   updateDocumentsOfEmployee,
+//   deleteDocumentsOfEmployee
+// } from "../services/documentsofemployee.service";
 
 export default function EmployeeDocuments() {
   const [documents, setDocuments] = useState([]);
@@ -346,18 +346,30 @@ export default function EmployeeDocuments() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const fetchDocs = async () => {
-    const res = await getDocumentsOfEmployee();
-    setDocuments(res.data.data || res.data || []);
-  };
+//   const fetchDocs = async () => {
+// const res = await EmployeeDocsAPI.getAll();
+//     setDocuments(res.data.data || res.data || []);
+//   };
+const fetchDocuments = async () => {
+  const res = await EmployeeDocsAPI.getAll();
+  const data = res.data?.data || [];
 
-  const fetchEmployees = async () => {
-    const res = await getEmployees();
-    setEmployees(res.data.data || res.data || []);
-  };
+  const formatted = data.map(d => ({
+    ...d,
+    employeeName: d.employee_name, // backend field
+  }));
+
+  setDocuments(formatted);
+};
+
+const fetchEmployees = async () => {
+  const res = await EmployeeAPI.getAll();
+  setEmployees(res.data?.data || []);
+};
+
 
   useEffect(() => {
-    fetchDocs();
+    fetchDocuments();
     fetchEmployees();
   }, []);
 
@@ -399,7 +411,7 @@ export default function EmployeeDocuments() {
 
       alert("Saved successfully");
       setMode("list");
-      fetchDocs();
+      fetchDocuments();
 
     } catch (err) {
       console.error("SAVE ERROR:", err.response?.data || err.message);
@@ -409,8 +421,21 @@ export default function EmployeeDocuments() {
 
   const handleDelete = async (id) => {
     await deleteDocumentsOfEmployee(id);
-    fetchDocs();
+    fetchDocuments();
   };
+const documentColumns = [
+  {
+    key: "employeeName",
+    render: (row) => row.employeeName,
+  },
+  { key: "pancard_number" },
+  { key: "aadhar_number" },
+  { key: "driving_license_number" },
+  {
+    key: "uploaded_at",
+    render: (row) => row.uploaded_at?.slice(0, 10),
+  },
+];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -422,19 +447,26 @@ export default function EmployeeDocuments() {
         </div>
 
         <Table header={<TableHeader columns={["Employee","PAN","Aadhar","DL","Uploaded","Action"]} />}>
-          {documents.map(d => {
-            const emp = employees.find(e => e.id === (d.employee || d.employee_id));
-            return (
-              <EmployeeDocumentsRow
-                key={d.id}
-                row={d}
-                employeeName={emp ? `${emp.employee_code} - ${emp.first_name}` : "—"}
-                onView={(r) => { setSelectedItem(r); setMode("view"); }}
-                onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
-                onDelete={(id) => handleDelete(id)}
-              />
-            );
-          })}
+       {documents.map((doc, index) => (
+  <EntityTableRow
+    key={doc.id}
+    row={doc}
+    index={index}
+    columns={documentColumns}
+    onView={(r) => {
+      setSelectedDocuments(r);
+      setMode("view");
+    }}
+    onEdit={(r) => {
+      setSelectedDocuments(r);
+      setMode("form");
+    }}
+    onDelete={(id) =>
+      EmployeeDocsAPI.delete(id).then(fetchDocuments)
+    }
+  />
+))}
+
         </Table>
       </PageContainer>
     );

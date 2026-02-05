@@ -358,14 +358,15 @@ import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
-import OfficeBranchRow from "../components/table/OfficeBranchRow";
+import EntityTableRow from "../components/table/EntityTableRow";
 
-import {
-  getOfficeBranches,
-  createOfficeBranch,
-  updateOfficeBranch,
-  deleteOfficeBranch,
-} from "../services/officebranches.service";
+// import {
+//   getOfficeBranches,
+//   createOfficeBranch,
+//   updateOfficeBranch,
+//   deleteOfficeBranch,
+// } from "../services/officebranches.service";
+import { BranchAPI } from "../services/apiService";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -379,18 +380,25 @@ export default function OfficeBranch() {
   const [selectedBranch, setSelectedBranch] = useState(null);
 
 const fetchBranches = async () => {
-  const res = await getOfficeBranches();
+  const res = await BranchAPI.getAll();
   setBranches(res.data.data);   // ✅ actual array
 };
   useEffect(() => { fetchBranches(); }, []);
 
   const onSubmit = async (data) => {
     selectedBranch
-      ? await updateOfficeBranch(selectedBranch.id, data)
-      : await createOfficeBranch(data);
+      ? await BranchAPI.update(selectedBranch.id, data)
+      : await BranchAPI.create(data);
     setMode("list");
     fetchBranches();
   };
+const branchColumns = [
+  { key: "name" },
+  { key: "address" },
+  { key: "city" },
+  { key: "state" },
+  { key: "country" },
+];
 
   if (mode === "list") {
     return (
@@ -401,17 +409,24 @@ const fetchBranches = async () => {
         </div>
 
         <Table header={<TableHeader columns={["Name","Address","City","State","Country","Action"]} />}>
-          {branches.map((b,index) => (
-            <OfficeBranchRow
-          
-              key={b.id}
-              row={b}
-                index={index}   
-              onView={() => { setSelectedBranch(b); setMode("view"); }}
-              onEdit={() => { setSelectedBranch(b); setMode("form"); }}
-              onDelete={() => deleteOfficeBranch(b.id).then(fetchBranches)}
-            />
-          ))}
+      {branches.map((b, index) => (
+  <EntityTableRow
+    key={b.id}
+    row={b}
+    index={index}
+    columns={branchColumns}
+    onView={(r) => {
+      setSelectedBranch(r);
+      setMode("view");
+    }}
+    onEdit={(r) => {
+      setSelectedBranch(r);
+      setMode("form");
+    }}
+    onDelete={(id) => BranchAPI.delete(id).then(fetchBranches)}
+  />
+))}
+
         </Table>
       </PageContainer>
     );

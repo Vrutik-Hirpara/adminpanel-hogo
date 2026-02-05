@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
-import DepartmentRow from "../components/table/DepartmentRow";
+// import DepartmentRow from "../components/table/DepartmentRow";
 
 import TableHeader from "../components/table/TableHeader";
-import TableRow from "../components/table/TableRow";
 
-import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from "../services/department.service";
+// import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from "../services/department.service";
+import { DepartmentAPI } from "../services/apiService";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import DepartmentViewCard from "../components/view/DepartmentViewCard";
-import EntityForm from "../components/form/EntityForm";
+import EntityTableRow from "../components/table/EntityTableRow";
 
 export default function Department() {
   const [departments, setDepartments] = useState([]);
@@ -21,7 +21,7 @@ export default function Department() {
 
   // ✅ FETCH + convert "Active/Inactive" → boolean
   const fetchDepartments = async () => {
-    const res = await getDepartments();
+const res = await DepartmentAPI.getAll();
     const data = res.data?.data || [];
 
     const formatted = data.map(d => ({
@@ -44,7 +44,7 @@ export default function Department() {
     );
 
     try {
-      await updateDepartment(dept.id, {
+      await DepartmentAPI.update(dept.id, {
         ...dept,
         status: newStatus ? "Active" : "Inactive" // boolean → string for API
       });
@@ -68,15 +68,36 @@ const onSubmit = async (data) => {
   };
 
   if (selectedDept) {
-    await updateDepartment(selectedDept.id, payload);
+    await DepartmentAPI.update(selectedDept.id, payload);
   } else {
-    await createDepartment(payload);
+    await DepartmentAPI.create(payload);
   }
 
   setMode("list");
   fetchDepartments();
 };
 
+const departmentColumns = [
+  { key: "name" },
+  { key: "description" },
+  {
+    key: "status",
+    render: (row) => (
+      <button
+        onClick={() => handleStatusToggle(row)}
+        className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
+          row.status ? "bg-green-500" : "bg-gray-300"
+        }`}
+      >
+        <span
+          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+            row.status ? "translate-x-6" : ""
+          }`}
+        />
+      </button>
+    ),
+  },
+];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -88,17 +109,24 @@ const onSubmit = async (data) => {
         </div>
 
      <Table header={<TableHeader columns={["Name","Description","Status","Action"]} />}>
-{departments.map((d, index) => (
-  <DepartmentRow
-    key={d.id}
-    row={d}
+{departments.map((dept, index) => (
+  <EntityTableRow
+    key={dept.id}
+    row={dept}
     index={index}
-    onToggleStatus={handleStatusToggle}   // ⭐ THIS ENABLES BUTTON
-    onView={() => { setSelectedDept(d); setMode("view"); }}
-    onEdit={() => { setSelectedDept(d); setMode("form"); }}
-    onDelete={() => deleteDepartment(d.id).then(fetchDepartments)}
+    columns={departmentColumns}
+    onView={(r) => {
+      setSelectedDepartment(r);
+      setMode("view");
+    }}
+    onEdit={(r) => {
+      setSelectedDepartment(r);
+      setMode("form");
+    }}
+    onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
   />
 ))}
+
 
 </Table>
 

@@ -102,7 +102,7 @@
 //   );
 // }
 
-import { updateLead } from "../../services/leads.service";
+import { LeadsAPI } from "../../services/apiService";
  import TableActions from "./TableActions";
 export default function LeadsRow({
   row,
@@ -127,7 +127,7 @@ const handleAssignChange = async (e) => {
   const newEmpId = e.target.value;
 
   try {
-    await updateLead(row.id, {
+    await LeadsAPI.update(row.id, {
       assigned_to: newEmpId || null,
     });
 

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -6,33 +7,35 @@ import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import EmployeeSalaryRow from "../components/table/EmployeeSalaryRow";
+import EntityTableRow from "../components/table/EntityTableRow";
 import EmployeeSalaryViewCard from "../components/view/EmployeeSalaryViewCard";
 
-import { getEmployees } from "../services/employee.service";
-import axios from "axios";
-
-const SALARY_API = "https://hogofilm.pythonanywhere.com/employee-salary/";
+import { SalaryAPI } from "../services/apiService";
 
 export default function EmployeeSalary() {
   const [salaryData, setSalaryData] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // const fetchSalary = async () => {
+  //   const res = await SalaryAPI.getAll();
+  //   setSalaryData(res.data?.data || []);
+  // };
   const fetchSalary = async () => {
-    const res = await axios.get(SALARY_API);
-    setSalaryData(res.data.data || []);
+    const res = await SalaryAPI.getAll();
+    const data = res.data?.data || [];
+
+    const formatted = data.map(d => ({
+      ...d,
+      employeeName: d.employee_name,  // backend field
+    }));
+
+    setSalaryData(formatted);
   };
 
-  const fetchEmployees = async () => {
-    const res = await getEmployees();
-    setEmployees(res.data.data || []);
-  };
 
   useEffect(() => {
     fetchSalary();
-    fetchEmployees();
   }, []);
 
   const onSubmit = async (data) => {
@@ -46,19 +49,37 @@ export default function EmployeeSalary() {
     }
 
     selectedItem
-      ? await axios.patch(`${SALARY_API}${selectedItem.id}/`, data)
-      : await axios.post(SALARY_API, data);
+      ? await SalaryAPI.update(selectedItem.id, data)
+      : await SalaryAPI.create(data);
 
     setMode("list");
     fetchSalary();
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`${SALARY_API}${id}/`);
+    await SalaryAPI.delete(id);
     fetchSalary();
   };
+  const salaryColumns = [
+    {
+      key: "employeeName",
+      render: (row) => row.employeeName,
+    },
+    { key: "basic_salary" },
+    { key: "alloances" },
+    { key: "deductions" },
+    {
+      key: "gross_salary",
+      render: (row) => (
+        <span className="font-semibold text-green-600">
+          {row.gross_salary}
+        </span>
+      ),
+    },
+    { key: "effective_from" },
+  ];
 
-  // LIST
+  // ================= LIST =================
   if (mode === "list") {
     return (
       <PageContainer>
@@ -67,49 +88,43 @@ export default function EmployeeSalary() {
           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
-        <Table header={<TableHeader columns={["Employee","Basic","Allowances","Deductions","Gross","Effective From","Action"]} />}>
-          {salaryData.map(s => {
-            const emp = employees.find(e => e.id === s.employee_id);
+        <Table header={<TableHeader columns={["Employee ID", "Basic", "Allowances", "Deductions", "Gross", "Effective From", "Action"]} />}>
+          {salaryData.map((s, index) => (
+            <EntityTableRow
+              key={s.id}
+              row={s}
+              index={index}
+              columns={salaryColumns}
+              onView={(r) => {
+                setSelectedSalary(r);
+                setMode("view");
+              }}
+              onEdit={(r) => {
+                setSelectedSalary(r);
+                setMode("form");
+              }}
+              onDelete={(id) => SalaryAPI.delete(id).then(fetchSalary)}
+            />
+          ))}
 
-            return (
-              <EmployeeSalaryRow
-                key={s.id}
-                row={s}
-employeeName={
-  emp
-    ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-    : "—"
-}
-                onView={(r) => { setSelectedItem(r); setMode("view"); }}
-                onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
-                onDelete={(id) => handleDelete(id)}
-              />
-            );
-          })}
         </Table>
       </PageContainer>
     );
   }
 
-  // VIEW
+  // ================= VIEW =================
   if (mode === "view" && selectedItem) {
-    const emp = employees.find(e => e.id === selectedItem.employee_id);
-
     return (
       <EntityPageLayout title="Salary Details" showBack onBack={() => setMode("list")}>
         <EmployeeSalaryViewCard
           salary={selectedItem}
-employeeName={
-  emp
-    ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-    : "Employee"
-}
+          employeeName={selectedItem.employee_id}
         />
       </EntityPageLayout>
     );
   }
 
-  // FORM
+  // ================= FORM =================
   return (
     <EntityPageLayout title="Employee Salary" showBack onBack={() => setMode("list")}>
       <EntityForm
@@ -119,13 +134,13 @@ employeeName={
         setMode={setMode}
         fields={[
           {
-            label: "Employee",
+            label: "Employee ID",
             name: "employee_id",
             type: "select",
-            options: employees.map(e => ({
-  label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
-  value: e.id,
-})),
+            options: salaryData.map(s => ({
+              label: s.employee_id,
+              value: s.employee_id,
+            })),
             required: true,
           },
           { label: "Basic Salary", name: "basic_salary", type: "number" },

@@ -26,18 +26,6 @@ export default function TableHeader({ columns }) {
   ))}
 </tr>
 
-      {/* <tr>
-        {columns.map((col) => (
-          
-          <th
-            key={col}
-            className="px-4 py-3 text-center align-middle font-semibold whitespace-nowrap"
-          >
-            {col}
-          </th>
-          
-        ))}
-      </tr> */}
     </thead>
   );
 }

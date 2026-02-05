@@ -56,7 +56,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "../layout/Layout";
 import Dashboard from "../modules/Dashboard";
 import Department from "../modules/Department";
-import CarsList from "../modules/CarsList";
+// import CarsList from "../modules/CarsList";
 import Roles from "../modules/Roles";
 import OfficeBranches from "../modules/OfficeBranches";
 import Login from "../pages/Login";
@@ -69,6 +69,8 @@ import EmployeeDocuments from "../modules/EmployeeDocuments";
 import Users from "../modules/Users";
 import Leads from "../modules/Leads";
 import Visit from "../modules/Visit";
+import Holiday from "../modules/Holiday";
+import LeaveBalance from "../modules/LeaveBalance";
 
 export default function AppRoutes() {
   return (
@@ -94,7 +96,7 @@ export default function AppRoutes() {
         <Route path="/department/new" element={<Department />} />
         <Route path="/department/edit/:id" element={<Department />} />
 
-        <Route path="/list" element={<CarsList />} />
+        {/* <Route path="/list" element={<CarsList />} /> */}
 
         <Route path="/role" element={<Roles />} />
 
@@ -109,6 +111,8 @@ export default function AppRoutes() {
         <Route path="/users" element={<Users />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/visits" element={<Visit />} />
+        <Route path="/holiday" element={<Holiday />} />
+        <Route path="/leave-balance" element={<LeaveBalance />} />
 
       </Route>
 

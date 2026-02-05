@@ -502,17 +502,18 @@ import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import EmployeePersonalDetailsRow from "../components/table/EmployeePersonalDetailsRow";
+import EntityTableRow from "../components/table/EntityTableRow";
 import EmployeePersonalDetailsViewCard from "../components/view/EmployeePersonalDetailsViewCard";
 
-import { getEmployees } from "../services/employee.service";
+import { EmployeeAPI } from "../services/apiService";
 
-import {
-  getEmployeePersonalDetails,
-  createEmployeePersonalDetails,
-  updateEmployeePersonalDetails,
-  deleteEmployeePersonalDetails,
-} from "../services/employeepersonaldetails.service";
+// import {
+//   getEmployeePersonalDetails,
+//   createEmployeePersonalDetails,
+//   updateEmployeePersonalDetails,
+//   deleteEmployeePersonalDetails,
+// } from "../services/employeepersonaldetails.service";
+import { EmployeePersonalAPI } from "../services/apiService";
 
 export default function EmployeePersonalDetails() {
   const [details, setDetails] = useState([]);
@@ -521,13 +522,25 @@ export default function EmployeePersonalDetails() {
   const [selectedItem, setSelectedItem] = useState(null);
 
   // ================= FETCH DATA =================
+  // const fetchDetails = async () => {
+  //   const res = await EmployeePersonalAPI.getAll();
+  //   setDetails(res.data.data || []);
+  // };
   const fetchDetails = async () => {
-    const res = await getEmployeePersonalDetails();
-    setDetails(res.data.data || []);
-  };
+  const res = await EmployeePersonalAPI.getAll();
+  const data = res.data?.data || [];
+
+  const formatted = data.map(d => ({
+    ...d,
+    employeeName: d.employee_name, // 👈 comes from backend
+  }));
+
+  setDetails(formatted);
+};
+
 
   const fetchEmployees = async () => {
-    const res = await getEmployees();
+    const res = await EmployeeAPI.getAll();
     setEmployees(res.data.data || []);
   };
 
@@ -554,9 +567,9 @@ const onSubmit = async (data) => {
     }
 
     if (selectedItem) {
-      await updateEmployeePersonalDetails(selectedItem.id, payload);
+      await EmployeePersonalAPI.update(selectedItem.id, payload);
     } else {
-      await createEmployeePersonalDetails(payload);
+      await EmployeePersonalAPI.create(payload);
     }
 
     alert("Saved successfully");
@@ -572,9 +585,19 @@ const onSubmit = async (data) => {
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    await deleteEmployeePersonalDetails(id);
+    await EmployeePersonalAPI.delete(id);
     fetchDetails();
   };
+const personalColumns = [
+  {
+    key: "employeeName",
+    render: (row) => row.employeeName,   // we inject this while mapping
+  },
+  { key: "father_name" },
+  { key: "mother_name" },
+  { key: "marital_status" },
+  { key: "emergency_contact_phone" },
+];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -599,30 +622,26 @@ const onSubmit = async (data) => {
             />
           }
         >
-          {details.map(d => {
-            const emp = employees.find(e => e.id === d.employee_id);
+     {details.map((d, index) => (
+  <EntityTableRow
+    key={d.id}
+    row={d}
+    index={index}
+    columns={personalColumns}
+    onView={(r) => {
+      setSelectedDetails(r);
+      setMode("view");
+    }}
+    onEdit={(r) => {
+      setSelectedDetails(r);
+      setMode("form");
+    }}
+    onDelete={(id) =>
+      EmployeePersonalAPI.delete(id).then(fetchDetails)
+    }
+  />
+))}
 
-            return (
-              <EmployeePersonalDetailsRow
-                key={d.id}
-                row={d}
-                employeeName={
-                  emp
-                    ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-                    : "—"
-                }
-                onView={(r) => {
-                  setSelectedItem(r);
-                  setMode("view");
-                }}
-                onEdit={(r) => {
-                  setSelectedItem(r);
-                  setMode("form");
-                }}
-                onDelete={(id) => handleDelete(id)}
-              />
-            );
-          })}
         </Table>
       </PageContainer>
     );

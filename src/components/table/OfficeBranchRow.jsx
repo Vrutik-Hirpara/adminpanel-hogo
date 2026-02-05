@@ -37,45 +37,45 @@
 
 
 
-import TableActions from "./TableActions";
-import { themes } from "../../config/theme.config";
+// import TableActions from "./TableActions";
+// import { themes } from "../../config/theme.config";
 
-export default function OfficeBranchRow({ row, onView,index, onEdit, onDelete }) {
-  return (
-    <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
+// export default function OfficeBranchRow({ row, onView,index, onEdit, onDelete }) {
+//   return (
+//     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
 
 
-<td className="w-[5%] px-4 py-3 text-center font-medium">
-  {index + 1}
-</td>
+// <td className="w-[5%] px-4 py-3 text-center font-medium">
+//   {index + 1}
+// </td>
 
-      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-        {row.name}
-      </td>
+//       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+//         {row.name}
+//       </td>
 
-      <td className="px-4 py-3 text-center align-middle break-words max-w-[260px]">
-        {row.address}
-      </td>
+//       <td className="px-4 py-3 text-center align-middle break-words max-w-[260px]">
+//         {row.address}
+//       </td>
 
-      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-        {row.city}
-      </td>
+//       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+//         {row.city}
+//       </td>
 
-      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-        {row.state}
-      </td>
+//       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+//         {row.state}
+//       </td>
 
-      <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
-        {row.country}
-      </td>
+//       <td className="px-4 py-3 text-center align-middle whitespace-nowrap">
+//         {row.country}
+//       </td>
 
-      <td className="px-4 py-3 text-center align-middle">
-        <TableActions
-          onView={() => onView(row)}
-          onEdit={() => onEdit(row)}
-          onDelete={() => onDelete(row.id)}
-        />
-      </td>
-    </tr>
-  );
-}
+//       <td className="px-4 py-3 text-center align-middle">
+//         <TableActions
+//           onView={() => onView(row)}
+//           onEdit={() => onEdit(row)}
+//           onDelete={() => onDelete(row.id)}
+//         />
+//       </td>
+//     </tr>
+//   );
+// }

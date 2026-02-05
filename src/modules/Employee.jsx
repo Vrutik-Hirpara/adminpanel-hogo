@@ -1,7 +1,11 @@
-// import { useEffect, useState } from "react";
-// import PageContainer from "../layout/PageContainer";
-// import Table from "../components/table/Table";
-// import TableHeader from "../components/table/TableHeader";
+
+
+import { useEffect, useState } from "react";
+import PageContainer from "../layout/PageContainer";
+import Table from "../components/table/Table";
+import TableHeader from "../components/table/TableHeader";
+import EntityTableRow from "../components/table/EntityTableRow";
+
 // import EmployeeTableRow from "../components/table/EmployeeTableRow";
 
 // import {
@@ -10,208 +14,7 @@
 //   updateEmployee,
 //   deleteEmployee,
 // } from "../services/employee.service";
-
-// import ActionButtons from "../components/form/ActionButton";
-// import SectionTitle from "../components/form/SectionTitle";
-// import EntityPageLayout from "../layout/EntityPageLayout";
-// import EntityForm from "../components/form/EntityForm";
-// import EmployeeViewCard from "../components/view/EmployeeViewCard";
-
-// export default function Employee() {
-//   const [employees, setEmployees] = useState([]);
-//   const [mode, setMode] = useState("list");
-//   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
-//   // ✅ FETCH + map fields correctly
-//   const fetchEmployees = async () => {
-//     const res = await getEmployees();
-//     const data = res.data?.data || [];
-
-//     const formatted = data.map(e => ({
-//       id: e.id,
-//       employee_code: e.employee_code,
-//       first_name: e.first_name,
-//       last_name: e.last_name,
-//       gender: e.gender,
-//       date_of_birth: e.date_of_birth,
-//       email: e.email,
-//       phone: e.phone,
-//       joining_date: e.joining_date,
-//       employment_type: e.employment_type,
-//       status: e.status === "Active",
-//       raw: e, // preserve original for edit/view
-//     }));
-
-//     setEmployees(formatted);
-//   };
-
-//   useEffect(() => { fetchEmployees(); }, []);
-
-//   // 🔥 STATUS TOGGLE
-//   const handleStatusToggle = async (emp) => {
-//     const newStatus = !emp.status;
-
-//     setEmployees(prev =>
-//       prev.map(e => e.id === emp.id ? { ...e, status: newStatus } : e)
-//     );
-
-//     try {
-//       await updateEmployee(emp.id, {
-//         ...emp.raw,
-//         status: newStatus ? "Active" : "Inactive",
-//       });
-//     } catch {
-//       setEmployees(prev =>
-//         prev.map(e => e.id === emp.id ? { ...e, status: !newStatus } : e)
-//       );
-//     }
-//   };
-
-// const onSubmit = async (data) => {
-//   const payload = {
-//     ...data,
-//     status: data.status,   // already "Active" or "Inactive"
-//   };
-
-//   if (selectedEmployee) {
-//     await updateEmployee(selectedEmployee.id, payload);
-//   } else {
-//     await createEmployee(payload);
-//   }
-
-//   setMode("list");
-//   fetchEmployees();
-// };
-
-
-//   // ================= LIST PAGE =================
-//   if (mode === "list") {
-//     return (
-//       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
-//           <SectionTitle title="Employees" />
-//           <ActionButtons showAdd addText="+ Add Employee" onAdd={() => setMode("form")} />
-//         </div>
-
-//       <Table
-//   header={
-//     <TableHeader
-//       columns={[
-//         "Code",
-//         "First Name",
-//         "Last Name",
-//         "Gender",
-//         "DOB",
-//         "Email",
-//         "Phone",
-//         "Joining",
-//         "Type",
-//         "Status",
-//         "Action",
-//       ]}
-//     />
-//   }
-// >
-
-//           {employees.map(emp => (
-//             <EmployeeTableRow
-//   key={emp.id}
-//   row={emp}
-//   columns={[
-//     { key: "employee_code" },
-//     { key: "first_name" },
-//     { key: "last_name" },
-//     { key: "gender" },
-//     { key: "date_of_birth" },
-//     { key: "email" },
-//     { key: "phone" },
-//     { key: "joining_date" },
-//     { key: "employment_type" },
-//   ]}
-//   onToggleStatus={handleStatusToggle}
-//   onView={(r) => setSelectedEmployee(r.raw)}
-//   onEdit={(r) => setSelectedEmployee(r.raw)}
-//   onDelete={(id) => deleteEmployee(id)}
-// />
-
-//           ))}
-//         </Table>
-//       </PageContainer>
-//     );
-//   }
-
-//   // ================= VIEW =================
-//   if (mode === "view" && selectedEmployee) {
-//     return (
-//       <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
-//         <EmployeeViewCard employee={selectedEmployee} />
-//       </EntityPageLayout>
-//     );
-//   }
-
-//   // ================= FORM =================
-//   return (
-//     <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
-//       <EntityForm
-//         title={selectedEmployee ? "Edit Employee" : "Create Employee"}
-//         selectedItem={selectedEmployee}
-//         onSubmit={onSubmit}
-//         setMode={setMode}
-//         fields={[
-//           { label: "Employee Code", name: "employee_code", required: true },
-//           { label: "First Name", name: "first_name", required: true },
-//           { label: "Last Name", name: "last_name", required: true },
-//           {
-//             label: "Gender",
-//             name: "gender",
-//             type: "select",
-//             options: [
-//               { label: "Male", value: "Male" },
-//               { label: "Female", value: "Female" }
-//             ]
-//           },
-//           { label: "Date of Birth", name: "date_of_birth", type: "date" },
-//           { label: "Email", name: "email", type: "email" },
-//           { label: "Phone", name: "phone" },
-//           { label: "Joining Date", name: "joining_date", type: "date" },
-//           {
-//             label: "Employment Type",
-//             name: "employment_type",
-//             type: "select",
-//             options: [
-//               { label: "Permanent", value: "Permanent" },
-//               { label: "Contract", value: "Contract" },
-//               { label: "Intern", value: "Intern" }
-//             ]
-//           },
-//           {
-//             label: "Status",
-//             name: "status",
-//             type: "select",
-//             options: [
-//               { label: "Active", value: "Active" },
-//               { label: "Inactive", value: "Inactive" }
-//             ]
-//           },
-//         ]}
-//       />
-//     </EntityPageLayout>
-//   );
-// }
-
-
-import { useEffect, useState } from "react";
-import PageContainer from "../layout/PageContainer";
-import Table from "../components/table/Table";
-import TableHeader from "../components/table/TableHeader";
-import EmployeeTableRow from "../components/table/EmployeeTableRow";
-
-import {
-  getEmployees,
-  createEmployee,
-  updateEmployee,
-  deleteEmployee,
-} from "../services/employee.service";
+import { EmployeeAPI } from "../services/apiService";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -233,7 +36,7 @@ export default function Employee() {
 
   // FETCH EMPLOYEES
   const fetchEmployees = async () => {
-    const res = await getEmployees();
+    const res = await EmployeeAPI.getAll();
     const data = res.data?.data || [];
 
     const formatted = data.map(e => ({
@@ -280,7 +83,7 @@ export default function Employee() {
     );
 
     try {
-      await updateEmployee(emp.id, { status: newStatus ? "Active" : "Inactive" });
+      await EmployeeAPI.update(emp.id, { status: newStatus ? "Active" : "Inactive" });
     } catch {
       fetchEmployees();
     }
@@ -298,9 +101,9 @@ export default function Employee() {
 
       if (selectedEmployee) {
         delete payload.password;
-        await updateEmployee(selectedEmployee.id, payload);
+        await EmployeeAPI.update(selectedEmployee.id, payload);
       } else {
-        await createEmployee(payload);
+        await EmployeeAPI.create(payload);
       }
 
       setMode("list");
@@ -309,6 +112,33 @@ export default function Employee() {
       console.error("Employee Save Error:", error.response?.data);
     }
   };
+  const employeeColumns = [
+  { key: "employee_code" },
+  { key: "first_name" },
+  { key: "last_name" },
+  { key: "date_of_birth" },
+  { key: "email" },
+  { key: "phone" },
+  { key: "joining_date" },
+  {
+    key: "status",
+    render: (row) => (
+      <button
+        onClick={() => handleStatusToggle(row)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 ${
+          row.status ? "bg-green-500" : "bg-gray-400"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-500 ${
+            row.status ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
+    ),
+  },
+];
+
 
   // LIST
   if (mode === "list") {
@@ -319,18 +149,30 @@ export default function Employee() {
           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
-        <Table header={<TableHeader columns={["Code","First Name","Last Name","DOB","Email","Phone","Joining","Status","Action"]} />}>
-          {employees.map((emp,index) => (
-            <EmployeeTableRow
-              key={emp.id}
-              row={emp}
-              index={index}
-              onToggleStatus={handleStatusToggle}
-              onView={(r) => { setSelectedEmployee(r.raw); setMode("view"); }}
-              onEdit={(r) => { setSelectedEmployee(r.raw); setMode("form"); }}
-              onDelete={(id) => deleteEmployee(id).then(fetchEmployees)}
-            />
-          ))}
+        <Table header={<TableHeader columns={["Code", "First Name", "Last Name", "DOB", "Email", "Phone", "Joining", "Status", "Action"]} />}>
+        {employees.map((emp, index) => (
+  <EntityTableRow
+    key={emp.id}
+    row={emp}
+    index={index}
+    columns={employeeColumns}
+    onView={(r) => { setSelectedEmployee(r.raw); setMode("view"); }}
+    onEdit={(r) => {
+      const dept = departments.find(d => d.name === r.raw.department_name);
+      const role = roles.find(r2 => r2.name === r.raw.role_name);
+
+      setSelectedEmployee({
+        ...r.raw,
+        department_id: dept?.id,
+        role_id: role?.id,
+      });
+
+      setMode("form");
+    }}
+    onDelete={(id) => EmployeeAPI.delete(id).then(fetchEmployees)}
+  />
+))}
+
         </Table>
       </PageContainer>
     );
@@ -358,32 +200,42 @@ export default function Employee() {
           { label: "First Name", name: "first_name", required: true },
           { label: "Last Name", name: "last_name", required: true },
 
-          { label: "Gender", name: "gender", type: "select", options: [
-            { label: "Male", value: "Male" },
-            { label: "Female", value: "Female" }
-          ]},
+          {
+            label: "Gender", name: "gender", type: "select", options: [
+              { label: "Male", value: "Male" },
+              { label: "Female", value: "Female" }
+            ]
+          },
 
           { label: "Date of Birth", name: "date_of_birth", type: "date" },
           { label: "Email", name: "email", type: "email" },
           { label: "Phone", name: "phone" },
           { label: "Joining Date", name: "joining_date", type: "date" },
 
-          { label: "Department", name: "department_id", type: "select", required: true,
-            options: departments.map(d => ({ label: d.name, value: d.id })) },
+          {
+            label: "Department", name: "department_id", type: "select", required: true,
+            options: departments.map(d => ({ label: d.name, value: d.id }))
+          },
 
-          { label: "Role", name: "role_id", type: "select", required: true,
-            options: roles.map(r => ({ label: r.name, value: r.id })) },
+          {
+            label: "Role", name: "role_id", type: "select", required: true,
+            options: roles.map(r => ({ label: r.name, value: r.id }))
+          },
 
-          { label: "Employment Type", name: "employment_type", type: "select", options: [
-            { label: "Permanent", value: "Permanent" },
-            { label: "Contract", value: "Contract" },
-            { label: "Intern", value: "Intern" }
-          ]},
+          {
+            label: "Employment Type", name: "employment_type", type: "select", options: [
+              { label: "Permanent", value: "Permanent" },
+              { label: "Contract", value: "Contract" },
+              { label: "Intern", value: "Intern" }
+            ]
+          },
 
-          { label: "Status", name: "status", type: "select", options: [
-            { label: "Active", value: "Active" },
-            { label: "Inactive", value: "Inactive" }
-          ]},
+          {
+            label: "Status", name: "status", type: "select", options: [
+              { label: "Active", value: "Active" },
+              { label: "Inactive", value: "Inactive" }
+            ]
+          },
 
           ...(selectedEmployee ? [] : [{ label: "Password", name: "password", type: "password", required: true }]),
         ]}

@@ -385,9 +385,9 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import UsersViewCard from "../components/view/UserViewCard";
 
-import { getEmployees } from "../services/employee.service";
+import { EmployeeAPI } from "../services/apiService";
 import api from "../services/api";
-import UserRow from "../components/table/UserRow";
+import EntityTableRow from "../components/table/EntityTableRow";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -411,10 +411,11 @@ export default function Users() {
     setUsers(formatted);
   };
 
-  const fetchEmployees = async () => {
-    const res = await getEmployees();
-    setEmployees(res.data.data || []);
-  };
+const fetchEmployees = async () => {
+  const res = await EmployeeAPI.getAll();
+  setEmployees(res.data?.data || []);
+};
+
 
   useEffect(() => {
     fetchUsers();
@@ -469,6 +470,27 @@ const onSubmit = async (data) => {
     await api.delete(`users/${id}/`);
     fetchUsers();
   };
+const userColumns = [
+  { key: "username" },
+  { key: "role" },
+  {
+    key: "status",
+    render: (row) => (
+      <button
+        onClick={() => handleStatusToggle(row)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 ${
+          row.status ? "bg-green-500" : "bg-gray-400"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-500 ${
+            row.status ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
+    ),
+  },
+];
 
   // ================= LIST =================
   if (mode === "list") {
@@ -486,17 +508,24 @@ const onSubmit = async (data) => {
         <Table
           header={<TableHeader columns={["Name", "Role", "Status", "Action"]} />}
         >
-          {users.map((u,index) => (
-            <UserRow
-              key={u.id}
-              row={u}
-              index={index}
-              onToggleStatus={handleStatusToggle}
-              onView={(r) => { setSelectedItem(r.raw); setMode("view"); }}
-              onEdit={(r) => { setSelectedItem(r.raw); setMode("form"); }}
-              onDelete={(id) => handleDelete(id)}
-            />
-          ))}
+      {users.map((u, index) => (
+  <EntityTableRow
+    key={u.id}
+    row={u}
+    index={index}
+    columns={userColumns}
+    onView={(r) => {
+      setSelectedUser(r);
+      setMode("view");
+    }}
+    onEdit={(r) => {
+      setSelectedUser(r);
+      setMode("form");
+    }}
+    onDelete={(id) => UserAPI.delete(id).then(fetchUsers)}
+  />
+))}
+
         </Table>
       </PageContainer>
     );
