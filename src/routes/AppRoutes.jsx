@@ -71,6 +71,7 @@ import Leads from "../modules/Leads";
 import Visit from "../modules/Visit";
 import Holiday from "../modules/Holiday";
 import LeaveBalance from "../modules/LeaveBalance";
+import LeaveRequests from "../modules/LeaveRequests";
 
 export default function AppRoutes() {
   return (
@@ -113,6 +114,7 @@ export default function AppRoutes() {
         <Route path="/visits" element={<Visit />} />
         <Route path="/holiday" element={<Holiday />} />
         <Route path="/leave-balance" element={<LeaveBalance />} />
+        <Route path="/leave-requests" element={<LeaveRequests />} />
 
       </Route>
 

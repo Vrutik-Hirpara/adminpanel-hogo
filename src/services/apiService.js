@@ -119,65 +119,6 @@ export const VisitsAPI = {
   delete: (id) => api.delete(`visits/${id}/`),
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ================= HOLIDAYS ================= */
 export const HolidayAPI = {
   getAll: () => api.get("holidays/"),
@@ -193,4 +134,18 @@ export const LeaveBalanceAPI = {
   create: (data) => api.post("leave-balance/", data),
   update: (id, data) => api.patch(`leave-balance/${id}/`, data),
   delete: (id) => api.delete(`leave-balance/${id}/`),
+};
+
+
+export const LeaveRequestsAPI = {
+  getAll: () => api.get("leave-requests/"),
+  create: (data) =>
+    api.post("leave-requests/", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  update: (id, data) =>
+    api.patch(`leave-requests/${id}/`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  delete: (id) => api.delete(`leave-requests/${id}/`),
 };
