@@ -1,4 +1,4 @@
-/* @tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -16,67 +16,6 @@ body {
   font-family: "Oxanium", sans-serif;
 }
 
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-} */
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* 🌍 GLOBAL THEME COLORS */
-:root {
-  --primary: #D20000;
-  --primary-hover: #ED3434;
-
-  --sidebar-bg: #0f0f1a;
-  --page-bg: #00001a;
-  --card-bg: #ffffff;
-
-  --text-main: #1e293b;
-  --text-muted: #94a3b8;
-  --text-white: #ffffff;
-
-  --border-color: #e2e8f0;
-
-  --success: #22c55e;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-}
-
-/* 🖥 BODY */
-body {
-  font-family: "Oxanium", sans-serif;
-  background-color: var(--page-bg);
-  color: var(--text-main);
-}
-
-/* 🧩 COMMON UI ELEMENTS */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-}
-
-.sidebar {
-  background: var(--sidebar-bg);
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: var(--text-white);
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-/* ✨ SHIMMER ANIMATION */
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }

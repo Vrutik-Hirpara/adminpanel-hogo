@@ -55,7 +55,7 @@ export default function FormSelect({
         disabled={disabled}
         className="px-4 py-2 rounded outline-none"
         style={{
-          backgroundColor: disabled ? "#f3f4f6" : themes.textWhite,
+          backgroundColor: disabled ? themes.surfaceMuted : themes.textWhite,
           color: themes.backgroundDark,
           border: `1px solid ${themes.backgroundGray}`,
           cursor: disabled ? "not-allowed" : "pointer",

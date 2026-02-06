@@ -64,7 +64,7 @@ export default function FormInput({
         readOnly={readOnly}
         className="px-4 py-2 rounded outline-none"
         style={{
-          backgroundColor: readOnly ? "#f3f4f6" : themes.textWhite,
+          backgroundColor: readOnly ? themes.surfaceMuted : themes.textWhite,
           color: themes.backgroundDark,
           border: `1px solid ${themes.backgroundGray}`,
           cursor: readOnly ? "not-allowed" : "text",

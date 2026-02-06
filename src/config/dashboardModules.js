@@ -349,62 +349,54 @@ import {
   CalendarDays,
   ClipboardList,
 } from "lucide-react";
-
+import { themes } from "./theme.config";
 export const dashboardModules = [
   {
     title: "Departments",
     api: () => DepartmentAPI.getAll(),
-    color: "#8B5CF6",
-    path: "/department",
+    color: themes.cardDepartment,    path: "/department",
     icon: Building2,
   },
   {
     title: "Roles",
     api: () => RolesAPI.getAll(),
-    color: "#22C55E",
-    path: "/role",
+    color: themes.cardRole,    path: "/role",
     icon: ShieldCheck,
   },
   {
     title: "Office Branches",
     api: () => BranchAPI.getAll(),
-    color: "#F59E0B",
-    path: "/officebranches",
+    color: themes.cardOfficeBranch,    path: "/officebranches",
     icon: Briefcase,
   },
   {
     title: "Employees",
     api: () => EmployeeAPI.getAll(),
-    color: "#3B82F6",
-    path: "/employee",
+    color: themes.cardEmployee,    path: "/employee",
     icon: Users,
   },
   {
     title: "Personal Details",
     api: () => EmployeePersonalAPI.getAll(),
-    color: "#6366F1",
-    path: "/employee-personal-details",
+    color: themes.cardPersonalDetails,    path: "/employee-personal-details",
     icon: UserCircle2,
   },
   {
     title: "Employee Salary",
     api: () => SalaryAPI.getAll(),
-    color: "#10B981",
-    path: "/employee-salary",
+    color: themes.cardSalary,    path: "/employee-salary",
     icon: Wallet,
   },
   {
     title: "Employee Documents",
     api: () => EmployeeDocsAPI.getAll(),
-    color: "#F43F5E",
-    path: "/employee-documents",
+    color: themes.cardDocuments,    path: "/employee-documents",
     icon: FileText,
   },
   {
     title: "Users",
     api: () => UserAPI.getAll(),
-    color: "#06B6D4",
-    path: "/users",
+    color: themes.cardUsers,    path: "/users",
     icon: Users,
   },
 
@@ -412,29 +404,25 @@ export const dashboardModules = [
   {
     title: "Leads",
     api: () => LeadsAPI.getAll(),
-    color: "#06B6D4",
-    path: "/leads",
+    color: themes.cardLeads,            path: "/leads",
     icon: UserPlus,
   },
   {
     title: "Visits",
     api: () => VisitsAPI.getAll(),
-    color: "#10B981",
-    path: "/visits",
+    color: themes.cardVisits,    path: "/visits",
     icon: MapPin,
   },
   {
     title: "Holiday",
     api: () => HolidayAPI.getAll(),
-    color: "#F59E0B",
-    path: "/holiday",
+    color: themes.cardHoliday,    path: "/holiday",
     icon: CalendarDays,
   },
   {
     title: "Leave Balance",
     api: () => EmployeeAPI.getAll(), // change if separate API exists
-    color: "#8B5CF6",
-    path: "/leave-balance",
+    color: themes.cardLeaveBalance,    path: "/leave-balance",
     icon: ClipboardList,
   },
 ];

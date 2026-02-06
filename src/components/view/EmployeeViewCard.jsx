@@ -139,12 +139,18 @@ export default function EmployeeViewCard({ employee }) {
           <Detail label="Employee Code" value={employee.employee_code} />
           <Detail label="First Name" value={employee.first_name} />
           <Detail label="Last Name" value={employee.last_name} />
-          {/* <Detail label="Gender" value={employee.gender} /> */}
+          <Detail label="Gender" value={employee.gender} />
           <Detail label="Date of Birth" value={employee.date_of_birth} />
           <Detail label="Email" value={employee.email} />
           <Detail label="Phone" value={employee.phone} />
+          <Detail label="Department Id" value={employee.department_id} />
+<Detail label="Department Name" value={employee.department_name} />
+<Detail label="Role Id" value={employee.role_id} />
+          <Detail label="Role Name" value={employee.role_name} />
           <Detail label="Joining Date" value={employee.joining_date} />
-          {/* <Detail label="Employment Type" value={employee.employment_type} /> */}
+          <Detail label="Employment Type" value={employee.employment_type} />
+                    <Detail label="Status" value={employee.status} />
+
         </div>
       </div>
     </div>

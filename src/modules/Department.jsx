@@ -13,6 +13,7 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import DepartmentViewCard from "../components/view/DepartmentViewCard";
 import EntityTableRow from "../components/table/EntityTableRow";
+import EntityForm from "../components/form/EntityForm";
 
 export default function Department() {
   const [departments, setDepartments] = useState([]);
@@ -116,11 +117,11 @@ const departmentColumns = [
     index={index}
     columns={departmentColumns}
     onView={(r) => {
-      setSelectedDepartment(r);
+      setSelectedDept(r);
       setMode("view");
     }}
     onEdit={(r) => {
-      setSelectedDepartment(r);
+      setSelectedDept(r);
       setMode("form");
     }}
     onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}

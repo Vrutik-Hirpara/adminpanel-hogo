@@ -181,9 +181,9 @@ export default function Login() {
                   />
                 </div>
 
-               <div className="mt-6 flex justify-center items-center">
-  <FormActions submitLabel="Login" hideCancel />
-</div>
+                <div className="mt-6 flex justify-center items-center">
+                  <FormActions submitLabel="Login" hideCancel />
+                </div>
 
 
               </FormContainer>

@@ -104,18 +104,39 @@ export const UserAPI = {
   delete: (id) => api.delete(`users/${id}/`),
 };
 
-/* ================= VISITS ================= */
+// /* ================= VISITS ================= */
+// export const VisitsAPI = {
+//   getAll: () => api.get("visits/"),
+//   getById: (id) => api.get(`visits/${id}/`),
+//   create: (data) =>
+//     api.post("visits/", data, {
+//       headers: { "Content-Type": "multipart/form-data" },
+//     }),
+//   update: (id, data) =>
+//     api.patch(`visits/${id}/`, data, {
+//       headers: { "Content-Type": "multipart/form-data" },
+//     }),
+//   delete: (id) => api.delete(`visits/${id}/`),
+// };
 export const VisitsAPI = {
   getAll: () => api.get("visits/"),
   getById: (id) => api.get(`visits/${id}/`),
-  create: (data) =>
-    api.post("visits/", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  update: (id, data) =>
-    api.patch(`visits/${id}/`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+
+  create: (data) => {
+    const isForm = data instanceof FormData;
+    return api.post("visits/", data, {
+      headers: isForm ? { "Content-Type": "multipart/form-data" } : {},
+    });
+  },
+
+  update: (id, data) => {
+    const isForm = data instanceof FormData;
+    // console.log(isForm,"okok",data)
+    return api.patch(`visits/${id}/`, data, {
+      headers: isForm ? { "Content-Type": "multipart/form-data" } : {},
+    });
+  },
+
   delete: (id) => api.delete(`visits/${id}/`),
 };
 
