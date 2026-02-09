@@ -13,6 +13,8 @@ LeaveBalanceAPI,
   LeadsAPI,
   VisitsAPI,
   HolidayAPI,
+  ExpenseAPI,
+  LeadFollowupsAPI,
 } from "../services";
 
 import {
@@ -27,8 +29,11 @@ import {
   MapPin,
   CalendarDays,
   ClipboardList,
+  PhoneCall,
+  Receipt,
 } from "lucide-react";
 import { themes } from "./theme.config";
+import { followValue } from "framer-motion";
 export const dashboardModules = [
   {
     title: "Departments",
@@ -103,5 +108,17 @@ export const dashboardModules = [
     api: () => LeaveBalanceAPI.getAll(), // change if separate API exists
     color: themes.cardLeaveBalance,    path: "/leave-balance",
     icon: ClipboardList,
+  },
+    {
+    title: "expense ",
+    api: () => ExpenseAPI.getAll(), // change if separate API exists
+    color: themes.cardLeaveBalance,    path: "/leave-balance",
+    icon: Receipt,
+  },
+    {
+    title: "lead-followups",
+    api: () => LeadFollowupsAPI.getAll(), // change if separate API exists
+    color: themes.cardLeaveBalance,    path: "/leave-balance",
+    icon: PhoneCall,
   },
 ];

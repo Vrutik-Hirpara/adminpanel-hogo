@@ -135,7 +135,9 @@ import {
   TrendingUp,
   UserCheck,
   Layers,
-  CalendarCheck   // ⭐ better icon for Leave Balance
+  CalendarCheck,   // ⭐ better icon for Leave Balance
+  PhoneCall,
+  Receipt
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -226,11 +228,11 @@ const Sidebar = () => {
           <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color="text-orange-500" />
           <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color="text-purple-500" />
           <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color="text-purple-500" />
-        <LinkItem to="/expense" icon={Wallet} label="Expense" color="text-emerald-500" />
+        <LinkItem to="/expense" icon={Receipt} label="Expense" color="text-emerald-500" />
 
         </Dropdown>
         
-        <LinkItem to="/lead-followups" icon={Wallet} label="lead-followups" color="text-emerald-500" />
+        <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" color="text-emerald-500" />
 
       </ul>
     </div>
