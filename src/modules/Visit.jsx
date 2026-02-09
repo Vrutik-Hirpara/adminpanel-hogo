@@ -198,7 +198,7 @@ const visitFields = [
         row.notes ? (
           <div className="relative inline-block group">
             <span className="cursor-pointer text-blue-600 text-lg">📝</span>
-            <div className="absolute z-50 hidden group-hover:block bg-black text-white text-xs rounded px-3 py-2 top-full -mt-8 left-1/2 -translate-x-1/2 w-56 text-left break-words shadow-xl">
+            <div className="absolute z-50 hidden group-hover:block bg-black text-white text-xs rounded px-3 py-2 top-full -mt-8 left-1/2 -translate-x-1/2 w-48 text-left break-words shadow-xl">
               {row.notes}
             </div>
           </div>
