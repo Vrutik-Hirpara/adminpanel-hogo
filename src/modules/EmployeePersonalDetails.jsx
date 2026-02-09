@@ -8,17 +8,11 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
-import EmployeePersonalDetailsViewCard from "../components/view/EmployeePersonalDetailsViewCard";
+import EntityViewCard from "../components/view/EntityViewCard";
 
-import { EmployeeAPI } from "../services/apiService";
+import { EmployeeAPI,EmployeePersonalAPI } from "../services";
 
-// import {
-//   getEmployeePersonalDetails,
-//   createEmployeePersonalDetails,
-//   updateEmployeePersonalDetails,
-//   deleteEmployeePersonalDetails,
-// } from "../services/employeepersonaldetails.service";
-import { EmployeePersonalAPI } from "../services/apiService";
+// import {  } from "../services";
 
 export default function EmployeePersonalDetails() {
   const [details, setDetails] = useState([]);
@@ -26,28 +20,6 @@ export default function EmployeePersonalDetails() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // ================= FETCH DATA =================
-  // const fetchDetails = async () => {
-  //   const res = await EmployeePersonalAPI.getAll();
-  //   setDetails(res.data.data || []);
-  // };
-// const fetchDetails = async (empList) => {
-//   const res = await EmployeePersonalAPI.getAll();
-//   const data = res.data?.data || [];
-
-//   const formatted = data.map(d => {
-//     const emp = empList.find(e => e.id === d.employee_id);
-
-//     return {
-//       ...d,
-//       employeeName: emp
-//         ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-//         : "—",
-//     };
-//   });
-
-//   setDetails(formatted);
-// };
 
 
 const fetchDetails = async () => {
@@ -73,17 +45,6 @@ const fetchDetails = async () => {
     setEmployees(res.data.data || []);
   };
 
-// useEffect(() => {
-//   const load = async () => {
-//     const resEmp = await EmployeeAPI.getAll();
-//     const empData = resEmp.data.data || [];
-//     setEmployees(empData);
-
-//     await fetchDetails(empData); // 🔥 pass employees list here
-//   };
-
-//   load();
-// }, []);
 
 useEffect(() => {
   const load = async () => {
@@ -149,6 +110,16 @@ useEffect(() => {
     { key: "marital_status" },
     { key: "emergency_contact_phone" },
   ];
+const personalFields = [
+  { key: "employeeName", label: "Employee" },
+  { key: "father_name", label: "Father Name" },
+  { key: "mother_name", label: "Mother Name" },
+  { key: "marital_status", label: "Marital Status" },
+  { key: "spouse_name", label: "Spouse Name" },
+  { key: "address", label: "Address" },
+  { key: "emergency_contact_name", label: "Emergency Contact Name" },
+  { key: "emergency_contact_phone", label: "Emergency Contact Phone" },
+];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -199,22 +170,26 @@ useEffect(() => {
   }
 
   // ================= VIEW PAGE =================
-  if (mode === "view" && selectedItem) {
-    const emp = employees.find(e => e.id === selectedItem.employee_id);
+if (mode === "view" && selectedItem) {
+  return (
+    <EntityPageLayout
+      title="Personal Details"
+      showBack
+      onBack={() => setMode("list")}
+    >
+      <EntityViewCard
+        title="Personal Details"
+        data={selectedItem}
+        fields={personalFields}
+        api={EmployeePersonalAPI}
+        onUpdated={fetchDetails}
+        onDeleted={fetchDetails}
+        headerKeys={["employeeName"]}   // ⭐ red header shows employee
+      />
+    </EntityPageLayout>
+  );
+}
 
-    return (
-      <EntityPageLayout title="Personal Details" showBack onBack={() => setMode("list")}>
-        <EmployeePersonalDetailsViewCard
-          details={selectedItem}
-          employeeName={
-            emp
-              ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-              : "Employee"
-          }
-        />
-      </EntityPageLayout>
-    );
-  }
 
   // ================= FORM PAGE =================
   return (
@@ -265,8 +240,8 @@ useEffect(() => {
             name: "marital_status",
             type: "select",
             options: [
-              { label: "Single", value: "Single" },
-              { label: "Married", value: "Married" },
+              { label: "Single", value: "single" },
+              { label: "Married", value: "married" },
             ],
           },
           { label: "Spouse Name", name: "spouse_name" },

@@ -6,21 +6,15 @@ import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
 import EntityTableRow from "../components/table/EntityTableRow";
 
-// import EmployeeTableRow from "../components/table/EmployeeTableRow";
 
-// import {
-//   getEmployees,
-//   createEmployee,
-//   updateEmployee,
-//   deleteEmployee,
-// } from "../services/employee.service";
-import { EmployeeAPI } from "../services/apiService";
+import { EmployeeAPI } from "../services";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import EmployeeViewCard from "../components/view/EmployeeViewCard";
+// import EmployeeViewCard from "../components/view/EmployeeViewCard";
+import EntityViewCard from "../components/view/EntityViewCard";
 
 import axios from "axios";
 
@@ -138,6 +132,27 @@ export default function Employee() {
     ),
   },
 ];
+const employeeFields = [
+  { key: "employee_code", label: "Employee Code" },
+  { key: "first_name", label: "First Name" },
+  { key: "last_name", label: "Last Name" },
+  { key: "gender", label: "Gender" },
+  { key: "date_of_birth", label: "Date of Birth" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "department_id", label: "Department Id" },
+  { key: "department_name", label: "Department Name" },
+  { key: "role_id", label: "Role Id" },
+  { key: "role_name", label: "Role Name" },
+  { key: "joining_date", label: "Joining Date" },
+    { key: "employment_type", label: "Employee Type" },
+
+      { key: "status", label: "Status" },
+
+        { key: "created_at", label: "Created At" },
+        { key: "updated_at", label: "Updated At" },
+
+];
 
 
   // LIST
@@ -178,14 +193,34 @@ export default function Employee() {
     );
   }
 
-  // VIEW
-  if (mode === "view" && selectedEmployee) {
-    return (
-      <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
-        <EmployeeViewCard employee={selectedEmployee} />
-      </EntityPageLayout>
-    );
-  }
+  // // VIEW
+  // if (mode === "view" && selectedEmployee) {
+  //   return (
+  //     <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
+  //       <EntityViewCard employee={selectedEmployee} />
+  //     </EntityPageLayout>
+  //   );
+  // }
+if (mode === "view" && selectedEmployee) {
+  return (
+    <EntityPageLayout
+      title="Employee Details"
+      showBack
+      onBack={() => setMode("list")}
+    >
+      <EntityViewCard
+        title="Employee"
+        data={selectedEmployee}        // ✅ correct prop
+        fields={employeeFields}       // ✅ required
+        api={EmployeeAPI}             // ✅ for edit/delete
+        onUpdated={fetchEmployees}
+        onDeleted={fetchEmployees}
+          headerKeys={["employee_code", "first_name", "last_name"]}   // ⭐ ADD THIS
+
+      />
+    </EntityPageLayout>
+  );
+}
 
   // FORM
   return (

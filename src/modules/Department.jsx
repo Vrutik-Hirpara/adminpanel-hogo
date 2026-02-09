@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
-// import DepartmentRow from "../components/table/DepartmentRow";
 
 import TableHeader from "../components/table/TableHeader";
 
-// import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from "../services/department.service";
-import { DepartmentAPI } from "../services/apiService";
+import { DepartmentAPI } from "../services";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
-import DepartmentViewCard from "../components/view/DepartmentViewCard";
+// import DepartmentViewCard from "../components/view/DepartmentViewCard";
+import EntityViewCard from "../components/view/EntityViewCard";
+
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
 
@@ -22,7 +22,7 @@ export default function Department() {
 
   // ✅ FETCH + convert "Active/Inactive" → boolean
   const fetchDepartments = async () => {
-const res = await DepartmentAPI.getAll();
+    const res = await DepartmentAPI.getAll();
     const data = res.data?.data || [];
 
     const formatted = data.map(d => ({
@@ -57,48 +57,57 @@ const res = await DepartmentAPI.getAll();
     }
   };
 
-const onSubmit = async (data) => {
-  const payload = {
-    ...data,
-    status:
-      typeof data.status === "boolean"
-        ? data.status
-          ? "Active"
-          : "Inactive"
-        : data.status,
+  const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      status:
+        typeof data.status === "boolean"
+          ? data.status
+            ? "Active"
+            : "Inactive"
+          : data.status,
+    };
+
+    if (selectedDept) {
+      await DepartmentAPI.update(selectedDept.id, payload);
+    } else {
+      await DepartmentAPI.create(payload);
+    }
+
+    setMode("list");
+    fetchDepartments();
   };
 
-  if (selectedDept) {
-    await DepartmentAPI.update(selectedDept.id, payload);
-  } else {
-    await DepartmentAPI.create(payload);
-  }
+  const departmentColumns = [
+    { key: "name" },
+    { key: "description" },
+    {
+      key: "status",
+      render: (row) => (
+        <button
+          onClick={() => handleStatusToggle(row)}
+          className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${row.status ? "bg-green-500" : "bg-gray-300"
+            }`}
+        >
+          <span
+            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
+              }`}
+          />
+        </button>
+      ),
+    },
+  ];
+  const departmentFields = [
+    { key: "name", label: "Department Name" },
+    { key: "description", label: "Description" },
+    {
+      key: "status",
+      label: "Status",
+      format: (val) => (val ? "Active" : "Inactive"),
+    },
+    { key: "created_at", label: "Created at" },
 
-  setMode("list");
-  fetchDepartments();
-};
-
-const departmentColumns = [
-  { key: "name" },
-  { key: "description" },
-  {
-    key: "status",
-    render: (row) => (
-      <button
-        onClick={() => handleStatusToggle(row)}
-        className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
-          row.status ? "bg-green-500" : "bg-gray-300"
-        }`}
-      >
-        <span
-          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
-            row.status ? "translate-x-6" : ""
-          }`}
-        />
-      </button>
-    ),
-  },
-];
+  ];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -109,27 +118,27 @@ const departmentColumns = [
           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
         </div>
 
-     <Table header={<TableHeader columns={["Name","Description","Status","Action"]} />}>
-{departments.map((dept, index) => (
-  <EntityTableRow
-    key={dept.id}
-    row={dept}
-    index={index}
-    columns={departmentColumns}
-    onView={(r) => {
-      setSelectedDept(r);
-      setMode("view");
-    }}
-    onEdit={(r) => {
-      setSelectedDept(r);
-      setMode("form");
-    }}
-    onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
-  />
-))}
+        <Table header={<TableHeader columns={["Name", "Description", "Status", "Action"]} />}>
+          {departments.map((dept, index) => (
+            <EntityTableRow
+              key={dept.id}
+              row={dept}
+              index={index}
+              columns={departmentColumns}
+              onView={(r) => {
+                setSelectedDept(r);
+                setMode("view");
+              }}
+              onEdit={(r) => {
+                setSelectedDept(r);
+                setMode("form");
+              }}
+              onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
+            />
+          ))}
 
 
-</Table>
+        </Table>
 
       </PageContainer>
     );
@@ -138,11 +147,25 @@ const departmentColumns = [
   // ================= VIEW PAGE =================
   if (mode === "view" && selectedDept) {
     return (
-      <EntityPageLayout title="Department Details" showBack onBack={() => setMode("list")}>
-        <DepartmentViewCard department={selectedDept} />
+      <EntityPageLayout
+        title="Department Details"
+        showBack
+        onBack={() => setMode("list")}
+      >
+        <EntityViewCard
+          title="Department"
+          data={selectedDept}
+          fields={departmentFields}
+          api={DepartmentAPI}
+          onUpdated={fetchDepartments}
+          onDeleted={fetchDepartments}
+          headerKeys={["name"]}   // ⭐ REQUIRED for red header
+
+        />
       </EntityPageLayout>
     );
   }
+
 
   // ================= FORM PAGE =================
   return (

@@ -224,6 +224,8 @@ const Sidebar = () => {
           <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color="text-orange-500" />
           <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color="text-purple-500" />
           <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color="text-purple-500" />
+          <LinkItem to="/expense" icon={Wallet} label="Expense" color="text-emerald-500" />
+
         </Dropdown>
 
       </ul>

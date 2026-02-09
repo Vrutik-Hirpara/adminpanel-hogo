@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
-import { RolesAPI } from "../services/apiService";
+import { RolesAPI } from "../services";
 
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
-import RoleViewCard from "../components/view/RoleViewCard";
+import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 
@@ -88,6 +88,17 @@ const roleColumns = [
     ),
   },
 ];
+const roleFields = [
+  { key: "name", label: "Role Name" },
+  { key: "description", label: "Description" },
+  {
+    key: "status",
+    label: "Status",
+    format: (v) => (v ? "Active" : "Inactive"),
+  },
+    { key: "created_at", label: "Created at" },
+
+];
 
   // ================= LIST PAGE =================
   if (mode === "list") {
@@ -123,13 +134,26 @@ const roleColumns = [
   }
 
   // ================= VIEW PAGE =================
-  if (mode === "view" && selectedRole) {
-    return (
-      <EntityPageLayout title="Role Details" showBack onBack={() => setMode("list")}>
-        <RoleViewCard role={selectedRole} />
-      </EntityPageLayout>
-    );
-  }
+if (mode === "view" && selectedRole) {
+  return (
+    <EntityPageLayout
+      title="Role Details"
+      showBack
+      onBack={() => setMode("list")}
+    >
+      <EntityViewCard
+        title="Role"
+        data={selectedRole}
+        fields={roleFields}
+        api={RolesAPI}
+        onUpdated={fetchRoles}
+        onDeleted={fetchRoles}
+        headerKeys={["name"]}   // ⭐ Dynamic red header
+      />
+    </EntityPageLayout>
+  );
+}
+
 
   // ================= FORM PAGE =================
   return (

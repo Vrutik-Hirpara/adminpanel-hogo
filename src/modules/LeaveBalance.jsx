@@ -7,8 +7,8 @@ import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import LeaveBalanceViewCard from "../components/view/LeaveBalanceViewCard";
-import { LeaveBalanceAPI } from "../services/apiService";
+import EntityViewCard from "../components/view/EntityViewCard";
+import { LeaveBalanceAPI } from "../services";
 import api from "../services/api";
 
 export default function LeaveBalance() {
@@ -57,7 +57,26 @@ export default function LeaveBalance() {
       ),
     },
   ];
-
+// 🔥 VIEW FIELDS
+const leaveFields = [
+  { key: "leave_type", label: "Leave Type" },
+  { key: "total_allocated", label: "Total Allocated Days" },
+  { key: "used_days", label: "Used Days" },
+  {
+    key: "remaining_days",
+    label: "Remaining Days",
+    format: (v) => `${v} days`,
+  },
+  {
+    key: "employee_id",
+    label: "Employee",
+    format: (id) => {
+      const emp = employees.find(e => e.id === id);
+      return emp ? `${emp.first_name} ${emp.last_name}` : "—";
+    },
+  },
+];
+   
   if (mode === "list") {
     return (
       <PageContainer>
@@ -81,7 +100,7 @@ export default function LeaveBalance() {
                 setSelected(r);
                 setMode("form");
               }}
-              onDelete={(id) => LeaveBalanceAPI.delete(id).then(fetchLeaveBalances)}
+              onDelete={(id) => LeaveBalanceAPI.delete(id).then(fetchData)}
             />
           ))}
 
@@ -93,7 +112,15 @@ export default function LeaveBalance() {
   if (mode === "view") {
     return (
       <EntityPageLayout title="Leave Balance Details" showBack onBack={() => setMode("list")}>
-        <LeaveBalanceViewCard data={selected} />
+<EntityViewCard
+  title="Leave Balance Details"
+  data={selected}
+  fields={leaveFields}
+  api={LeaveBalanceAPI}
+  headerKeys={["leave_type"]}
+  onUpdated={fetchData}
+  onDeleted={fetchData}
+/>
       </EntityPageLayout>
     );
   }
@@ -125,7 +152,7 @@ export default function LeaveBalance() {
             name: "employee_id",
             type: "select",
             options: employees.map(e => ({
-              label: e.first_name,
+label: `${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
           },

@@ -7,8 +7,8 @@ import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
-import HolidayViewCard from "../components/view/HolidayViewCard";
-import { HolidayAPI } from "../services/apiService";
+import EntityViewCard from "../components/view/EntityViewCard";
+import { HolidayAPI } from "../services";
 
 export default function Holiday() {
   const [holidays, setHolidays] = useState([]);
@@ -59,6 +59,18 @@ const holidayColumns = [
   },
   { key: "description" },
 ];
+// 🔥 VIEW FIELDS
+const holidayFields = [
+  { key: "holiday_name", label: "Holiday Name" },
+  { key: "holiday_date", label: "Holiday Date" },
+  { key: "holiday_type", label: "Holiday Type" },
+  {
+    key: "is_paid",
+    label: "Paid Status",
+    format: (v) => (v ? "Paid Holiday" : "Unpaid Holiday"),
+  },
+  { key: "description", label: "Description", emptyLabel: "No description" },
+];
 
   // LIST VIEW
   if (mode === "list") {
@@ -104,7 +116,15 @@ const holidayColumns = [
   if (mode === "view" && selectedHoliday) {
     return (
       <EntityPageLayout title="Holiday Details" showBack onBack={() => setMode("list")}>
-        <HolidayViewCard holiday={selectedHoliday} />
+<EntityViewCard
+  title="Holiday Details"
+  data={selectedHoliday}
+  fields={holidayFields}
+  api={HolidayAPI}
+  headerKeys={["holiday_name"]}
+  onUpdated={fetchHolidays}
+  onDeleted={fetchHolidays}
+/>
       </EntityPageLayout>
     );
   }
