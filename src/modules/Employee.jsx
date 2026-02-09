@@ -6,6 +6,7 @@ import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
 import EntityTableRow from "../components/table/EntityTableRow";
 
+import { formatDate } from "../utils/dateFormatter";
 
 import { EmployeeAPI } from "../services";
 
@@ -110,11 +111,15 @@ export default function Employee() {
   { key: "employee_code" },
   { key: "first_name" },
   { key: "last_name" },
-  { key: "date_of_birth" },
-  { key: "email" },
+{
+  key: "date_of_birth",
+  render: (row) => formatDate(row.date_of_birth),
+},  { key: "email" },
   { key: "phone" },
-  { key: "joining_date" },
-  {
+{
+  key: "joining_date",
+  render: (row) => formatDate(row.joining_date),
+},  {
     key: "status",
     render: (row) => (
       <button
@@ -227,7 +232,19 @@ if (mode === "view" && selectedEmployee) {
     <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
       <EntityForm
         title={selectedEmployee ? "Edit Employee" : "Create Employee"}
-        selectedItem={selectedEmployee}
+selectedItem={
+  selectedEmployee
+    ? {
+        ...selectedEmployee,
+        status:
+          selectedEmployee.status === true ||
+          selectedEmployee.status === "Active"
+            ? "Active"
+            : "Inactive",
+      }
+    : null
+}
+
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[

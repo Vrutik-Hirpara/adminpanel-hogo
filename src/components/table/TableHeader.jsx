@@ -19,7 +19,7 @@ export default function TableHeader({ columns }) {
   {columns.map((col) => (
     <th
       key={col}
-      className="px-4 py-3 text-center align-middle font-semibold whitespace-nowrap"
+      className=" text-center align-middle font-semibold whitespace-nowrap"
     >
       {col}
     </th>

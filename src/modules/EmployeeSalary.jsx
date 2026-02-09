@@ -9,6 +9,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
+import { formatDate } from "../utils/dateFormatter";
 
 import { SalaryAPI, EmployeeAPI } from "../services";
 
@@ -93,7 +94,10 @@ export default function EmployeeSalary() {
         <span className="font-semibold text-green-600">{row.gross_salary}</span>
       ),
     },
-    { key: "effective_from" },
+{
+  key: "effective_from",
+  render: (row) => formatDate(row.effective_from),
+},
   ];
 const salaryFields = [
   { key: "employeeName", label: "Employee" },
@@ -101,7 +105,7 @@ const salaryFields = [
   { key: "alloances", label: "Allowances" },
   { key: "deductions", label: "Deductions" },
   { key: "gross_salary", label: "Gross Salary" },
-  { key: "effective_from", label: "Effective From" },
+  { key: "effective_from", label: "Effective From",format: formatDate  },
 ];
 
   // ================= LIST =================

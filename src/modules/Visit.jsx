@@ -30,37 +30,95 @@ const [v, e] = await Promise.all([
   };
 
   useEffect(() => { fetchData(); }, []);
+// const onSubmit = async (data) => {
+  
+//   try {
+//     if (!data.employee_id) return alert("Employee is required");
+// if (!data.lead_type) return alert("Lead Type is required");
+// if (!data.visit_date) return alert("Visit Date is required");
+
+//     const hasFile =
+//       data.payment_image instanceof FileList ||
+//       data.images instanceof FileList;
+
+//     if (hasFile) {
+//       // 👉 Use FormData ONLY if file present
+//       const formData = new FormData();
+
+//       Object.keys(data).forEach((key) => {
+//         const value = data[key];
+
+//         if (value instanceof FileList) {
+//           console.log(value,"olp")
+//           if (value.length > 0) formData.append(key, value[0]);
+//         } else if (value !== "" && value !== null && value !== undefined) {
+//           console.log(value,"olp1")
+
+//           formData.append(key, value);
+//         }
+//       });
+// console.log("plpl",formData,data)
+//       selectedVisit
+//         ? await VisitsAPI.update(selectedVisit.id, formData)
+//         : await VisitsAPI.create(formData);
+
+//     } else {
+//       // 👉 PURE JSON (THIS FIXES LEAD TYPE ISSUE)
+// console.log("plpl1")
+
+//       selectedVisit
+//         ? await VisitsAPI.update(selectedVisit.id, data)
+//         : await VisitsAPI.create(data);
+//     }
+
+//     setMode("list");
+//     fetchData();
+
+//   } catch (err) {
+//   const res = err.response?.data;
+
+//   if (!res) {
+//     alert("Network error. Please try again.");
+//     return;
+//   }
+
+//   // 🔥 Convert API errors to readable message
+//   const message = Object.entries(res)
+//     .map(([field, errors]) => {
+//       const text = Array.isArray(errors) ? errors.join(", ") : errors;
+//       return `${field.replaceAll("_", " ")}: ${text}`;
+//     })
+//     .join("\n");
+
+//   alert(message);
+// }
+
+// };
 const onSubmit = async (data) => {
   try {
+    if (!data.employee_id) return alert("Employee is required");
+    if (!data.lead_type) return alert("Lead Type is required");
+    if (!data.visit_date) return alert("Visit Date is required");
+
     const hasFile =
       data.payment_image instanceof FileList ||
       data.images instanceof FileList;
 
     if (hasFile) {
-      // 👉 Use FormData ONLY if file present
       const formData = new FormData();
-
       Object.keys(data).forEach((key) => {
         const value = data[key];
-
         if (value instanceof FileList) {
-          console.log(value,"olp")
           if (value.length > 0) formData.append(key, value[0]);
         } else if (value !== "" && value !== null && value !== undefined) {
-          console.log(value,"olp1")
-
           formData.append(key, value);
         }
       });
-console.log("plpl",formData,data)
+
       selectedVisit
         ? await VisitsAPI.update(selectedVisit.id, formData)
         : await VisitsAPI.create(formData);
-
     } else {
-      // 👉 PURE JSON (THIS FIXES LEAD TYPE ISSUE)
-console.log("plpl1")
-
       selectedVisit
         ? await VisitsAPI.update(selectedVisit.id, data)
         : await VisitsAPI.create(data);
@@ -70,7 +128,21 @@ console.log("plpl1")
     fetchData();
 
   } catch (err) {
-    console.log("Save failed", err.response?.data);
+    const res = err.response?.data;
+
+    if (!res) {
+      alert("Network error. Please try again.");
+      return;
+    }
+
+    const message = Object.entries(res)
+      .map(([field, errors]) => {
+        const text = Array.isArray(errors) ? errors.join(", ") : errors;
+        return `${field.replaceAll("_", " ")}: ${text}`;
+      })
+      .join("\n");
+
+    alert(message);
   }
 };
 

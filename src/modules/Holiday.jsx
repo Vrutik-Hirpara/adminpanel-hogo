@@ -9,6 +9,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
 import { HolidayAPI } from "../services";
+import { formatDate } from "../utils/dateFormatter";
 
 export default function Holiday() {
   const [holidays, setHolidays] = useState([]);
@@ -47,7 +48,10 @@ export default function Holiday() {
   };
 const holidayColumns = [
   { key: "holiday_name" },
-  { key: "holiday_date" },
+{
+  key: "holiday_date",
+  render: (row) => formatDate(row.holiday_date),
+},
   { key: "holiday_type" },
   {
     key: "is_paid",
@@ -60,9 +64,20 @@ const holidayColumns = [
   { key: "description" },
 ];
 // 🔥 VIEW FIELDS
+// const holidayFields = [
+//   { key: "holiday_name", label: "Holiday Name" },
+//   { key: "holiday_date", label: "Holiday Date" },
+//   { key: "holiday_type", label: "Holiday Type" },
+//   {
+//     key: "is_paid",
+//     label: "Paid Status",
+//     format: (v) => (v ? "Paid Holiday" : "Unpaid Holiday"),
+//   },
+//   { key: "description", label: "Description", emptyLabel: "No description" },
+// ];
 const holidayFields = [
   { key: "holiday_name", label: "Holiday Name" },
-  { key: "holiday_date", label: "Holiday Date" },
+  { key: "holiday_date", label: "Holiday Date", format: formatDate },
   { key: "holiday_type", label: "Holiday Type" },
   {
     key: "is_paid",

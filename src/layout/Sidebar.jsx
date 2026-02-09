@@ -188,9 +188,11 @@ const Sidebar = () => {
   );
 
   return (
-    <div className="w-56 h-screen px-3 py-5 overflow-hidden flex-shrink-0"
-      style={{ backgroundColor: themes.sidebar, fontFamily: themes.fontPrimary }}
-    >
+  <div
+  className="w-56 h-screen px-3 py-5 overflow-y-auto flex-shrink-0"
+  style={{ backgroundColor: themes.sidebar, fontFamily: themes.fontPrimary }}
+>
+
       <h4 className="text-lg font-semibold mb-5 pl-2 text-white">Employee Panel</h4>
 
       <ul className="space-y-1.5">
@@ -224,9 +226,11 @@ const Sidebar = () => {
           <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color="text-orange-500" />
           <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color="text-purple-500" />
           <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color="text-purple-500" />
-          <LinkItem to="/expense" icon={Wallet} label="Expense" color="text-emerald-500" />
+        <LinkItem to="/expense" icon={Wallet} label="Expense" color="text-emerald-500" />
 
         </Dropdown>
+        
+        <LinkItem to="/lead-followups" icon={Wallet} label="lead-followups" color="text-emerald-500" />
 
       </ul>
     </div>

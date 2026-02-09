@@ -14,3 +14,4 @@ export const HolidayAPI = createCRUD("holidays");
 export const LeaveBalanceAPI = createCRUD("leave-balance");
 export const LeaveRequestsAPI = createCRUD("leave-requests");
 export const ExpenseAPI = createCRUD("expenses");
+export const LeadFollowupsAPI = createCRUD("lead-followups");

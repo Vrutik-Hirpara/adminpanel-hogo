@@ -9,6 +9,7 @@ import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 import api from "../services/api";
+import { formatDate } from "../utils/dateFormatter";
 
 import { ExpenseAPI } from "../services";
 
@@ -78,7 +79,10 @@ export default function Expenses() {
         { key: "vendor_name" },
         { key: "expense_type" },
         { key: "amount" },
-        { key: "date" },
+{
+  key: "date",
+  render: (row) => formatDate(row.date),
+},
         {
             key: "status",
             render: (row) => (
@@ -98,28 +102,52 @@ export default function Expenses() {
     ];
 
     // ================= VIEW FIELDS =================
-    const expenseFields = [
-        { key: "vendor_name", label: "Vendor Name" },
-        { key: "expense_type", label: "Expense Type" },
-        { key: "amount", label: "Amount" },
-        { key: "date", label: "Date" },
-        { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
-        {
-            key: "receipt_photo",
-            label: "Receipt Photo",
-            format: (url) =>
-                url ? (
-                    <img
-                        src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
-                        alt="receipt"
-                        className="w-40 rounded shadow border"
-                    />
-                ) : "No Image",
-        }
+    // const expenseFields = [
+    //     { key: "vendor_name", label: "Vendor Name" },
+    //     { key: "expense_type", label: "Expense Type" },
+    //     { key: "amount", label: "Amount" },
+    //     { key: "date", label: "Date" },
+    //     { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
+    //     {
+    //         key: "receipt_photo",
+    //         label: "Receipt Photo",
+    //         format: (url) =>
+    //             url ? (
+    //                 <img
+    //                     src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+    //                     alt="receipt"
+    //                     className="w-40 rounded shadow border"
+    //                 />
+    //             ) : "No Image",
+    //     }
 
-        ,
-        { key: "created_at", label: "Created At" },
-    ];
+    //     ,
+    //     { key: "created_at", label: "Created At" },
+    // ];
+const expenseFields = [
+  { key: "vendor_name", label: "Vendor Name" },
+  { key: "expense_type", label: "Expense Type" },
+  { key: "amount", label: "Amount" },
+
+  { key: "date", label: "Date", format: formatDate },
+
+  { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
+
+  {
+    key: "receipt_photo",
+    label: "Receipt Photo",
+    format: (url) =>
+      url ? (
+        <img
+          src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+          alt="receipt"
+          className="w-40 rounded shadow border"
+        />
+      ) : "No Image",
+  },
+
+  { key: "created_at", label: "Created At", format: formatDate },
+];
 
     // ================= LIST PAGE =================
     if (mode === "list") {

@@ -268,7 +268,7 @@ export default function EntityViewCard({
   headerKeys = [],
   onUpdated,
   onDeleted,
-  emptyText = "Not Available", // 🔥 customizable empty text
+  emptyText = "inactive", // 🔥 customizable empty text
 }) {
   const [editMode, setEditMode] = useState(false);
 

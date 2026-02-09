@@ -32,18 +32,41 @@ export default function LeaveBalance() {
     fetchEmployees();
   }, []);
 
-  const onSubmit = async (form) => {
-    const payload = {
-      ...form,
-      employee_id: Number(form.employee_id),
-    };
+const onSubmit = async (form) => {
+  const total = Number(form.total_allocated || 0);
+  const used = Number(form.used_days || 0);
 
-    if (selected) await LeaveBalanceAPI.update(selected.id, payload);
-    else await LeaveBalanceAPI.create(payload);
+  const payload = {
+    leave_type: form.leave_type,
+    employee_id: Number(form.employee_id),
+    total_allocated: total,
+    used_days: used,
+    remaining_days: total - used,   // 🔥 MISSING FIELD FIX
+  };
+
+  try {
+    selected
+      ? await LeaveBalanceAPI.update(selected.id, payload)
+      : await LeaveBalanceAPI.create(payload);
 
     setMode("list");
     fetchData();
-  };
+
+  } catch (err) {
+    console.log("API ERROR:", err.response?.data);
+
+    const res = err.response?.data;
+    if (!res) return alert("Network error");
+
+    const message = Object.entries(res)
+      .map(([f, e]) => `${f.replaceAll("_"," ")}: ${Array.isArray(e)?e.join(", "):e}`)
+      .join("\n");
+
+    alert(message);
+  }
+};
+
+
   const leaveColumns = [
     { key: "leave_type" },
     { key: "total_allocated" },
@@ -139,11 +162,13 @@ const leaveFields = [
             type: "select",
             required: true,
             options: [
-              { label: "Casual Leave", value: "casual leave" },
-              { label: "Sick Leave", value: "sick leave" },
-              { label: "Paid Leave", value: "paid leave" },
-              { label: "Unpaid Leave", value: "unpaid leave" },
-            ],
+  { label: "Casual Leave", value: "casual leave" },
+  { label: "Sick Leave", value: "sick leave" },
+  { label: "Paid Leave", value: "paid leave" },
+  { label: "Unpaid Leave", value: "unpaid leave" },
+]
+
+            ,
           },
           { label: "Total Allocated", name: "total_allocated", type: "number" },
           { label: "Used Days", name: "used_days", type: "number" },
