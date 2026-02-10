@@ -211,6 +211,8 @@ const Sidebar = () => {
         {/* EMPLOYEE */}
         <Dropdown id="employee" label="Employee" icon={Users} color="text-blue-500">
           <LinkItem to="/employee" icon={Users} label="Employee" color="text-blue-500" />
+                    <LinkItem to="/users" icon={Users} label="Users" color="text-cyan-500" />
+
           <LinkItem to="/employee-personal-details" icon={UserCircle2} label="Personal Details" color="text-indigo-500" />
           <LinkItem to="/employee-salary" icon={Wallet} label="Employee Salary" color="text-emerald-500" />
           <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color="text-rose-500" />
@@ -219,7 +221,6 @@ const Sidebar = () => {
         {/* SALES */}
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color="text-cyan-500">
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color="text-cyan-500" />
-          <LinkItem to="/users" icon={Users} label="Users" color="text-cyan-500" />
           <LinkItem to="/visits" icon={MapPin} label="Visits" color="text-emerald-500" />
         </Dropdown>
 
@@ -232,7 +233,7 @@ const Sidebar = () => {
 
         </Dropdown>
         
-        <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" color="text-emerald-500" />
+        <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" color="text-sky-500" />
 
       </ul>
     </div>

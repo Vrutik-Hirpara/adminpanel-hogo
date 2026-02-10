@@ -17,7 +17,7 @@ export default function EntityTableRow({
       </td>
 
       {/* DYNAMIC COLUMNS */}
-{columns?.map((col, i) => (
+      {columns?.map((col, i) => (
         <td key={i} className={`px-0 py-1 text-center text-sm break-words max-w-[160px] ${col.className || ""}`}>
           {col.render ? col.render(row) : row[col.key]}
         </td>

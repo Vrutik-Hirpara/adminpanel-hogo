@@ -79,10 +79,10 @@ export default function Expenses() {
         { key: "vendor_name" },
         { key: "expense_type" },
         { key: "amount" },
-{
-  key: "date",
-  render: (row) => formatDate(row.date),
-},
+        {
+            key: "date",
+            render: (row) => formatDate(row.date),
+        },
         {
             key: "status",
             render: (row) => (
@@ -124,30 +124,30 @@ export default function Expenses() {
     //     ,
     //     { key: "created_at", label: "Created At" },
     // ];
-const expenseFields = [
-  { key: "vendor_name", label: "Vendor Name" },
-  { key: "expense_type", label: "Expense Type" },
-  { key: "amount", label: "Amount" },
+    const expenseFields = [
+        { key: "vendor_name", label: "Vendor Name" },
+        { key: "expense_type", label: "Expense Type" },
+        { key: "amount", label: "Amount" },
 
-  { key: "date", label: "Date", format: formatDate },
+        { key: "date", label: "Date", format: formatDate },
 
-  { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
+        { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
 
-  {
-    key: "receipt_photo",
-    label: "Receipt Photo",
-    format: (url) =>
-      url ? (
-        <img
-          src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
-          alt="receipt"
-          className="w-40 rounded shadow border"
-        />
-      ) : "No Image",
-  },
+        {
+            key: "receipt_photo",
+            label: "Receipt Photo",
+            format: (url) =>
+                url ? (
+                    <img
+                        src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+                        alt="receipt"
+                        className="w-40 rounded shadow border"
+                    />
+                ) : "No Image",
+        },
 
-  { key: "created_at", label: "Created At", format: formatDate },
-];
+        { key: "created_at", label: "Created At", format: formatDate },
+    ];
 
     // ================= LIST PAGE =================
     if (mode === "list") {
@@ -166,7 +166,15 @@ const expenseFields = [
                             index={index}
                             columns={expenseColumns}
                             onView={(r) => { setSelectedItem(r); setMode("view"); }}
-                            onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+                            // onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+                            onEdit={(r) => {
+                                setSelectedItem({
+                                    ...r,
+                                    status: String(r.status) // ⭐ IMPORTANT FIX
+                                });
+                                setMode("form");
+                            }}
+
                             onDelete={handleDelete}
                         />
                     ))}
@@ -215,7 +223,7 @@ const expenseFields = [
                     },
                     { label: "Date", name: "date", type: "date" },
                     { label: "Receipt Photo", name: "receipt_photo", type: "file" },
-                    
+
                 ]}
             />
         </EntityPageLayout>

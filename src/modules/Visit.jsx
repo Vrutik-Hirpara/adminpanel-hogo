@@ -30,6 +30,7 @@ const [v, e] = await Promise.all([
   };
 
   useEffect(() => { fetchData(); }, []);
+  
 // const onSubmit = async (data) => {
   
 //   try {

@@ -12,12 +12,14 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
 
 import { SalaryAPI, EmployeeAPI } from "../services";
+import SearchBar from "../components/table/SearchBar";
 
 export default function EmployeeSalary() {
   const [salaryData, setSalaryData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
+const [search, setSearch] = useState("");
 
   // ================= FETCH SALARY =================
   const fetchSalary = async (empList) => {
@@ -50,6 +52,11 @@ export default function EmployeeSalary() {
 
     load();
   }, []);
+const filteredSalary = salaryData.filter(s =>
+  `${s.employeeName} ${s.basic_salary} ${s.gross_salary}`
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -61,10 +68,10 @@ export default function EmployeeSalary() {
         (!selectedItem || s.id !== selectedItem.id)
     );
 
-    if (!selectedItem && exists) {
-      alert("Salary already exists for this employee");
-      return;
-    }
+    // if (!selectedItem && exists) {
+    //   alert("Salary already exists for this employee");
+    //   return;
+    // }
 
     selectedItem
       ? await SalaryAPI.update(selectedItem.id, data)
@@ -112,10 +119,15 @@ const salaryFields = [
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="Employee Salary" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
-        </div>
+     <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="Employee Salary" />
+
+  <div className="flex gap-3">
+    <SearchBar value={search} onChange={setSearch} placeholder="Search salary..." />
+    <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+  </div>
+</div>
+
 
         <Table
           header={
@@ -132,7 +144,7 @@ const salaryFields = [
             />
           }
         >
-          {salaryData.map((s, index) => (
+{filteredSalary.map((s, index) => (
             <EntityTableRow
               key={s.id}
               row={s}

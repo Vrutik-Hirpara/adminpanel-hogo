@@ -12,12 +12,14 @@ import EntityTableRow from "../components/table/EntityTableRow";
 
 import { EmployeeAPI, UserAPI } from "../services";
 import api from "../services/api";
+import SearchBar from "../components/table/SearchBar";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
+const [search, setSearch] = useState("");
 
   // ================= FETCH USERS =================
   const fetchUsers = async () => {
@@ -38,6 +40,11 @@ export default function Users() {
     fetchUsers();
     fetchEmployees();
   }, []);
+const filteredUsers = users.filter(u =>
+  `${u.username}`
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   // ================= STATUS TOGGLE =================
   const handleStatusToggle = async (user) => {
@@ -120,16 +127,21 @@ const userColumns = [
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="Users" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => {
-            setSelectedItem(null);
-            setMode("form");
-          }} />
-        </div>
+      <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="Users" />
+
+  <div className="flex gap-3">
+    <SearchBar value={search} onChange={setSearch} placeholder="Search users..." />
+    <ActionButtons showAdd addText="+ Add" onAdd={() => {
+      setSelectedItem(null);
+      setMode("form");
+    }} />
+  </div>
+</div>
+
 
         <Table header={<TableHeader columns={["Name", "Status", "Action"]} />}>
-          {users.map((u, index) => (
+{filteredUsers.map((u, index) => (
             <EntityTableRow
               key={u.id}
               row={u}

@@ -60,27 +60,27 @@ export default function Leads() {
     await LeadsAPI.delete(id);
     fetchLeads();
   };
-const handleAssignChange = async (row, employeeId) => {
-  const empName =
-    employees.find(e => e.id === Number(employeeId))?.employee_code || "Unassigned";
+  const handleAssignChange = async (row, employeeId) => {
+    const empName =
+      employees.find(e => e.id === Number(employeeId))?.employee_code || "Unassigned";
 
-  const confirmChange = window.confirm(
-    `Are you sure you want to assign this lead to "${empName}"?`
-  );
+    const confirmChange = window.confirm(
+      `Are you sure you want to assign this lead to "${empName}"?`
+    );
 
-  if (!confirmChange) return;
+    if (!confirmChange) return;
 
-  try {
-    await LeadsAPI.update(row.id, {
-      assigned_to: employeeId ? Number(employeeId) : null,
-    });
+    try {
+      await LeadsAPI.update(row.id, {
+        assigned_to: employeeId ? Number(employeeId) : null,
+      });
 
-    fetchLeads();
-  } catch (err) {
-    console.log("Assign update failed", err);
-    alert("Update failed");
-  }
-};
+      fetchLeads();
+    } catch (err) {
+      console.log("Assign update failed", err);
+      alert("Update failed");
+    }
+  };
 
 
   // ================= TABLE COLUMNS =================
@@ -103,8 +103,8 @@ const handleAssignChange = async (row, employeeId) => {
             row.interest_level === "High"
               ? "text-red-600"
               : row.interest_level === "Medium"
-              ? "text-yellow-600"
-              : "text-green-600"
+                ? "text-yellow-600"
+                : "text-green-600"
           }
         >
           {row.interest_level}
@@ -114,46 +114,56 @@ const handleAssignChange = async (row, employeeId) => {
 
     // { key: "lead_status" },
 
-{
-  key: "assigned_to_name",
-  className: "whitespace-nowrap min-w-[100px]",
-  render: (row) => (
-    <div className="w-[100px]">
-      <select
-        value={row.assigned_to || ""}
-        onChange={(e) => handleAssignChange(row, e.target.value)}
-        className="w-full border rounded px-2 py-1 text-sm bg-white"
-      >
-        <option value="">Unassigned</option>
-        {employees.map((emp) => (
-          <option key={emp.id} value={emp.id}>
-            {emp.employee_code}
-          </option>
-        ))}
-      </select>
-    </div>
-  ),
-}
+    {
+      key: "assigned_to_name",
+      className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
+      render: (row) => (
+        <div className="w-[100px]">
+          <select
+            value={row.assigned_to || ""}
+            onChange={(e) => handleAssignChange(row, e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm bg-white"
+          >
+            <option value="">Unassigned</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {/* {emp.employee_code} */}
+                            {emp.first_name} {emp.last_name}   {/* 👈 CHANGE HERE */}
+
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
+    }
 
 
   ];
 
-const leadFields = [
-  { key: "business_name", label: "Business Name" },
-  { key: "lead_type", label: "Lead Type" },
-  { key: "lead_source", label: "Lead Source" },
-  { key: "contact_person", label: "Contact Person" },
-  { key: "phone", label: "Phone" },
-  { key: "email", label: "Email" },
-  { key: "address", label: "Address" },
-  { key: "city", label: "City" },
-  { key: "state", label: "State" },
-  { key: "location", label: "Location" },
-  { key: "interest_level", label: "Interest Level" },
-  // { key: "lead_status", label: "Lead Status" },
-  { key: "assigned_to_name", label: "Assigned To" },
-  { key: "remarks", label: "Remarks" },
-];
+  const leadFields = [
+    { key: "lead_type", label: "Lead Type" },
+    { key: "business_name", label: "Business Name" },
+    { key: "contact_person", label: "Contact Person" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+    { key: "location", label: "Location" },
+    { key: "address", label: "Address" },
+    { key: "city", label: "City" },
+    { key: "state", label: "State" },
+    { key: "interest_level", label: "Interest Level" },
+    { key: "lead_status", label: "Lead Status" },
+    { key: "remarks", label: "Remarks" },
+    { key: "created_by", label: "Remarks" },
+    { key: "assigned_to", label: "Remarks" },
+    { key: "created_by_name", label: "Remarks" },
+    { key: "created_by_code", label: "Remarks" },
+    { key: "assigned_to_name", label: "Assigned To" },
+    { key: "assigned_to_code", label: "Remarks" },
+    { key: "created_at", label: "Remarks" },
+    { key: "assigned_at", label: "Remarks" },
+    { key: "updated_at", label: "Remarks" },
+    { key: "lead_source", label: "Lead Source" },
+  ];
 
 
 
@@ -196,25 +206,25 @@ const leadFields = [
     );
   }
 
-if (mode === "view" && selectedItem) {
-  return (
-    <EntityPageLayout
-      title="Lead Details"
-      showBack
-      onBack={() => setMode("list")}
-    >
-      <EntityViewCard
+  if (mode === "view" && selectedItem) {
+    return (
+      <EntityPageLayout
         title="Lead Details"
-        data={selectedItem}
-        fields={leadFields}
-        api={LeadsAPI}
-        onUpdated={fetchLeads}
-        onDeleted={fetchLeads}
-        headerKeys={["business_name"]}   // 🔴 header shows company
-      />
-    </EntityPageLayout>
-  );
-}
+        showBack
+        onBack={() => setMode("list")}
+      >
+        <EntityViewCard
+          title="Lead Details"
+          data={selectedItem}
+          fields={leadFields}
+          api={LeadsAPI}
+          onUpdated={fetchLeads}
+          onDeleted={fetchLeads}
+          headerKeys={["business_name"]}   // 🔴 header shows company
+        />
+      </EntityPageLayout>
+    );
+  }
 
 
   // ================= FORM =================
@@ -247,7 +257,7 @@ if (mode === "view" && selectedItem) {
             ],
             required: true,
           },
-           {
+          {
             label: "Lead Source",
             name: "lead_source",
             type: "select",
@@ -274,6 +284,8 @@ if (mode === "view" && selectedItem) {
             label: "Assign To",
             name: "assigned_to",
             type: "select",
+              className: "text-center",   // 👈 ADD THIS
+
             options: employees.map((e) => ({
               label: e.employee_code,
               value: e.id,
@@ -303,7 +315,7 @@ if (mode === "view" && selectedItem) {
             ],
           },
 
-         
+
 
           { label: "Remarks", name: "remarks", type: "textarea" },
         ]}

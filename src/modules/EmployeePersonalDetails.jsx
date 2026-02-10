@@ -11,6 +11,7 @@ import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 
 import { EmployeeAPI,EmployeePersonalAPI } from "../services";
+import SearchBar from "../components/table/SearchBar";
 
 // import {  } from "../services";
 
@@ -19,6 +20,7 @@ export default function EmployeePersonalDetails() {
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
+const [search, setSearch] = useState("");
 
 
 
@@ -60,6 +62,11 @@ useEffect(() => {
     fetchDetails();
   }
 }, [employees]);
+const filteredDetails = details.filter(d =>
+  `${d.employeeName} ${d.father_name} ${d.mother_name} ${d.emergency_contact_phone}`
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -125,10 +132,15 @@ const personalFields = [
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="Employee Personal Details" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
-        </div>
+       <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="Employee Personal Details" />
+
+  <div className="flex gap-3">
+    <SearchBar value={search} onChange={setSearch} placeholder="Search details..." />
+    <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+  </div>
+</div>
+
 
         <Table
           header={
@@ -144,7 +156,7 @@ const personalFields = [
             />
           }
         >
-          {details.map((d, index) => (
+{filteredDetails.map((d, index) => (
             <EntityTableRow
               key={d.id}
               row={d}

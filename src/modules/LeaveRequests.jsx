@@ -186,6 +186,8 @@
 //     </EntityPageLayout>
 //   );
 // }
+
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -404,7 +406,9 @@ export default function LeaveRequests() {
             name: "approved_by",
             type: "select",
             options: employees.map(e => ({
-              label: e.employee_code,
+              // label: e.employee_code,
+                  label: `${e.first_name} ${e.last_name}`,  // ✅ NAME SHOW
+
               value: e.id,
             })),
           },

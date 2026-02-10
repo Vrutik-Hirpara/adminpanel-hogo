@@ -222,12 +222,14 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
 
 import { EmployeeAPI, EmployeeDocsAPI } from "../services";
+import SearchBar from "../components/table/SearchBar";
 
 export default function EmployeeDocuments() {
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
+const [search, setSearch] = useState("");
 
   // ================= FETCH =================
   const fetchDocuments = async (empList) => {
@@ -256,6 +258,11 @@ export default function EmployeeDocuments() {
     };
     load();
   }, []);
+const filteredDocuments = documents.filter(doc =>
+  `${doc.employeeName} ${doc.pancard_number} ${doc.aadhar_number} ${doc.driving_license_number}`
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
 
   // ================= SAVE =================
 const onSubmit = async (data) => {
@@ -359,13 +366,18 @@ const documentFields = [
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="Employee Documents" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
-        </div>
+       <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="Employee Documents" />
+
+  <div className="flex gap-3">
+    <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
+    <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
+  </div>
+</div>
+
 
         <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
-          {documents.map((doc, index) => (
+{filteredDocuments.map((doc, index) => (
             <EntityTableRow
               key={doc.id}
               row={doc}
