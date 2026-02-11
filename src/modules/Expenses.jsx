@@ -144,10 +144,7 @@ export default function Expenses() {
                         className="w-40 rounded shadow border"
                     />
                 ) : "No Image",
-        },
-
-        { key: "created_at", label: "Created At", format: formatDate },
-    ];
+        }    ];
 
     // ================= LIST PAGE =================
     if (mode === "list") {

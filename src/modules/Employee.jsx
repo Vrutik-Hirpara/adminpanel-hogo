@@ -9,7 +9,7 @@ import SearchBar from "../components/table/SearchBar";
 
 import { formatDate } from "../utils/dateFormatter";
 
-import { EmployeeAPI } from "../services";
+import { EmployeeAPI, BranchAPI } from "../services";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -30,6 +30,7 @@ export default function Employee() {
   const [mode, setMode] = useState("list");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [search, setSearch] = useState("");
+  const [branches, setBranches] = useState([]);
 
 
   // FETCH EMPLOYEES
@@ -45,6 +46,9 @@ export default function Employee() {
       date_of_birth: e.date_of_birth,
       email: e.email,
       phone: e.phone,
+      role_name: e.role_name || e.role?.name || "-",
+      office_branch_name: e.office_branch_name || e.branch?.name || "-",
+
       joining_date: e.joining_date,
       employment_type: e.employment_type,
       status: e.status === "Active",
@@ -58,9 +62,13 @@ export default function Employee() {
   const fetchMeta = async () => {
     const deptRes = await axios.get(DEPT_API);
     const roleRes = await axios.get(ROLE_API);
+    const branchRes = await BranchAPI.getAll();  // ⭐ CORRECT API NAME
+
 
     setDepartments(deptRes.data.data || []);
     setRoles(roleRes.data.data || []);
+    setBranches(branchRes.data.data || []);
+
   };
 
   useEffect(() => {
@@ -68,7 +76,7 @@ export default function Employee() {
     fetchMeta();
   }, []);
   const filteredEmployees = employees.filter(emp =>
-    `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone}`
+    `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone} ${emp.role_name}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
@@ -98,6 +106,9 @@ export default function Employee() {
         ...data,
         department_id: Number(data.department_id),
         role_id: Number(data.role_id),
+        office_branch_id: data.office_branch_id
+          ? Number(data.office_branch_id)
+          : null,
         status: data.status,
       };
 
@@ -116,17 +127,21 @@ export default function Employee() {
   };
   const employeeColumns = [
     { key: "employee_code" },
-    { key: "first_name" },
-    { key: "last_name" },
+    { key: "office_branch_name" },   // ⭐ HERE
+
+    {
+      key: "name",
+      render: (row) => `${row.first_name} ${row.last_name}`,
+    },
+
     {
       key: "date_of_birth",
       render: (row) => formatDate(row.date_of_birth),
-    }, { key: "email" },
+    },
+
     { key: "phone" },
+    { key: "role_name" },
     {
-      key: "joining_date",
-      render: (row) => formatDate(row.joining_date),
-    }, {
       key: "status",
       render: (row) => (
         <button
@@ -150,18 +165,13 @@ export default function Employee() {
     { key: "date_of_birth", label: "Date of Birth" },
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
-    { key: "department_id", label: "Department Id" },
+    { key: "office_branch_name", label: "Office Branch " },
     { key: "department_name", label: "Department Name" },
-    { key: "role_id", label: "Role Id" },
     { key: "role_name", label: "Role Name" },
     { key: "joining_date", label: "Joining Date" },
     { key: "employment_type", label: "Employee Type" },
 
-    { key: "status", label: "Status" },
-
-    { key: "created_at", label: "Created At" },
-    { key: "updated_at", label: "Updated At" },
-
+    { key: "status", label: "Status" }
   ];
 
 
@@ -170,24 +180,24 @@ export default function Employee() {
     return (
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
-  <SectionTitle title="Employees" />
+          <SectionTitle title="Employees" />
 
-  <div className="flex items-center gap-3">
-    <input
-      type="text"
-      placeholder="Search..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-    />
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
 
-    <ActionButtons
-      showAdd
-      addText="+ Add"
-      onAdd={() => setMode("form")}
-    />
-  </div>
-</div>
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => setMode("form")}
+            />
+          </div>
+        </div>
 
         {/* <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Employees" />
@@ -204,7 +214,7 @@ export default function Employee() {
           />
         </div> */}
 
-        <Table header={<TableHeader columns={["Code", "First Name", "Last Name", "DOB", "Email", "Phone", "Joining", "Status", "Action"]} />}>
+        <Table header={<TableHeader columns={["Code", "Branch", "Name", "DOB", "Phone", "Role", "Status", "Action"]} />}>
           {filteredEmployees.map((emp, index) => (
             <EntityTableRow
               key={emp.id}
@@ -220,6 +230,8 @@ export default function Employee() {
                   ...r.raw,
                   department_id: dept?.id,
                   role_id: role?.id,
+                  office_branch_id: r.raw.office_branch_id || "", // ⭐ ADD
+
                 });
 
                 setMode("form");
@@ -283,49 +295,133 @@ export default function Employee() {
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[
-          { label: "Employee Code", name: "employee_code", required: true },
-          { label: "First Name", name: "first_name", required: true },
-          { label: "Last Name", name: "last_name", required: true },
+  { label: "Employee Code", name: "employee_code", required: true },
+  { label: "First Name", name: "first_name", required: true },
+  { label: "Last Name", name: "last_name", required: true },
 
-          {
-            label: "Gender", name: "gender", type: "select", options: [
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" }
-            ]
-          },
+  {
+    label: "Gender",
+    name: "gender",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Male", value: "Male" },
+      { label: "Female", value: "Female" }
+    ]
+  },
 
-          { label: "Date of Birth", name: "date_of_birth", type: "date" },
-          { label: "Email", name: "email", type: "email" },
-          { label: "Phone", name: "phone" },
-          { label: "Joining Date", name: "joining_date", type: "date" },
+  {
+    label: "Office Branch",
+    name: "office_branch_id",
+    type: "select",
+    options: branches.map(b => ({
+      label: b.name,
+      value: b.id,
+    })),
+  },
 
-          {
-            label: "Department", name: "department_id", type: "select", required: true,
-            options: departments.map(d => ({ label: d.name, value: d.id }))
-          },
+  { label: "Date of Birth", name: "date_of_birth", type: "date", required: true },
+  { label: "Email", name: "email", type: "email", required: true },
+  { label: "Phone", name: "phone", required: true },
+  { label: "Joining Date", name: "joining_date", type: "date", required: true },
 
-          {
-            label: "Role", name: "role_id", type: "select", required: true,
-            options: roles.map(r => ({ label: r.name, value: r.id }))
-          },
+  {
+    label: "Department",
+    name: "department_id",
+    type: "select",
+    required: true,
+    options: departments.map(d => ({ label: d.name, value: d.id }))
+  },
 
-          {
-            label: "Employment Type", name: "employment_type", type: "select", options: [
-              { label: "Permanent", value: "Permanent" },
-              { label: "Contract", value: "Contract" },
-              { label: "Intern", value: "Intern" }
-            ]
-          },
+  {
+    label: "Role",
+    name: "role_id",
+    type: "select",
+    required: true,
+    options: roles.map(r => ({ label: r.name, value: r.id }))
+  },
 
-          {
-            label: "Status", name: "status", type: "select", options: [
-              { label: "Active", value: "Active" },
-              { label: "Inactive", value: "Inactive" }
-            ]
-          },
+  {
+    label: "Employment Type",
+    name: "employment_type",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Permanent", value: "Permanent" },
+      { label: "Contract", value: "Contract" },
+      { label: "Intern", value: "Intern" }
+    ]
+  },
 
-          ...(selectedEmployee ? [] : [{ label: "Password", name: "password", type: "password", required: true }]),
-        ]}
+  {
+    label: "Status",
+    name: "status",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "Inactive" }
+    ]
+  },
+
+  ...(selectedEmployee ? [] : [
+    { label: "Password", name: "password", type: "password", required: true }
+  ]),
+]}
+
+        // fields={[
+        //   { label: "Employee Code", name: "employee_code", required: true },
+        //   { label: "First Name", name: "first_name", required: true },
+        //   { label: "Last Name", name: "last_name", required: true },
+
+        //   {
+        //     label: "Gender", name: "gender", type: "select", options: [
+        //       { label: "Male", value: "Male" },
+        //       { label: "Female", value: "Female" }
+        //     ]
+        //   },
+        //   {
+        //     label: "Office Branch",
+        //     name: "office_branch_id",
+        //     type: "select",
+        //     options: branches.map(b => ({
+        //       label: b.name,
+        //       value: b.id,
+        //     })),
+        //   },
+
+        //   { label: "Date of Birth", name: "date_of_birth", type: "date" },
+        //   { label: "Email", name: "email", type: "email" },
+        //   { label: "Phone", name: "phone" },
+        //   { label: "Joining Date", name: "joining_date", type: "date" },
+
+        //   {
+        //     label: "Department", name: "department_id", type: "select", required: true,
+        //     options: departments.map(d => ({ label: d.name, value: d.id }))
+        //   },
+
+        //   {
+        //     label: "Role", name: "role_id", type: "select", required: true,
+        //     options: roles.map(r => ({ label: r.name, value: r.id }))
+        //   },
+
+        //   {
+        //     label: "Employment Type", name: "employment_type", type: "select", options: [
+        //       { label: "Permanent", value: "Permanent" },
+        //       { label: "Contract", value: "Contract" },
+        //       { label: "Intern", value: "Intern" }
+        //     ]
+        //   },
+
+        //   {
+        //     label: "Status", name: "status", type: "select", options: [
+        //       { label: "Active", value: "Active" },
+        //       { label: "Inactive", value: "Inactive" }
+        //     ]
+        //   },
+
+        //   ...(selectedEmployee ? [] : [{ label: "Password", name: "password", type: "password", required: true }]),
+        // ]}
       />
     </EntityPageLayout>
   );

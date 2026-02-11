@@ -61,8 +61,12 @@ export default function Leads() {
     fetchLeads();
   };
   const handleAssignChange = async (row, employeeId) => {
-    const empName =
-      employees.find(e => e.id === Number(employeeId))?.employee_code || "Unassigned";
+ const emp = employees.find(e => e.id === Number(employeeId));
+
+const empName = emp
+  ? `${emp.first_name} ${emp.last_name}`
+  : "Unassigned";
+
 
     const confirmChange = window.confirm(
       `Are you sure you want to assign this lead to "${empName}"?`
@@ -153,15 +157,11 @@ export default function Leads() {
     { key: "interest_level", label: "Interest Level" },
     { key: "lead_status", label: "Lead Status" },
     { key: "remarks", label: "Remarks" },
-    { key: "created_by", label: "Remarks" },
-    { key: "assigned_to", label: "Remarks" },
-    { key: "created_by_name", label: "Remarks" },
-    { key: "created_by_code", label: "Remarks" },
+
+    { key: "created_by_name", label: "Created By" },
+    { key: "created_by_code", label: "Created By Code" },
     { key: "assigned_to_name", label: "Assigned To" },
-    { key: "assigned_to_code", label: "Remarks" },
-    { key: "created_at", label: "Remarks" },
-    { key: "assigned_at", label: "Remarks" },
-    { key: "updated_at", label: "Remarks" },
+    { key: "assigned_to_code", label: "Assigned To Code" },
     { key: "lead_source", label: "Lead Source" },
   ];
 

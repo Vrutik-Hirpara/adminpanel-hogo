@@ -95,9 +95,7 @@ const roleFields = [
     key: "status",
     label: "Status",
     format: (v) => (v ? "Active" : "Inactive"),
-  },
-    { key: "created_at", label: "Created at" },
-
+  }
 ];
 
   // ================= LIST PAGE =================

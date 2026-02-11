@@ -103,10 +103,10 @@ export default function Department() {
     {
       key: "status",
       label: "Status",
-      format: (val) => (val ? "Active" : "Inactive"),
-    },
-    { key: "created_at", label: "Created at" },
+        required: true,  
 
+      format: (val) => (val ? "Active" : "Inactive"),
+    }
   ];
 
   // ================= LIST PAGE =================
@@ -185,6 +185,8 @@ export default function Department() {
             label: "Status",
             name: "status",
             type: "select",
+              required: true,   // ⭐ ADD THIS LINE
+
             options: [
               { label: "Active", value: "Active" },
               { label: "Inactive", value: "Inactive" }

@@ -513,7 +513,6 @@ export default function LeadFollowups() {
           fields={[
   { key: "employee_name", label: "Employee Name" },
 
-  { key: "lead_id", label: "Lead ID" },   // ⭐ Added
 
   { key: "followup_date", label: "Followup Date" },
     { key: "lead_type", label: "lead type" },
@@ -525,7 +524,6 @@ export default function LeadFollowups() {
     label: "Status",
     format: (v) => (v ? "Active" : "Inactive"),
   },
-  { key: "created_at", label: "Created At" },
 ]}
 
         //   fields={[

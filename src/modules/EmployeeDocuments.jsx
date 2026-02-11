@@ -359,7 +359,6 @@ const documentFields = [
   { key: "driving_license_front", label: "DL Front", render: v => v && <img src={v} className="h-24 rounded border" /> },
   { key: "driving_license_back", label: "DL Back", render: v => v && <img src={v} className="h-24 rounded border" /> },
 
-  { key: "uploaded_at", label: "Uploaded At", format: formatDate },
 ];
 
   // ================= LIST =================

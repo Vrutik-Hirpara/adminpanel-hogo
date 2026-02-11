@@ -200,12 +200,22 @@ import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 
 import { LeaveRequestsAPI, EmployeeAPI } from "../services";
+import SearchBar from "../components/table/SearchBar";
 
 export default function LeaveRequests() {
   const [leaves, setLeaves] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
+const [search, setSearch] = useState("");
+const filteredLeaves = leaves.filter(l => {
+  const emp = employees.find(e => e.id === l.employee_id);
+  const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
+
+  return `${empName} ${l.leave_type} ${l.reason} ${l.status}`
+    .toLowerCase()
+    .includes(search.toLowerCase());
+});
 
   // ================= FETCH =================
   const fetchLeaves = async () => {
@@ -256,6 +266,12 @@ export default function LeaveRequests() {
 
   // ================= TABLE COLUMNS =================
   const leaveColumns = [
+      {
+    key: "employee_id",
+    render: (row) => {
+      const emp = employees.find(e => e.id === row.employee_id);
+      return emp ? `${emp.first_name} ${emp.last_name}` : "-";
+    }},
     { key: "leave_type" },
     { key: "start_date" },
     { key: "end_date" },
@@ -328,20 +344,21 @@ export default function LeaveRequests() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="Leave Requests" />
-          <ActionButtons
-            showAdd
-            addText="+ Add"
-            onAdd={() => {
-              setSelectedItem(null);
-              setMode("form");
-            }}
-          />
-        </div>
+      <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="Leave Requests" />
 
-        <Table header={<TableHeader columns={["Type", "Start", "End", "Days", "Reason", "Status", "Action"]} />}>
-          {leaves.map((l, index) => (
+  <div className="flex gap-3">
+    <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
+    <ActionButtons showAdd addText="+ Add" onAdd={() => {
+      setSelectedItem(null);
+      setMode("form");
+    }} />
+  </div>
+</div>
+
+
+        <Table header={<TableHeader columns={["Employee","Type", "Start", "End", "Days", "Reason", "Status", "Action"]} />}>
+{filteredLeaves.map((l, index) => (
             <EntityTableRow
               key={l.id}
               row={l}

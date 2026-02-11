@@ -163,6 +163,8 @@ if (mode === "view" && selectedItem) {
     e => e.id === (selectedItem.employee_id || selectedItem.employee)
   );
 
+
+
   const viewData = {
     ...selectedItem,
     employeeName: emp
@@ -198,7 +200,7 @@ if (mode === "view" && selectedItem) {
         selectedItem={
           selectedItem
             ? { ...selectedItem, status: selectedItem.is_active ? "Active" : "Inactive" }
-            : { status: "Active" }
+            : {}
         }
         onSubmit={onSubmit}
         setMode={setMode}
@@ -220,6 +222,7 @@ if (mode === "view" && selectedItem) {
             name: "status",
             type: "select",
             options: [
+
               { label: "Active", value: "Active" },
               { label: "Inactive", value: "Inactive" },
             ],

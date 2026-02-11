@@ -48,8 +48,7 @@ const branchFields = [
   { key: "address", label: "Address" },
   { key: "city", label: "City" },
   { key: "state", label: "State" },
-  { key: "country", label: "Country" },
-  { key: "created_at", label: "Created at" },
+  { key: "country", label: "Country" }
 ];
 
   if (mode === "list") {
@@ -112,13 +111,14 @@ if (mode === "view" && selectedBranch) {
         selectedItem={selectedBranch}
         onSubmit={onSubmit}
         setMode={setMode}
-        fields={[
-          { label: "Name", name: "name", required: true },
-          { label: "Address", name: "address", type: "textarea" },
-          { label: "City", name: "city" },
-          { label: "State", name: "state" },
-          { label: "Country", name: "country" },
-        ]}
+    fields={[
+  { label: "Branch Name", name: "name", required: true },
+  { label: "Address", name: "address", type: "textarea", required: true },
+  { label: "City", name: "city", required: true },
+  { label: "State", name: "state", required: true },
+  { label: "Country", name: "country", required: true },
+]}
+
       />
     </EntityPageLayout>
   );

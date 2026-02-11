@@ -18,16 +18,29 @@ export default function Visits() {
   const [mode, setMode] = useState("list");
   const [selectedVisit, setSelectedVisit] = useState(null);
 
-  const fetchData = async () => {
-const [v, e] = await Promise.all([
-  VisitsAPI.getAll(),
-  EmployeeAPI.getAll(),
-]);
+//   const fetchData = async () => {
+// const [v, e] = await Promise.all([
+//   VisitsAPI.getAll(),
+//   EmployeeAPI.getAll(),
+// ]);
 
 
-    setVisits(v.data.data || []);
-    setEmployees(e.data.data || []);
-  };
+//     setVisits(v.data.data || []);
+//     setEmployees(e.data.data || []);
+//   };
+const fetchData = async () => {
+  const [v, e] = await Promise.all([
+    VisitsAPI.getAll(),
+    EmployeeAPI.getAll(),
+  ]);
+
+  const visitsData = v.data.data || [];
+  setVisits(visitsData);
+  setEmployees(e.data.data || []);
+
+  // ⭐ UNIQUE LEAD TYPES FROM API
+
+};
 
   useEffect(() => { fetchData(); }, []);
   
@@ -98,7 +111,6 @@ const [v, e] = await Promise.all([
 const onSubmit = async (data) => {
   try {
     if (!data.employee_id) return alert("Employee is required");
-    if (!data.lead_type) return alert("Lead Type is required");
     if (!data.visit_date) return alert("Visit Date is required");
 
     const hasFile =
@@ -303,17 +315,17 @@ const handleEdit = (r) => {
           //   type: "select",
           //   options: uniqueLeadTypes, // FIXED UNIQUE
           // },
-{
-  label: "Lead Type",
-  name: "lead_type",   // correct
-  type: "select",
-  options: [
-    { label: "Distributor", value: "Distributor" },
-    { label: "Direct", value: "Direct" },
-    { label: "Retailer", value: "Retailer" },
-  ],
-  required: true,
-},
+// {
+//   label: "Lead Type",
+//   name: "lead_type",   // correct
+//   type: "select",
+//   options: [
+//     { label: "Distributor", value: "Distributor" },
+//     { label: "Direct", value: "Direct" },
+//     { label: "Retailer", value: "Retailer" },
+//   ],
+//   required: true,
+// },
 
 
 
