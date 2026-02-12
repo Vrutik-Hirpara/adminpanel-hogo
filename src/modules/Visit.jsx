@@ -108,33 +108,79 @@ const fetchData = async () => {
 // }
 
 // };
+// const onSubmit = async (data) => {
+//   try {
+//     // if (!data.employee_id) return alert("Employee is required");
+//     // if (!data.visit_date) return alert("Visit Date is required");
+
+//     const hasFile =
+//       data.payment_image instanceof FileList ||
+//       data.images instanceof FileList;
+
+//     if (hasFile) {
+//       const formData = new FormData();
+//       Object.keys(data).forEach((key) => {
+//         const value = data[key];
+//         if (value instanceof FileList) {
+//           if (value.length > 0) formData.append(key, value[0]);
+//         } else if (value !== "" && value !== null && value !== undefined) {
+//           formData.append(key, value);
+//         }
+//       });
+
+//       selectedVisit
+//         ? await VisitsAPI.update(selectedVisit.id, formData)
+//         : await VisitsAPI.create(formData);
+//     } else {
+//       selectedVisit
+//         ? await VisitsAPI.update(selectedVisit.id, data)
+//         : await VisitsAPI.create(data);
+//     }
+
+//     setMode("list");
+//     fetchData();
+
+//   } catch (err) {
+//     const res = err.response?.data;
+
+//     if (!res) {
+//       alert("Network error. Please try again.");
+//       return;
+//     }
+
+//     const message = Object.entries(res)
+//       .map(([field, errors]) => {
+//         const text = Array.isArray(errors) ? errors.join(", ") : errors;
+//         return `${field.replaceAll("_", " ")}: ${text}`;
+//       })
+//       .join("\n");
+
+//     alert(message);
+//   }
+// };
 const onSubmit = async (data) => {
   try {
-    if (!data.employee_id) return alert("Employee is required");
-    if (!data.visit_date) return alert("Visit Date is required");
+    const formData = new FormData();
 
-    const hasFile =
-      data.payment_image instanceof FileList ||
-      data.images instanceof FileList;
+    Object.keys(data).forEach((key) => {
+      const value = data[key];
 
-    if (hasFile) {
-      const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        const value = data[key];
-        if (value instanceof FileList) {
-          if (value.length > 0) formData.append(key, value[0]);
-        } else if (value !== "" && value !== null && value !== undefined) {
-          formData.append(key, value);
+      // If file field
+      if (value instanceof FileList) {
+        if (value.length > 0) {
+          formData.append(key, value[0]);
         }
-      });
+      }
+      // Normal fields
+      else if (value !== "" && value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
 
-      selectedVisit
-        ? await VisitsAPI.update(selectedVisit.id, formData)
-        : await VisitsAPI.create(formData);
+    if (selectedVisit) {
+      await VisitsAPI.update(selectedVisit.id, formData);
     } else {
-      selectedVisit
-        ? await VisitsAPI.update(selectedVisit.id, data)
-        : await VisitsAPI.create(data);
+      await VisitsAPI.create(formData);
     }
 
     setMode("list");
@@ -329,10 +375,10 @@ const handleEdit = (r) => {
 
 
 
-          { label: "Address", name: "address" },
+          { label: "Address", name: "address",required: true,  },
           { label: "Location", name: "location" },
-          { label: "Visit Purpose", name: "visit_purpose" },
-          { label: "Visit Date", name: "visit_date", type: "datetime-local" },
+          { label: "Visit Purpose", name: "visit_purpose",required: true  },
+          { label: "Visit Date", name: "visit_date", type: "datetime-local",required: true, },
           { label: "Check In Time", name: "check_in_time", type: "datetime-local" },
           { label: "Checkout Time", name: "checkout_time", type: "datetime-local" },
           { label: "Followup Date", name: "followup_date", type: "datetime-local" },
@@ -347,7 +393,7 @@ const handleEdit = (r) => {
             ],
           },
           { label: "Contact Person", name: "contact_person" },
-          { label: "Notes", name: "notes", type: "textarea" },
+          { label: "Notes", name: "notes", type: "textarea",required: true, },
           { label: "Order Information", name: "order_information", type: "textarea" },
           { label: "Payment Details", name: "payment_details", type: "textarea" },
           { label: "Order Name", name: "order_name" },

@@ -221,6 +221,8 @@ if (mode === "view" && selectedItem) {
             label: "Status",
             name: "status",
             type: "select",
+                        required: true,
+
             options: [
 
               { label: "Active", value: "Active" },

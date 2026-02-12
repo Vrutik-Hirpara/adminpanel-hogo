@@ -265,8 +265,10 @@ const filteredDocuments = documents.filter(doc =>
 );
 
   // ================= SAVE =================
-const onSubmit = async (data) => {
+const onSubmit = async (data, methods) => {
   try {
+    const { setError } = methods;
+
     const isEdit = Boolean(selectedItem);
     const empIdNum = Number(data.employee_id);
 
@@ -291,14 +293,22 @@ const onSubmit = async (data) => {
       "driving_license_back",
     ];
 
-    if (!isEdit) {
-      for (let key of requiredFiles) {
-        if (!data[key] || data[key].length === 0) {
-          alert(`${key.replaceAll("_", " ")} is required`);
-          return;
-        }
-      }
+if (!isEdit) {
+  let hasError = false;
+
+  for (let key of requiredFiles) {
+    if (!data[key] || data[key].length === 0) {
+      setError(key, {
+        type: "manual",
+        message: "This file is required",
+      });
+      hasError = true;
     }
+  }
+
+  if (hasError) return;
+}
+
 
     const formData = new FormData();
 
@@ -438,12 +448,12 @@ const documentFields = [
           { label: "Aadhar Number", name: "aadhar_number" },
           { label: "Driving License Number", name: "driving_license_number" },
 
-          { label: "Photo", name: "photo", type: "file" },
-          { label: "Aadhar Front", name: "aadhar_front", type: "file" },
-          { label: "Aadhar Back", name: "aadhar_back", type: "file" },
-          { label: "PAN Card", name: "pan_card", type: "file" },
-          { label: "DL Front", name: "driving_license_front", type: "file" },
-          { label: "DL Back", name: "driving_license_back", type: "file" },
+          { label: "Photo", name: "photo", type: "file",required: true, },
+          { label: "Aadhar Front", name: "aadhar_front", type: "file",required: true, },
+          { label: "Aadhar Back", name: "aadhar_back", type: "file",required: true, },
+          { label: "PAN Card", name: "pan_card", type: "file",required: true, },
+          { label: "DL Front", name: "driving_license_front", type: "file",required: true, },
+          { label: "DL Back", name: "driving_license_back", type: "file",required: true, },
         ]}
       />
     </EntityPageLayout>

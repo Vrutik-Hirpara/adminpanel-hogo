@@ -205,23 +205,46 @@ export default function Expenses() {
                 selectedItem={selectedItem}
                 onSubmit={onSubmit}
                 setMode={setMode}
-                fields={[
-                    { label: "Vendor Name", name: "vendor_name", required: true },
-                    { label: "Expense Type", name: "expense_type" },
-                    { label: "Amount", name: "amount", type: "number" },
-                    {
-                        label: "Status",
-                        name: "status",
-                        type: "select",
-                        options: [
-                            { label: "Approved", value: "true" },
-                            { label: "Pending", value: "false" },
-                        ],
-                    },
-                    { label: "Date", name: "date", type: "date" },
-                    { label: "Receipt Photo", name: "receipt_photo", type: "file" },
+                // fields={[
+                //     { label: "Vendor Name", name: "vendor_name", required: true },
+                //     { label: "Expense Type", name: "expense_type" },
+                //     { label: "Amount", name: "amount", type: "number" },
+                //     {
+                //         label: "Status",
+                //         name: "status",
+                //         type: "select",
+                //         options: [
+                //             { label: "Approved", value: "true" },
+                //             { label: "Pending", value: "false" },
+                //         ],
+                //     },
+                //     { label: "Date", name: "date", type: "date" },
+                //     { label: "Receipt Photo", name: "receipt_photo", type: "file" },
 
-                ]}
+                // ]}
+                fields={[
+  { label: "Vendor Name", name: "vendor_name", required: true },
+
+  { label: "Expense Type", name: "expense_type", required: true },
+
+  { label: "Amount", name: "amount", type: "number", required: true },
+
+  {
+    label: "Status",
+    name: "status",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Approved", value: "true" },
+      { label: "Pending", value: "false" },
+    ],
+  },
+
+  { label: "Date", name: "date", type: "date", required: true },
+
+  { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional
+]}
+
             />
         </EntityPageLayout>
     );

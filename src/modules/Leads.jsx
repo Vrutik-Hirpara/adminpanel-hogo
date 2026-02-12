@@ -272,12 +272,12 @@ const empName = emp
             ],
           },
           { label: "Business Name", name: "business_name", required: true },
-          { label: "Contact Person", name: "contact_person" },
-          { label: "Phone", name: "phone" },
-          { label: "Email", name: "email" },
-          { label: "Address", name: "address", type: "textarea" },
-          { label: "City", name: "city" },
-          { label: "State", name: "state" },
+          { label: "Contact Person", name: "contact_person",required: true },
+          { label: "Phone", name: "phone",required: true },
+          { label: "Email", name: "email",required: true },
+          { label: "Address", name: "address", type: "textarea",required: true },
+          { label: "City", name: "city",required: true },
+          { label: "State", name: "state",required: true },
           { label: "Location", name: "location" },
 
           {
@@ -296,6 +296,7 @@ const empName = emp
             label: "Interest Level",
             name: "interest_level",
             type: "select",
+            required: true,
             options: [
               { label: "LOW", value: "Low" },
               { label: "MEDIUM", value: "Medium" },
@@ -307,6 +308,7 @@ const empName = emp
             label: "Lead Status",
             name: "lead_status",
             type: "select",
+            required: true,
             options: [
               { label: "Lead", value: "Lead" },
               { label: "Prospect", value: "Prospect" },

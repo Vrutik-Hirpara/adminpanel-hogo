@@ -115,6 +115,8 @@
 //     </div>
 //   );
 // }
+
+
 import { themes } from "../../config/theme.config";
 
 export default function FormInput({
@@ -132,8 +134,21 @@ export default function FormInput({
       <label className="text-sm font-medium" style={{ color: themes.backgroundDark }}>
         {label}
       </label>
+<input
+  type={type}
+  autoComplete={autoComplete}
+  {...register(name, rules)}
+  readOnly={readOnly}
+  style={type === "file" ? { "--file-bg": themes.primary } : {}}
+  className={
+    type === "file"
+      ? "w-full text-sm border rounded px-3 py-2 file-btn file:text-white file:px-2 file:py-1 file:rounded file:border-0 file:mr-4 file:cursor-pointer"
+      : "w-full px-4 py-2 rounded outline-none border"
+  }
+/>
 
-      <input
+
+      {/* <input
         type={type}
         autoComplete={autoComplete}
         {...register(name, rules)}
@@ -145,7 +160,7 @@ export default function FormInput({
           border: `1px solid ${error ? "#ef4444" : themes.backgroundGray}`,
           cursor: readOnly ? "not-allowed" : "text",
         }}
-      />
+      /> */}
 
       {error?.message && (
         <p className="text-red-500 text-sm">{error.message}</p>

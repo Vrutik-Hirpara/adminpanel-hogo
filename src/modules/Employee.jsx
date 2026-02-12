@@ -9,7 +9,8 @@ import SearchBar from "../components/table/SearchBar";
 
 import { formatDate } from "../utils/dateFormatter";
 
-import { EmployeeAPI, BranchAPI } from "../services";
+import { EmployeeAPI, BranchAPI, DepartmentAPI, RolesAPI } from "../services";
+import api from "../services/api";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -20,8 +21,8 @@ import EntityViewCard from "../components/view/EntityViewCard";
 
 import axios from "axios";
 
-const DEPT_API = "https://hogofilm.pythonanywhere.com/departments/";
-const ROLE_API = "https://hogofilm.pythonanywhere.com/roles/";
+// const DEPT_API = "https://hogofilm.pythonanywhere.com/departments/";
+// const ROLE_API = "https://hogofilm.pythonanywhere.com/roles/";
 
 export default function Employee() {
   const [employees, setEmployees] = useState([]);
@@ -59,16 +60,25 @@ export default function Employee() {
   };
 
   // FETCH DEPARTMENTS & ROLES
+  // const fetchMeta = async () => {
+  //   const deptRes = await axios.get(DEPT_API);
+  //   const roleRes = await axios.get(ROLE_API);
+  //   const branchRes = await BranchAPI.getAll();  // ⭐ CORRECT API NAME
+
+
+  //   setDepartments(deptRes.data.data || []);
+  //   setRoles(roleRes.data.data || []);
+  //   setBranches(branchRes.data.data || []);
+
+  // };
   const fetchMeta = async () => {
-    const deptRes = await axios.get(DEPT_API);
-    const roleRes = await axios.get(ROLE_API);
-    const branchRes = await BranchAPI.getAll();  // ⭐ CORRECT API NAME
+    const deptRes = await DepartmentAPI.getAll();
+    const roleRes = await RolesAPI.getAll();
+    const branchRes = await BranchAPI.getAll();
 
-
-    setDepartments(deptRes.data.data || []);
-    setRoles(roleRes.data.data || []);
-    setBranches(branchRes.data.data || []);
-
+    setDepartments(deptRes.data?.data || []);
+    setRoles(roleRes.data?.data || []);
+    setBranches(branchRes.data?.data || []);
   };
 
   useEffect(() => {
@@ -100,7 +110,7 @@ export default function Employee() {
   };
 
   // CREATE / UPDATE
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, methods) => {
     try {
       const payload = {
         ...data,
@@ -121,10 +131,31 @@ export default function Employee() {
 
       setMode("list");
       fetchEmployees();
-    } catch (error) {
-      console.error("Employee Save Error:", error.response?.data);
-    }
-  };
+    }catch (error) {
+  console.log("SERVER ERROR:", error.response?.data);
+
+  const serverData = error.response?.data;
+
+  if (serverData?.email) {
+    methods.setError("email", {
+      type: "manual",
+      message: serverData.email[0] || "This email id already exists",
+    });
+  } else if (serverData?.detail) {
+    methods.setError("email", {
+      type: "manual",
+      message: serverData.detail,
+    });
+  } else {
+    methods.setError("email", {
+      type: "manual",
+      message: "This email id already exists",
+    });
+  }
+}
+
+
+  }
   const employeeColumns = [
     { key: "employee_code" },
     { key: "office_branch_name" },   // ⭐ HERE
@@ -294,92 +325,22 @@ export default function Employee() {
 
         onSubmit={onSubmit}
         setMode={setMode}
-        fields={[
-  { label: "Employee Code", name: "employee_code", required: true },
-  { label: "First Name", name: "first_name", required: true },
-  { label: "Last Name", name: "last_name", required: true },
-
-  {
-    label: "Gender",
-    name: "gender",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Male", value: "Male" },
-      { label: "Female", value: "Female" }
-    ]
-  },
-
-  {
-    label: "Office Branch",
-    name: "office_branch_id",
-    type: "select",
-    options: branches.map(b => ({
-      label: b.name,
-      value: b.id,
-    })),
-  },
-
-  { label: "Date of Birth", name: "date_of_birth", type: "date", required: true },
-  { label: "Email", name: "email", type: "email", required: true },
-  { label: "Phone", name: "phone", required: true },
-  { label: "Joining Date", name: "joining_date", type: "date", required: true },
-
-  {
-    label: "Department",
-    name: "department_id",
-    type: "select",
-    required: true,
-    options: departments.map(d => ({ label: d.name, value: d.id }))
-  },
-
-  {
-    label: "Role",
-    name: "role_id",
-    type: "select",
-    required: true,
-    options: roles.map(r => ({ label: r.name, value: r.id }))
-  },
-
-  {
-    label: "Employment Type",
-    name: "employment_type",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Permanent", value: "Permanent" },
-      { label: "Contract", value: "Contract" },
-      { label: "Intern", value: "Intern" }
-    ]
-  },
-
-  {
-    label: "Status",
-    name: "status",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Active", value: "Active" },
-      { label: "Inactive", value: "Inactive" }
-    ]
-  },
-
-  ...(selectedEmployee ? [] : [
-    { label: "Password", name: "password", type: "password", required: true }
-  ]),
-]}
-
-        // fields={[
+        //         fields={[
         //   { label: "Employee Code", name: "employee_code", required: true },
         //   { label: "First Name", name: "first_name", required: true },
         //   { label: "Last Name", name: "last_name", required: true },
 
         //   {
-        //     label: "Gender", name: "gender", type: "select", options: [
+        //     label: "Gender",
+        //     name: "gender",
+        //     type: "select",
+        //     required: true,
+        //     options: [
         //       { label: "Male", value: "Male" },
         //       { label: "Female", value: "Female" }
         //     ]
         //   },
+
         //   {
         //     label: "Office Branch",
         //     name: "office_branch_id",
@@ -390,23 +351,33 @@ export default function Employee() {
         //     })),
         //   },
 
-        //   { label: "Date of Birth", name: "date_of_birth", type: "date" },
-        //   { label: "Email", name: "email", type: "email" },
-        //   { label: "Phone", name: "phone" },
-        //   { label: "Joining Date", name: "joining_date", type: "date" },
+        //   { label: "Date of Birth", name: "date_of_birth", type: "date", required: true },
+        //   { label: "Email", name: "email", type: "email", required: true },
+        //   { label: "Phone", name: "phone", required: true },
+        //   { label: "Joining Date", name: "joining_date", type: "date", required: true },
 
         //   {
-        //     label: "Department", name: "department_id", type: "select", required: true,
+        //     label: "Department",
+        //     name: "department_id",
+        //     type: "select",
+        //     required: true,
         //     options: departments.map(d => ({ label: d.name, value: d.id }))
         //   },
 
         //   {
-        //     label: "Role", name: "role_id", type: "select", required: true,
+        //     label: "Role",
+        //     name: "role_id",
+        //     type: "select",
+        //     required: true,
         //     options: roles.map(r => ({ label: r.name, value: r.id }))
         //   },
 
         //   {
-        //     label: "Employment Type", name: "employment_type", type: "select", options: [
+        //     label: "Employment Type",
+        //     name: "employment_type",
+        //     type: "select",
+        //     required: true,
+        //     options: [
         //       { label: "Permanent", value: "Permanent" },
         //       { label: "Contract", value: "Contract" },
         //       { label: "Intern", value: "Intern" }
@@ -414,14 +385,112 @@ export default function Employee() {
         //   },
 
         //   {
-        //     label: "Status", name: "status", type: "select", options: [
+        //     label: "Status",
+        //     name: "status",
+        //     type: "select",
+        //     required: true,
+        //     options: [
         //       { label: "Active", value: "Active" },
         //       { label: "Inactive", value: "Inactive" }
         //     ]
         //   },
 
-        //   ...(selectedEmployee ? [] : [{ label: "Password", name: "password", type: "password", required: true }]),
+        //   ...(selectedEmployee ? [] : [
+        //     { label: "Password", name: "password", type: "password", required: true }
+        //   ]),
         // ]}
+
+        fields={[
+          { label: "Employee Code", name: "employee_code", required: true },
+
+          { label: "First Name", name: "first_name", required: true },
+
+          { label: "Last Name", name: "last_name", required: true },
+
+          {
+            label: "Gender",
+            name: "gender",
+            type: "select",
+            required: true,
+            options: [
+              { label: "Male", value: "Male" },
+              { label: "Female", value: "Female" }
+            ]
+          },
+
+          {
+            label: "Office Branch",
+            name: "office_branch_id",
+            type: "select",
+            options: branches.map(b => ({
+              label: b.name,
+              value: b.id,
+            })),
+          },
+
+          {
+            label: "Date of Birth",
+            name: "date_of_birth",
+            type: "date",
+            required: true
+          },
+
+          { label: "Email", name: "email", type: "email", required: true },
+
+          { label: "Phone", name: "phone", required: true },
+
+          {
+            label: "Joining Date",
+            name: "joining_date",
+            type: "date",
+            required: true
+          },
+
+          {
+            label: "Department",
+            name: "department_id",
+            type: "select",
+            required: true,
+            options: departments.map(d => ({ label: d.name, value: d.id }))
+          },
+
+          {
+            label: "Role",
+            name: "role_id",
+            type: "select",
+            required: true,
+            options: roles.map(r => ({ label: r.name, value: r.id }))
+          },
+
+          {
+            label: "Employment Type",
+            name: "employment_type",
+            type: "select",
+            required: true,
+            options: [
+              { label: "Permanent", value: "Permanent" },
+              { label: "Contract", value: "Contract" },
+              { label: "Intern", value: "Intern" }
+            ]
+          },
+
+          {
+            label: "Status",
+            name: "status",
+            type: "select",
+            required: true,
+            options: [
+              { label: "Active", value: "Active" },
+              { label: "Inactive", value: "Inactive" }
+            ]
+          },
+
+          ...(selectedEmployee
+            ? []
+            : [{ label: "Password", name: "password", type: "password", required: true }]),
+        ]}
+
+
       />
     </EntityPageLayout>
   );

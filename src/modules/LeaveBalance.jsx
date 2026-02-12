@@ -32,39 +32,39 @@ export default function LeaveBalance() {
     fetchEmployees();
   }, []);
 
-const onSubmit = async (form) => {
-  const total = Number(form.total_allocated || 0);
-  const used = Number(form.used_days || 0);
+  const onSubmit = async (form) => {
+    const total = Number(form.total_allocated || 0);
+    const used = Number(form.used_days || 0);
 
-  const payload = {
-    leave_type: form.leave_type,
-    employee_id: Number(form.employee_id),
-    total_allocated: total,
-    used_days: used,
-    remaining_days: total - used,   // 🔥 MISSING FIELD FIX
+    const payload = {
+      leave_type: form.leave_type,
+      employee_id: Number(form.employee_id),
+      total_allocated: total,
+      used_days: used,
+      remaining_days: total - used,   // 🔥 MISSING FIELD FIX
+    };
+
+    try {
+      selected
+        ? await LeaveBalanceAPI.update(selected.id, payload)
+        : await LeaveBalanceAPI.create(payload);
+
+      setMode("list");
+      fetchData();
+
+    } catch (err) {
+      console.log("API ERROR:", err.response?.data);
+
+      const res = err.response?.data;
+      if (!res) return alert("Network error");
+
+      const message = Object.entries(res)
+        .map(([f, e]) => `${f.replaceAll("_", " ")}: ${Array.isArray(e) ? e.join(", ") : e}`)
+        .join("\n");
+
+      alert(message);
+    }
   };
-
-  try {
-    selected
-      ? await LeaveBalanceAPI.update(selected.id, payload)
-      : await LeaveBalanceAPI.create(payload);
-
-    setMode("list");
-    fetchData();
-
-  } catch (err) {
-    console.log("API ERROR:", err.response?.data);
-
-    const res = err.response?.data;
-    if (!res) return alert("Network error");
-
-    const message = Object.entries(res)
-      .map(([f, e]) => `${f.replaceAll("_"," ")}: ${Array.isArray(e)?e.join(", "):e}`)
-      .join("\n");
-
-    alert(message);
-  }
-};
 
 
   const leaveColumns = [
@@ -80,26 +80,26 @@ const onSubmit = async (form) => {
       ),
     },
   ];
-// 🔥 VIEW FIELDS
-const leaveFields = [
-  { key: "leave_type", label: "Leave Type" },
-  { key: "total_allocated", label: "Total Allocated Days" },
-  { key: "used_days", label: "Used Days" },
-  {
-    key: "remaining_days",
-    label: "Remaining Days",
-    format: (v) => `${v} days`,
-  },
-  {
-    key: "employee_id",
-    label: "Employee",
-    format: (id) => {
-      const emp = employees.find(e => e.id === id);
-      return emp ? `${emp.first_name} ${emp.last_name}` : "—";
+  // 🔥 VIEW FIELDS
+  const leaveFields = [
+    { key: "leave_type", label: "Leave Type" },
+    { key: "total_allocated", label: "Total Allocated Days" },
+    { key: "used_days", label: "Used Days" },
+    {
+      key: "remaining_days",
+      label: "Remaining Days",
+      format: (v) => `${v} days`,
     },
-  },
-];
-   
+    {
+      key: "employee_id",
+      label: "Employee",
+      format: (id) => {
+        const emp = employees.find(e => e.id === id);
+        return emp ? `${emp.first_name} ${emp.last_name}` : "—";
+      },
+    },
+  ];
+
   if (mode === "list") {
     return (
       <PageContainer>
@@ -135,15 +135,15 @@ const leaveFields = [
   if (mode === "view") {
     return (
       <EntityPageLayout title="Leave Balance Details" showBack onBack={() => setMode("list")}>
-<EntityViewCard
-  title="Leave Balance Details"
-  data={selected}
-  fields={leaveFields}
-  api={LeaveBalanceAPI}
-  headerKeys={["leave_type"]}
-  onUpdated={fetchData}
-  onDeleted={fetchData}
-/>
+        <EntityViewCard
+          title="Leave Balance Details"
+          data={selected}
+          fields={leaveFields}
+          api={LeaveBalanceAPI}
+          headerKeys={["leave_type"]}
+          onUpdated={fetchData}
+          onDeleted={fetchData}
+        />
       </EntityPageLayout>
     );
   }
@@ -162,22 +162,22 @@ const leaveFields = [
             type: "select",
             required: true,
             options: [
-  { label: "Casual Leave", value: "casual leave" },
-  { label: "Sick Leave", value: "sick leave" },
-  { label: "Paid Leave", value: "paid leave" },
-  { label: "Unpaid Leave", value: "unpaid leave" },
-]
+              { label: "Casual Leave", value: "casual leave" },
+              { label: "Sick Leave", value: "sick leave" },
+              { label: "Paid Leave", value: "paid leave" },
+              { label: "Unpaid Leave", value: "unpaid leave" },
+            ]
 
             ,
           },
-          { label: "Total Allocated", name: "total_allocated", type: "number" },
-          { label: "Used Days", name: "used_days", type: "number" },
+          { label: "Total Allocated", name: "total_allocated", type: "number",required: true },
+          { label: "Used Days", name: "used_days", type: "number",required: true },
           {
             label: "Employee",
             name: "employee_id",
             type: "select",
             options: employees.map(e => ({
-label: `${e.first_name} ${e.last_name}`,
+              label: `${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
           },

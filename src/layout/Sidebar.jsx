@@ -115,8 +115,12 @@
 // };
 
 // export default Sidebar;
+
+
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { getUserFromToken } from "../utils/auth";
+
 import { themes } from "../config/theme.config";
 import {
   LayoutDashboard,
@@ -142,14 +146,18 @@ import {
 
 const Sidebar = () => {
   const location = useLocation();
+const user = getUserFromToken();
 
   // 🔥 ONLY ONE OPEN STATE
   const [openMenu, setOpenMenu] = useState(null);
+const isEmployee = user?.is_employee;
+console.log("USER:", user);
+console.log("isEmployee:", user?.is_employee);
 
   useEffect(() => {
     if (location.pathname.startsWith("/employee")) setOpenMenu("employee");
     else if (["/department", "/role", "/officebranches"].some(p => location.pathname.startsWith(p))) setOpenMenu("office");
-    else if (["/leads", "/users", "/visits"].some(p => location.pathname.startsWith(p))) setOpenMenu("sales");
+    else if (["/leads",  "/visits"].some(p => location.pathname.startsWith(p))) setOpenMenu("sales");
     else if (["/holiday", "/leave-balance", "/leave-requests"].some(p => location.pathname.startsWith(p))) setOpenMenu("hr");
   }, [location.pathname]);
 
@@ -196,19 +204,17 @@ const Sidebar = () => {
 >
 
       <h4 className="text-lg font-semibold mb-5 pl-2 text-white">Employee Panel</h4>
-
+{/* 
       <ul className="space-y-1.5">
 
         <LinkItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" color="text-blue-500" />
 
-        {/* OFFICE */}
         <Dropdown id="office" label="Office" icon={Briefcase} color="text-purple-500">
           <LinkItem to="/department" icon={Building2} label="Department" color="text-purple-500" />
           <LinkItem to="/role" icon={ShieldCheck} label="Roles" color="text-green-500" />
           <LinkItem to="/officebranches" icon={Layers} label="Office Branches" color="text-orange-500" />
         </Dropdown>
 
-        {/* EMPLOYEE */}
         <Dropdown id="employee" label="Employee" icon={Users} color="text-blue-500">
           <LinkItem to="/employee" icon={Users} label="Employee" color="text-blue-500" />
                     <LinkItem to="/users" icon={Users} label="Users" color="text-cyan-500" />
@@ -218,13 +224,11 @@ const Sidebar = () => {
           <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color="text-rose-500" />
         </Dropdown>
 
-        {/* SALES */}
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color="text-cyan-500">
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color="text-cyan-500" />
           <LinkItem to="/visits" icon={MapPin} label="Visits" color="text-emerald-500" />
         </Dropdown>
 
-        {/* HR */}
         <Dropdown id="hr" label="HR" icon={UserCheck} color="text-purple-500">
           <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color="text-orange-500" />
           <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color="text-purple-500" />
@@ -235,7 +239,89 @@ const Sidebar = () => {
         
         <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" color="text-sky-500" />
 
-      </ul>
+      </ul> */}
+ <ul className="space-y-1.5">
+
+  {isEmployee ? (
+    // ✅ EMPLOYEE LOGIN MENU
+    <Dropdown id="employee" label="Employee" icon={Users} color="text-blue-500">
+
+      <LinkItem 
+        to="/employee" 
+        icon={Users} 
+        label="Employee" 
+        color="text-blue-500" 
+      />
+
+      <LinkItem 
+        to="/users" 
+        icon={Users} 
+        label="Users" 
+        color="text-cyan-500" 
+      />
+
+      <LinkItem 
+        to="/employee-personal-details" 
+        icon={UserCircle2} 
+        label="Personal Details" 
+        color="text-indigo-500" 
+      />
+
+      <LinkItem 
+        to="/employee-salary" 
+        icon={Wallet} 
+        label="Employee Salary" 
+        color="text-emerald-500" 
+      />
+
+      <LinkItem 
+        to="/employee-documents" 
+        icon={FileText} 
+        label="Employee Documents" 
+        color="text-rose-500" 
+      />
+
+    </Dropdown>
+
+  ) : (
+
+    // ✅ FULL ADMIN MENU
+    <>
+      <LinkItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" color="text-blue-500" />
+
+      <Dropdown id="office" label="Office" icon={Briefcase} color="text-purple-500">
+        <LinkItem to="/department" icon={Building2} label="Department" color="text-purple-500" />
+        <LinkItem to="/role" icon={ShieldCheck} label="Roles" color="text-green-500" />
+        <LinkItem to="/officebranches" icon={Layers} label="Office Branches" color="text-orange-500" />
+      </Dropdown>
+
+      <Dropdown id="employee" label="Employee" icon={Users} color="text-blue-500">
+        <LinkItem to="/employee" icon={Users} label="Employee" color="text-blue-500" />
+        <LinkItem to="/users" icon={Users} label="Users" color="text-cyan-500" />
+        <LinkItem to="/employee-personal-details" icon={UserCircle2} label="Personal Details" color="text-indigo-500" />
+        <LinkItem to="/employee-salary" icon={Wallet} label="Employee Salary" color="text-emerald-500" />
+        <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color="text-rose-500" />
+      </Dropdown>
+
+      <Dropdown id="sales" label="Sales" icon={TrendingUp} color="text-cyan-500">
+        <LinkItem to="/leads" icon={UserPlus} label="Leads" color="text-cyan-500" />
+        <LinkItem to="/visits" icon={MapPin} label="Visits" color="text-emerald-500" />
+      </Dropdown>
+
+      <Dropdown id="hr" label="HR" icon={UserCheck} color="text-purple-500">
+        <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color="text-orange-500" />
+        <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color="text-purple-500" />
+        <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color="text-purple-500" />
+        <LinkItem to="/expense" icon={Receipt} label="Expense" color="text-emerald-500" />
+      </Dropdown>
+
+      <LinkItem to="/lead-followups" icon={PhoneCall} label="Lead Followups" color="text-sky-500" />
+    </>
+  )}
+
+</ul>
+
+
     </div>
   );
 };

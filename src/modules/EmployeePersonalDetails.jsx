@@ -251,6 +251,7 @@ if (mode === "view" && selectedItem) {
             label: "Marital Status",
             name: "marital_status",
             type: "select",
+            required:true,
             options: [
               { label: "Single", value: "single" },
               { label: "Married", value: "married" },

@@ -59,6 +59,13 @@ export const dashboardModules = [
     color: themes.cardEmployee,    path: "/employee",
     icon: Users,
   },
+    {
+    title: "Users",
+    api: () => UserAPI.getAll(),
+    color: themes.cardUsers,    path: "/users",
+    icon: Users,
+  },
+
   {
     title: "Personal Details",
     api: () => EmployeePersonalAPI.getAll(),
@@ -76,12 +83,6 @@ export const dashboardModules = [
     api: () => EmployeeDocsAPI.getAll(),
     color: themes.cardDocuments,    path: "/employee-documents",
     icon: FileText,
-  },
-  {
-    title: "Users",
-    api: () => UserAPI.getAll(),
-    color: themes.cardUsers,    path: "/users",
-    icon: Users,
   },
 
   // 🔥 NEW MODULES (Same icons as Sidebar)

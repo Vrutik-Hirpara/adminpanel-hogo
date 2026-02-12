@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { dashboardModules } from "../config/dashboardModules";
 import { themes } from "../config/theme.config";
+import { getUserFromToken } from "../utils/auth";
 
 import {
   Calendar,
@@ -28,24 +29,42 @@ export default function Dashboard() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
+const user = getUserFromToken();
+const isEmployee = user?.is_employee === true;
 
+const allowedPaths = isEmployee
+  ? [
+      "/employee",
+      "/users",
+      "/employee-personal-details",
+      "/employee-salary",
+      "/employee-documents",
+    ]
+  : dashboardModules.map((m) => m.path);
+
+const filteredModules = dashboardModules.filter((mod) =>
+  allowedPaths.includes(mod.path)
+);
+
+  
   useEffect(() => {
     const fetchAllStats = async () => {
       try {
         setLoading(true);
         const results = await Promise.all(
-          dashboardModules.map((mod) => mod.api())
+filteredModules.map((mod) => mod.api())
         );
 
-        const finalStats = results.map((res, index) => ({
-          title: dashboardModules[index].title,
-          value: res.data.data.length,
-          color: dashboardModules[index].color,
-          icon: dashboardModules[index].icon,
-          path: dashboardModules[index].path,
-          gradient: dashboardModules[index].gradient,
-          accentColor: dashboardModules[index].accentColor,
-        }));
+     const finalStats = results.map((res, index) => ({
+  title: filteredModules[index].title,
+  value: res.data.data.length,
+  color: filteredModules[index].color,
+  icon: filteredModules[index].icon,
+  path: filteredModules[index].path,
+  gradient: filteredModules[index].gradient,
+  accentColor: filteredModules[index].accentColor,
+}));
+
 
         setStats(finalStats);
 

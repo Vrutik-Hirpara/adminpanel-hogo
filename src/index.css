@@ -24,3 +24,12 @@ body {
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+@layer components {
+  .file-btn::file-selector-button {
+    background-color: var(--file-bg);
+  }
+
+  .file-btn::file-selector-button:hover {
+    filter: brightness(0.9);
+  }
+}
