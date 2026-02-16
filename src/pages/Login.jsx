@@ -86,7 +86,8 @@
 //     </div>
 //   );
 // }
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import FormWrapper from "../components/form/FormWrapper";
 import FormContainer from "../components/form/FormContainer";
@@ -97,16 +98,15 @@ import api from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isNavigated, setIsNavigated] = useState(false); // 🔥 prevent double redirect
 
-  // 🔥 Skip login page if already logged in
+  // 🔒 Skip login page if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token && window.location.pathname === "/login") {
       navigate("/dashboard", { replace: true });
     }
-  }, [navigate]);
+  }, []);
 
   const onSubmit = async (data) => {
     try {
@@ -123,11 +123,8 @@ export default function Login() {
         localStorage.setItem("refresh", result.refresh_token);
         localStorage.setItem("user", JSON.stringify(result.data));
 
-        // 🔥 Prevent multiple navigation
-        if (!isNavigated) {
-          setIsNavigated(true);
-          navigate("/dashboard", { replace: true });
-        }
+        // 🚀 Redirect
+        navigate("/dashboard", { replace: true });
       } else {
         alert(result.message || "Login failed");
       }
