@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { themes } from "../config/theme.config";
 
 export default function Card({ title, value, color, path, icon: Icon }) {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ export default function Card({ title, value, color, path, icon: Icon }) {
     <motion.div
       whileHover={{ y: -6 }}
       onClick={() => navigate(path)}
-      className="cursor-pointer bg-white rounded-2xl border border-gray-200 shadow-sm p-6 
+      style={{ backgroundColor: themes.textWhite , borderColor: themes.borderLight}}
+      className="cursor-pointer  rounded-2xl border  shadow-sm p-6 
                  hover:shadow-lg transition-all duration-300 relative overflow-hidden"
     >
       {/* 🔵 TOP ACCENT LINE (RESTORED) */}
@@ -21,10 +23,10 @@ export default function Card({ title, value, color, path, icon: Icon }) {
 
       <div className="flex justify-between items-center mt-2">
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <p className="text-xs font-semibold uppercase tracking-wider"style={{ color: themes.textMuted }}>
             {title}
           </p>
-          <h2 className="text-3xl font-bold text-gray-900 mt-2">{value}</h2>
+          <h2 className="text-3xl font-bold mt-2" style={{ color: themes.backgroundBlack }}>{value}</h2>
         </div>
 
         {/* ICON BOX */}

@@ -22,15 +22,18 @@ export default function ExampleForm({ defaultValues = null }) {
     >
       {/* HEADER */}
       <div
-        className="px-6 py-3 text-white font-semibold rounded-t-lg"
-        style={{ backgroundColor: themes.primary }}
+        className="px-6 py-3  font-semibold rounded-t-lg"
+        style={{ backgroundColor: themes.primary  , color: themes.textWhite }}
       >
         {defaultValues ? "Edit Car" : "Add Car"}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="p-6">
         {/* BASIC DETAILS */}
-        <h3 className="text-sm font-semibold uppercase border-b pb-1 mb-4">
+<h3
+  className="text-sm font-semibold uppercase pb-1 mb-4"
+  style={{ borderBottom: `1px solid ${themes.borderLight}` }}
+>
           Basic Details
         </h3>
 
@@ -76,7 +79,13 @@ export default function ExampleForm({ defaultValues = null }) {
         </div>
 
         {/* PRICING & AVAILABILITY */}
-        <h3 className="text-sm font-semibold uppercase border-b pb-1 mt-6 mb-4">
+<h3
+  className="text-sm font-semibold uppercase pb-1 mt-6 mb-4"
+  style={{
+    borderBottom: `1px solid ${themes.borderLight}`,
+    color: themes.textSecondary,   // optional but recommended
+  }}
+>
           Pricing & Availability
         </h3>
 
@@ -125,18 +134,28 @@ export default function ExampleForm({ defaultValues = null }) {
 
         {/* ACTIONS */}
         <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            className="px-4 py-2 border rounded"
-          >
-            Cancel
-          </button>
+      <button
+  type="button"
+  className="px-4 py-2 rounded"
+  style={{
+    border: `1px solid ${themes.borderLight}`,
+    color: themes.textPrimary,
+    backgroundColor: themes.surfaceLight,
+  }}
+>
+  Cancel
+</button>
 
-          <button
-            type="submit"
-            className="px-5 py-2 text-white rounded"
-            style={{ backgroundColor: themes.primary }}
-          >
+
+      <button
+  type="submit"
+  className="px-5 py-2 rounded transition-all duration-200"
+  style={{
+    backgroundColor: themes.primary,
+    color: themes.textWhite,
+  }}
+>
+
             {defaultValues ? "Update Car" : "Save Car"}
           </button>
         </div>

@@ -10,6 +10,7 @@ import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
 import { LeaveBalanceAPI } from "../services";
 import api from "../services/api";
+import { themes } from "../config/theme.config";
 
 export default function LeaveBalance() {
   const [data, setData] = useState([]);
@@ -74,7 +75,8 @@ export default function LeaveBalance() {
     {
       key: "remaining_days",
       render: (row) => (
-        <span className="font-medium text-blue-600">
+        <span className="font-medium " style={{ color: themes.cardEmployee }}
+>
           {row.remaining_days}
         </span>
       ),

@@ -8,6 +8,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
 import LeadsTableHeader from "../components/table/LeadsTableHeader";
+import { themes } from "../config/theme.config";
 
 import { LeadsAPI, EmployeeAPI } from "../services";
 import EntityTableRow from "../components/table/EntityTableRow";
@@ -103,13 +104,16 @@ const empName = emp
       key: "interest_level",
       render: (row) => (
         <span
-          className={
-            row.interest_level === "High"
-              ? "text-red-600"
-              : row.interest_level === "Medium"
-                ? "text-yellow-600"
-                : "text-green-600"
-          }
+       className="font-semibold"
+style={{
+  color:
+    row.interest_level === "High"
+      ? themes.danger
+      : row.interest_level === "Medium"
+        ? themes.warning
+        : themes.success,
+}}
+
         >
           {row.interest_level}
         </span>
@@ -123,11 +127,17 @@ const empName = emp
       className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
       render: (row) => (
         <div className="w-[100px]">
-          <select
-            value={row.assigned_to || ""}
-            onChange={(e) => handleAssignChange(row, e.target.value)}
-            className="w-full border rounded px-2 py-1 text-sm bg-white"
-          >
+       <select
+  value={row.assigned_to || ""}
+  onChange={(e) => handleAssignChange(row, e.target.value)}
+  className="w-full rounded px-2 py-1 text-sm"
+  style={{
+    border: `1px solid ${themes.borderLight}`,
+    backgroundColor: themes.textWhite,
+    color: themes.textPrimary,
+  }}
+>
+
             <option value="">Unassigned</option>
             {employees.map((emp) => (
               <option key={emp.id} value={emp.id}>

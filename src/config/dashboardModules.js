@@ -50,7 +50,7 @@ export const dashboardModules = [
   {
     title: "Office Branches",
     api: () => BranchAPI.getAll(),
-    color: themes.cardOfficeBranch,    path: "/officebranches",
+    color: themes.cardHoliday,    path: "/officebranches",
     icon: Briefcase,
   },
   {
@@ -89,13 +89,13 @@ export const dashboardModules = [
   {
     title: "Leads",
     api: () => LeadsAPI.getAll(),
-    color: themes.cardLeads,            path: "/leads",
+    color: themes.cardUsers,            path: "/leads",
     icon: UserPlus,
   },
   {
     title: "Visits",
     api: () => VisitsAPI.getAll(),
-    color: themes.cardVisits,    path: "/visits",
+    color: themes.cardSalary,    path: "/visits",
     icon: MapPin,
   },
   {

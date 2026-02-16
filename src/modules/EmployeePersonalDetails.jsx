@@ -205,7 +205,7 @@ if (mode === "view" && selectedItem) {
 
   // ================= FORM PAGE =================
   return (
-    <EntityPageLayout title="Employee Personal Dfetails" showBack onBack={() => setMode("list")}>
+    <EntityPageLayout title="Employee Personal Details" showBack onBack={() => setMode("list")}>
       <EntityForm
         title={selectedItem ? "Edit Personal Details" : "Create Personal Details"}
         selectedItem={

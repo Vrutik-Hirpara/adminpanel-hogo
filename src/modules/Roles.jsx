@@ -7,6 +7,7 @@ import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
 import { RolesAPI } from "../services";
 
+import { themes } from "../config/theme.config";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -75,14 +76,17 @@ const roleColumns = [
     render: (row) => (
       <button
         onClick={() => handleStatusToggle(row)}
-        className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
-          row.status ? "bg-green-500" : "bg-gray-300"
-        }`}
+       className="relative w-12 h-6 rounded-full transition-colors duration-300"
+style={{
+  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+}}
+
       >
         <span
-          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+          className={`absolute top-1 left-1 w-4 h-4  rounded-full shadow transform transition-transform duration-300 ${
             row.status ? "translate-x-6" : ""
-          }`}
+          }`}   style={{ backgroundColor: themes.textWhite }}
+
         />
       </button>
     ),

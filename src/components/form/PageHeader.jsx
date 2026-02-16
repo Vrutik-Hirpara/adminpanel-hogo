@@ -19,8 +19,8 @@ export default function PageHeader({
       {showAction && (
         <button
           onClick={onAction}
-          className="px-4 py-2 rounded text-white cursor-pointer"
-          style={{ backgroundColor: themes.primary }}
+          className="px-4 py-2 rounded cursor-pointer"
+          style={{ backgroundColor: themes.primary,color: themes.textWhite  }}
         >
           {actionText}
         </button>

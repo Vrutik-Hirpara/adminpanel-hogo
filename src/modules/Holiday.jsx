@@ -10,6 +10,7 @@ import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
 import { HolidayAPI } from "../services";
 import { formatDate } from "../utils/dateFormatter";
+import { themes } from "../config/theme.config";
 
 export default function Holiday() {
   const [holidays, setHolidays] = useState([]);
@@ -56,7 +57,11 @@ const holidayColumns = [
   {
     key: "is_paid",
     render: (row) => (
-      <span className={row.is_paid ? "text-green-600" : "text-red-500"}>
+      // <span className={row.is_paid ? themes.success : themes.danger}>
+      <span
+  style={{ color: row.is_paid ? themes.success : themes.danger }}
+>
+
         {row.is_paid ? "Paid" : "Unpaid"}
       </span>
     ),

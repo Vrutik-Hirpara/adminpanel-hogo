@@ -6,6 +6,7 @@ import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
 import EntityTableRow from "../components/table/EntityTableRow";
 import SearchBar from "../components/table/SearchBar";
+import { themes } from "../config/theme.config";
 
 import { formatDate } from "../utils/dateFormatter";
 
@@ -21,8 +22,7 @@ import EntityViewCard from "../components/view/EntityViewCard";
 
 import axios from "axios";
 
-// const DEPT_API = "https://hogofilm.pythonanywhere.com/departments/";
-// const ROLE_API = "https://hogofilm.pythonanywhere.com/roles/";
+
 
 export default function Employee() {
   const [employees, setEmployees] = useState([]);
@@ -177,12 +177,15 @@ export default function Employee() {
       render: (row) => (
         <button
           onClick={() => handleStatusToggle(row)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 ${row.status ? "bg-green-500" : "bg-gray-400"
-            }`}
+className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
+style={{
+  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+}}
+
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"
-              }`}
+            className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1" }`}   style={{ backgroundColor: themes.textWhite }}
+
           />
         </button>
       ),
@@ -219,7 +222,13 @@ export default function Employee() {
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+className="px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2"
+style={{
+  border: `1px solid ${themes.borderLight}`,
+  color: themes.textPrimary,
+  backgroundColor: themes.surfaceLight,
+  boxShadow: `0 0 0 2px ${themes.cardEmployee}`, // blue focus ring
+}}
             />
 
             <ActionButtons

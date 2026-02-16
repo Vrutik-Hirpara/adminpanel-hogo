@@ -18,215 +18,100 @@ export default function Visits() {
   const [mode, setMode] = useState("list");
   const [selectedVisit, setSelectedVisit] = useState(null);
 
-//   const fetchData = async () => {
-// const [v, e] = await Promise.all([
-//   VisitsAPI.getAll(),
-//   EmployeeAPI.getAll(),
-// ]);
+  //   const fetchData = async () => {
+  // const [v, e] = await Promise.all([
+  //   VisitsAPI.getAll(),
+  //   EmployeeAPI.getAll(),
+  // ]);
 
 
-//     setVisits(v.data.data || []);
-//     setEmployees(e.data.data || []);
-//   };
-const fetchData = async () => {
-  const [v, e] = await Promise.all([
-    VisitsAPI.getAll(),
-    EmployeeAPI.getAll(),
-  ]);
+  //     setVisits(v.data.data || []);
+  //     setEmployees(e.data.data || []);
+  //   };
+  const fetchData = async () => {
+    const [v, e] = await Promise.all([
+      VisitsAPI.getAll(),
+      EmployeeAPI.getAll(),
+    ]);
 
-  const visitsData = v.data.data || [];
-  setVisits(visitsData);
-  setEmployees(e.data.data || []);
+    const visitsData = v.data.data || [];
+    setVisits(visitsData);
+    setEmployees(e.data.data || []);
 
-  // ⭐ UNIQUE LEAD TYPES FROM API
+    // ⭐ UNIQUE LEAD TYPES FROM API
 
-};
+  };
 
   useEffect(() => { fetchData(); }, []);
-  
-// const onSubmit = async (data) => {
-  
-//   try {
-//     if (!data.employee_id) return alert("Employee is required");
-// if (!data.lead_type) return alert("Lead Type is required");
-// if (!data.visit_date) return alert("Visit Date is required");
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
 
-//     const hasFile =
-//       data.payment_image instanceof FileList ||
-//       data.images instanceof FileList;
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
 
-//     if (hasFile) {
-//       // 👉 Use FormData ONLY if file present
-//       const formData = new FormData();
-
-//       Object.keys(data).forEach((key) => {
-//         const value = data[key];
-
-//         if (value instanceof FileList) {
-//           console.log(value,"olp")
-//           if (value.length > 0) formData.append(key, value[0]);
-//         } else if (value !== "" && value !== null && value !== undefined) {
-//           console.log(value,"olp1")
-
-//           formData.append(key, value);
-//         }
-//       });
-// console.log("plpl",formData,data)
-//       selectedVisit
-//         ? await VisitsAPI.update(selectedVisit.id, formData)
-//         : await VisitsAPI.create(formData);
-
-//     } else {
-//       // 👉 PURE JSON (THIS FIXES LEAD TYPE ISSUE)
-// console.log("plpl1")
-
-//       selectedVisit
-//         ? await VisitsAPI.update(selectedVisit.id, data)
-//         : await VisitsAPI.create(data);
-//     }
-
-//     setMode("list");
-//     fetchData();
-
-//   } catch (err) {
-//   const res = err.response?.data;
-
-//   if (!res) {
-//     alert("Network error. Please try again.");
-//     return;
-//   }
-
-//   // 🔥 Convert API errors to readable message
-//   const message = Object.entries(res)
-//     .map(([field, errors]) => {
-//       const text = Array.isArray(errors) ? errors.join(", ") : errors;
-//       return `${field.replaceAll("_", " ")}: ${text}`;
-//     })
-//     .join("\n");
-
-//   alert(message);
-// }
-
-// };
-// const onSubmit = async (data) => {
-//   try {
-//     // if (!data.employee_id) return alert("Employee is required");
-//     // if (!data.visit_date) return alert("Visit Date is required");
-
-//     const hasFile =
-//       data.payment_image instanceof FileList ||
-//       data.images instanceof FileList;
-
-//     if (hasFile) {
-//       const formData = new FormData();
-//       Object.keys(data).forEach((key) => {
-//         const value = data[key];
-//         if (value instanceof FileList) {
-//           if (value.length > 0) formData.append(key, value[0]);
-//         } else if (value !== "" && value !== null && value !== undefined) {
-//           formData.append(key, value);
-//         }
-//       });
-
-//       selectedVisit
-//         ? await VisitsAPI.update(selectedVisit.id, formData)
-//         : await VisitsAPI.create(formData);
-//     } else {
-//       selectedVisit
-//         ? await VisitsAPI.update(selectedVisit.id, data)
-//         : await VisitsAPI.create(data);
-//     }
-
-//     setMode("list");
-//     fetchData();
-
-//   } catch (err) {
-//     const res = err.response?.data;
-
-//     if (!res) {
-//       alert("Network error. Please try again.");
-//       return;
-//     }
-
-//     const message = Object.entries(res)
-//       .map(([field, errors]) => {
-//         const text = Array.isArray(errors) ? errors.join(", ") : errors;
-//         return `${field.replaceAll("_", " ")}: ${text}`;
-//       })
-//       .join("\n");
-
-//     alert(message);
-//   }
-// };
-const onSubmit = async (data) => {
-  try {
-    const formData = new FormData();
-
-    Object.keys(data).forEach((key) => {
-      const value = data[key];
-
-      // If file field
-      if (value instanceof FileList) {
-        if (value.length > 0) {
-          formData.append(key, value[0]);
+        // If file field
+        if (value instanceof FileList) {
+          if (value.length > 0) {
+            formData.append(key, value[0]);
+          }
         }
+        // Normal fields
+        else if (value !== "" && value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      if (selectedVisit) {
+        await VisitsAPI.update(selectedVisit.id, formData);
+      } else {
+        await VisitsAPI.create(formData);
       }
-      // Normal fields
-      else if (value !== "" && value !== null && value !== undefined) {
-        formData.append(key, value);
+
+      setMode("list");
+      fetchData();
+
+    } catch (err) {
+      const res = err.response?.data;
+
+      if (!res) {
+        alert("Network error. Please try again.");
+        return;
       }
-    });
 
-    if (selectedVisit) {
-      await VisitsAPI.update(selectedVisit.id, formData);
-    } else {
-      await VisitsAPI.create(formData);
+      const message = Object.entries(res)
+        .map(([field, errors]) => {
+          const text = Array.isArray(errors) ? errors.join(", ") : errors;
+          return `${field.replaceAll("_", " ")}: ${text}`;
+        })
+        .join("\n");
+
+      alert(message);
     }
+  };
 
-    setMode("list");
-    fetchData();
+  // 🔥 VIEW FIELDS (FOR EntityViewCard)
+  const visitFields = [
+    { key: "employee_name", label: "Employee", column: "left" },
+    { key: "lead_type", label: "Lead Type", column: "left" },
+    { key: "contact_person", label: "Contact Person", column: "left" },
+    { key: "address", label: "Address", column: "left" },
+    { key: "location", label: "Location", column: "left" },
+    { key: "visit_purpose", label: "Visit Purpose", column: "left" },
+    { key: "order_name", label: "Order Name", column: "left" },
 
-  } catch (err) {
-    const res = err.response?.data;
+    { key: "visit_date", label: "Visit Date", column: "right" },
+    { key: "check_in_time", label: "Check In Time", column: "right" },
+    { key: "checkout_time", label: "Checkout Time", column: "right" },
+    { key: "followup_date", label: "Followup Date", column: "right" },
+    { key: "followup_type", label: "Followup Type", column: "right" },
+    { key: "order_information", label: "Order Information", column: "right" },
+    { key: "payment_details", label: "Payment Details", column: "right" },
+    { key: "notes", label: "Notes", column: "right" },
 
-    if (!res) {
-      alert("Network error. Please try again.");
-      return;
-    }
-
-    const message = Object.entries(res)
-      .map(([field, errors]) => {
-        const text = Array.isArray(errors) ? errors.join(", ") : errors;
-        return `${field.replaceAll("_", " ")}: ${text}`;
-      })
-      .join("\n");
-
-    alert(message);
-  }
-};
-
-// 🔥 VIEW FIELDS (FOR EntityViewCard)
-const visitFields = [
-  { key: "employee_name", label: "Employee", column: "left" },
-  { key: "lead_type", label: "Lead Type", column: "left" },
-  { key: "contact_person", label: "Contact Person", column: "left" },
-  { key: "address", label: "Address", column: "left" },
-  { key: "location", label: "Location", column: "left" },
-  { key: "visit_purpose", label: "Visit Purpose", column: "left" },
-  { key: "order_name", label: "Order Name", column: "left" },
-
-  { key: "visit_date", label: "Visit Date", column: "right" },
-  { key: "check_in_time", label: "Check In Time", column: "right" },
-  { key: "checkout_time", label: "Checkout Time", column: "right" },
-  { key: "followup_date", label: "Followup Date", column: "right" },
-  { key: "followup_type", label: "Followup Type", column: "right" },
-  { key: "order_information", label: "Order Information", column: "right" },
-  { key: "payment_details", label: "Payment Details", column: "right" },
-  { key: "notes", label: "Notes", column: "right" },
-
-  { key: "payment_image", label: "Payment Image", column: "right" },
-  { key: "images", label: "Visit Image", column: "right" },
-];
+    { key: "payment_image", label: "Payment Image", column: "right" },
+    { key: "images", label: "Visit Image", column: "right" },
+  ];
 
   /* 🔥 TABLE COLUMNS */
   const visitColumns = [
@@ -243,10 +128,34 @@ const visitFields = [
       key: "followup_type",
       render: (row) =>
         row.followup_type ? (
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold
-            ${row.followup_type === "CALL" && "bg-blue-100 text-blue-700"}
-            ${row.followup_type === "MEETING" && "bg-green-100 text-green-700"}
-            ${row.followup_type === "VISIT" && "bg-purple-100 text-purple-700"}`}>
+          // <span className={`px-3 py-1 rounded-full text-xs font-semibold
+          //   ${row.followup_type === "CALL" && "bg-blue-100 text-blue-700"}
+          //   ${row.followup_type === "MEETING" && "bg-green-100 text-green-700"}
+          //   ${row.followup_type === "VISIT" && "bg-purple-100 text-purple-700"}
+          //   `}>
+          <span
+            className="px-3 py-1 rounded-full text-xs font-semibold"
+            style={{
+              backgroundColor:
+                row.followup_type === "CALL"
+                  ? themes.cardEmployee + "20"
+                  : row.followup_type === "MEETING"
+                    ? themes.success + "20"
+                    : row.followup_type === "VISIT"
+                      ? themes.cardDepartment + "20"
+                      : undefined,
+
+              color:
+                row.followup_type === "CALL"
+                  ? themes.cardEmployee
+                  : row.followup_type === "MEETING"
+                    ? themes.success
+                    : row.followup_type === "VISIT"
+                      ? themes.cardDepartment
+                      : undefined,
+            }}
+          >
+
             {row.followup_type}
           </span>
         ) : "-",
@@ -256,8 +165,15 @@ const visitFields = [
       render: (row) =>
         row.notes ? (
           <div className="relative inline-block group">
-            <span className="cursor-pointer text-blue-600 text-lg">📝</span>
-            <div className="absolute z-50 hidden group-hover:block bg-black text-white text-xs rounded px-3 py-2 top-full -mt-8 left-1/2 -translate-x-1/2 w-48 text-left break-words shadow-xl">
+            <span className="cursor-pointer text-lg" style={{ color: themes.cardEmployee }}
+            >📝</span>
+<div
+  className="absolute z-50 hidden group-hover:block text-xs rounded px-3 py-2 top-full -mt-8 left-1/2 -translate-x-1/2 w-48 text-left break-words shadow-xl"
+  style={{
+    backgroundColor: themes.backgroundGray900,
+    color: themes.textWhite,
+  }}
+>
               {row.notes}
             </div>
           </div>
@@ -266,19 +182,19 @@ const visitFields = [
   ];
 
   /* 🔥 EDIT HANDLER */
-const handleEdit = (r) => {
-  const emp = employees.find(e =>
-    `${e.first_name} ${e.last_name}`.trim() === r.employee_name?.trim()
-  );
+  const handleEdit = (r) => {
+    const emp = employees.find(e =>
+      `${e.first_name} ${e.last_name}`.trim() === r.employee_name?.trim()
+    );
 
-  setSelectedVisit({
-    ...r,
-    employee_id: emp?.id,
-    lead_type: r.lead_type,   // ⭐ IMPORTANT
-  });
+    setSelectedVisit({
+      ...r,
+      employee_id: emp?.id,
+      lead_type: r.lead_type,   // ⭐ IMPORTANT
+    });
 
-  setMode("form");
-};
+    setMode("form");
+  };
 
 
   if (mode === "list") {
@@ -322,15 +238,15 @@ const handleEdit = (r) => {
   if (mode === "view" && selectedVisit) {
     return (
       <EntityPageLayout title="Visit Details" showBack onBack={() => setMode("list")}>
-<EntityViewCard
-  title="Visit Details"
-  data={selectedVisit}
-  fields={visitFields}
-  api={VisitsAPI}
-  headerKeys={["visit_date"]}
-  onUpdated={fetchData}
-  onDeleted={fetchData}
-/>
+        <EntityViewCard
+          title="Visit Details"
+          data={selectedVisit}
+          fields={visitFields}
+          api={VisitsAPI}
+          headerKeys={["visit_date"]}
+          onUpdated={fetchData}
+          onDeleted={fetchData}
+        />
       </EntityPageLayout>
     );
   }
@@ -361,24 +277,24 @@ const handleEdit = (r) => {
           //   type: "select",
           //   options: uniqueLeadTypes, // FIXED UNIQUE
           // },
-// {
-//   label: "Lead Type",
-//   name: "lead_type",   // correct
-//   type: "select",
-//   options: [
-//     { label: "Distributor", value: "Distributor" },
-//     { label: "Direct", value: "Direct" },
-//     { label: "Retailer", value: "Retailer" },
-//   ],
-//   required: true,
-// },
+          // {
+          //   label: "Lead Type",
+          //   name: "lead_type",   // correct
+          //   type: "select",
+          //   options: [
+          //     { label: "Distributor", value: "Distributor" },
+          //     { label: "Direct", value: "Direct" },
+          //     { label: "Retailer", value: "Retailer" },
+          //   ],
+          //   required: true,
+          // },
 
 
 
-          { label: "Address", name: "address",required: true,  },
+          { label: "Address", name: "address", required: true, },
           { label: "Location", name: "location" },
-          { label: "Visit Purpose", name: "visit_purpose",required: true  },
-          { label: "Visit Date", name: "visit_date", type: "datetime-local",required: true, },
+          { label: "Visit Purpose", name: "visit_purpose", required: true },
+          { label: "Visit Date", name: "visit_date", type: "datetime-local", required: true, },
           { label: "Check In Time", name: "check_in_time", type: "datetime-local" },
           { label: "Checkout Time", name: "checkout_time", type: "datetime-local" },
           { label: "Followup Date", name: "followup_date", type: "datetime-local" },
@@ -393,7 +309,7 @@ const handleEdit = (r) => {
             ],
           },
           { label: "Contact Person", name: "contact_person" },
-          { label: "Notes", name: "notes", type: "textarea",required: true, },
+          { label: "Notes", name: "notes", type: "textarea", required: true, },
           { label: "Order Information", name: "order_information", type: "textarea" },
           { label: "Payment Details", name: "payment_details", type: "textarea" },
           { label: "Order Name", name: "order_name" },

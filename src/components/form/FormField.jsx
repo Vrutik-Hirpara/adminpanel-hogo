@@ -8,7 +8,7 @@ export default function FormField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm text-gray-600">{label}</label>
+      <label className="text-sm"style={{ color: themes.textSecondary }}>{label}</label>
 
       <input
         type={type}

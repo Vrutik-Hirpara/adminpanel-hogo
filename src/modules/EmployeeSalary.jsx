@@ -10,6 +10,7 @@ import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
+import { themes } from "../config/theme.config";
 
 import { SalaryAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
@@ -98,7 +99,7 @@ const filteredSalary = salaryData.filter(s =>
     {
       key: "gross_salary",
       render: (row) => (
-        <span className="font-semibold text-green-600">{row.gross_salary}</span>
+        <span className="font-semibold "style={{ color: themes.success }}>{row.gross_salary}</span>
       ),
     },
 {

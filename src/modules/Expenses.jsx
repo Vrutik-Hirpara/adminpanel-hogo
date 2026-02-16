@@ -10,6 +10,7 @@ import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 import api from "../services/api";
 import { formatDate } from "../utils/dateFormatter";
+import { themes } from "../config/theme.config";
 
 import { ExpenseAPI } from "../services";
 
@@ -88,12 +89,16 @@ export default function Expenses() {
             render: (row) => (
                 <button
                     onClick={() => handleStatusToggle(row)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 ${row.status ? "bg-green-500" : "bg-gray-400"
-                        }`}
+                   className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
+style={{
+  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+}}
+
                 >
                     <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"
-                            }`}
+                        className={`inline-block h-4 w-4 transform rounded-full  transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"
+                            }`}   style={{ backgroundColor: themes.textWhite }}
+
                     />
                 </button>
             ),
@@ -101,29 +106,7 @@ export default function Expenses() {
 
     ];
 
-    // ================= VIEW FIELDS =================
-    // const expenseFields = [
-    //     { key: "vendor_name", label: "Vendor Name" },
-    //     { key: "expense_type", label: "Expense Type" },
-    //     { key: "amount", label: "Amount" },
-    //     { key: "date", label: "Date" },
-    //     { key: "status", label: "Status", format: v => v ? "Approved" : "Pending" },
-    //     {
-    //         key: "receipt_photo",
-    //         label: "Receipt Photo",
-    //         format: (url) =>
-    //             url ? (
-    //                 <img
-    //                     src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
-    //                     alt="receipt"
-    //                     className="w-40 rounded shadow border"
-    //                 />
-    //             ) : "No Image",
-    //     }
 
-    //     ,
-    //     { key: "created_at", label: "Created At" },
-    // ];
     const expenseFields = [
         { key: "vendor_name", label: "Vendor Name" },
         { key: "expense_type", label: "Expense Type" },
@@ -139,10 +122,20 @@ export default function Expenses() {
             format: (url) =>
                 url ? (
                     <img
-                        src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
-                        alt="receipt"
-                        className="w-40 rounded shadow border"
-                    />
+  src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+  alt="receipt"
+  className="w-40 rounded shadow"
+  style={{
+    border: `1px solid ${themes.borderLight}`,
+    backgroundColor: themes.surfaceLight,
+  }}
+/>
+
+                    // <img
+                    //     src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+                    //     alt="receipt"
+                    //     className="w-40 rounded shadow border"
+                    // />
                 ) : "No Image",
         }    ];
 

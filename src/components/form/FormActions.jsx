@@ -29,8 +29,8 @@ export default function FormActions({
       {!hideSubmit && (
         <button
           type="submit"
-          className="px-6 py-2 rounded text-white cursor-pointer"
-          style={{ backgroundColor: themes.primary }}
+          className="px-6 py-2 rounded  cursor-pointer"
+          style={{ backgroundColor: themes.primary, color: themes.textWhite  }}
         >
           {submitLabel}
         </button>

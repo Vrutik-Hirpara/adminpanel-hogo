@@ -12,8 +12,8 @@ export default function ActionButtons({
       {showAdd && (
         <button
           onClick={onAdd}
-          className="px-4 py-2 rounded text-white cursor-pointer"
-          style={{ backgroundColor: themes.primary }}
+          className="px-4 py-2 rounded cursor-pointer"
+          style={{ backgroundColor: themes.primary, color: themes.textWhite  }}
         >
           {addText}
         </button>
@@ -22,8 +22,8 @@ export default function ActionButtons({
       {showBack && (
         <button
           onClick={onBack}
-          className="px-4 py-2 rounded text-white cursor-pointer"
-          style={{ backgroundColor: themes.primary }}
+          className="px-4 py-2 rounded cursor-pointer"
+          style={{ backgroundColor: themes.primary, color: themes.textWhite  }}
         >
           Back to List
         </button>

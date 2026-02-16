@@ -3,7 +3,7 @@
 export default function LeadsTableHeader() {
   return (
     <thead>
-      <tr className="bg-red-600 text-white text-sm">
+      <tr className="bg-red-600 text-sm"  style={{ color: themes.textWhite }}>
 
         <th className="w-[4%] py-3 text-center">No</th>
         <th className="w-[14%] py-3 text-center">Business</th>

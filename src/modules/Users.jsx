@@ -9,6 +9,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
 import EntityTableRow from "../components/table/EntityTableRow";
+import { themes } from "../config/theme.config";
 
 import { EmployeeAPI, UserAPI } from "../services";
 import api from "../services/api";
@@ -109,14 +110,17 @@ const userColumns = [
     render: (row) => (
       <button
         onClick={() => handleStatusToggle(row)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 ${
-          row.status ? "bg-green-500" : "bg-gray-400"
-        }`}
+   className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
+style={{
+  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+}}
+
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-500 ${
+          className={`inline-block h-4 w-4 transform rounded-full  transition-all duration-500 ${
             row.status ? "translate-x-6" : "translate-x-1"
-          }`}
+          }`}   style={{ backgroundColor: themes.textWhite }}
+
         />
       </button>
     ),

@@ -3,6 +3,7 @@ import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 
 import TableHeader from "../components/table/TableHeader";
+import { themes } from "../config/theme.config";
 
 import { DepartmentAPI } from "../services";
 
@@ -83,18 +84,23 @@ export default function Department() {
     { key: "description" },
     {
       key: "status",
-      render: (row) => (
-        <button
-          onClick={() => handleStatusToggle(row)}
-          className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${row.status ? "bg-green-500" : "bg-gray-300"
-            }`}
-        >
-          <span
-            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
-              }`}
-          />
-        </button>
-      ),
+  render: (row) => (
+  <button
+    onClick={() => handleStatusToggle(row)}
+    className="relative w-12 h-6 rounded-full transition-colors duration-300"
+    style={{
+      backgroundColor: row.status
+        ? themes.cardRole       // green-500
+        : themes.toggleOff || themes.borderLight,
+    }}
+  >
+    <span
+      className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
+        }`}
+      style={{ backgroundColor: themes.textWhite }}
+    />
+  </button>
+),
     },
   ];
   const departmentFields = [
