@@ -34,7 +34,7 @@ toggleOff: "#9CA3AF", // gray-400
   // cardVisits: "#10B981",
   cardHoliday: "#F59E0B",
   cardLeaveBalance: "#8B5CF6",
-  fontPrimary: `"Oxanium", sans-serif`,
+  // fontPrimary: `"Oxanium", sans-serif`,
    borderLight: "#E5E7EB",
     success: "#16A34A",
   warning: "#D97706", // yellow-600

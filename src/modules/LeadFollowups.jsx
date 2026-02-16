@@ -97,7 +97,6 @@ export default function LeadFollowups() {
   // onMouseEnter={(e) => (e.currentTarget.style.color = themes.cardEmployee)}
   // onMouseLeave={(e) => (e.currentTarget.style.color = themes.cardEmployee)}
 >
-
               📝
             </span>
             <div className="absolute hidden group-hover:block z-50   text-xs rounded-lg px-3 py-2 w-48 break-words shadow-xl top-7 left-1/2 -translate-x-1/2 -translate-y-full" style={{ backgroundColor: themes.backgroundGray900, color: themes.textWhite  }}>
