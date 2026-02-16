@@ -270,6 +270,7 @@
 //     </div>
 //   );
 // }
+
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { dashboardModules } from "../config/dashboardModules";
@@ -292,8 +293,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
 
-  const user = getUserFromToken();
-  const isEmployee = user?.is_employee === true;
+//   const user = getUserFromToken();
+  
+//   // const isEmployee = user?.is_employee === true;
+// const isEmployee = user?.is_employee === true;
+const user = getUserFromToken() || {};
+const isEmployee = user.is_employee === true;
+
 
   // Employee modules only
   const employeeModulePaths = [
