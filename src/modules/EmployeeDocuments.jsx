@@ -1,4 +1,271 @@
 
+// import { useEffect, useState } from "react";
+// import PageContainer from "../layout/PageContainer";
+// import Table from "../components/table/Table";
+// import TableHeader from "../components/table/TableHeader";
+// import ActionButtons from "../components/form/ActionButton";
+// import SectionTitle from "../components/form/SectionTitle";
+// import EntityPageLayout from "../layout/EntityPageLayout";
+// import EntityForm from "../components/form/EntityForm";
+// import EntityTableRow from "../components/table/EntityTableRow";
+// import EntityViewCard from "../components/view/EntityViewCard";
+// import { formatDate } from "../utils/dateFormatter";
+
+// import { themes } from "../config/theme.config";
+
+// import { EmployeeAPI, EmployeeDocsAPI } from "../services";
+// import SearchBar from "../components/table/SearchBar";
+
+// export default function EmployeeDocuments() {
+//   const [documents, setDocuments] = useState([]);
+//   const [employees, setEmployees] = useState([]);
+//   const [mode, setMode] = useState("list");
+//   const [selectedItem, setSelectedItem] = useState(null);
+// const [search, setSearch] = useState("");
+
+//   // ================= FETCH =================
+//   const fetchDocuments = async (empList) => {
+//     const res = await EmployeeDocsAPI.getAll();
+//     const data = res.data?.data || [];
+
+//     const formatted = data.map(d => {
+//       const emp = empList.find(e => e.id === d.employee_id);
+//       return {
+//         ...d,
+//         employeeName: emp
+//           ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+//           : d.employee_id,
+//       };
+//     });
+
+//     setDocuments(formatted);
+//   };
+
+//   useEffect(() => {
+//     const load = async () => {
+//       const resEmp = await EmployeeAPI.getAll();
+//       const empData = resEmp.data?.data || [];
+//       setEmployees(empData);
+//       await fetchDocuments(empData);
+//     };
+//     load();
+//   }, []);
+// const filteredDocuments = documents.filter(doc =>
+//   `${doc.employeeName} ${doc.pancard_number} ${doc.aadhar_number} ${doc.driving_license_number}`
+//     .toLowerCase()
+//     .includes(search.toLowerCase())
+// );
+
+//   // ================= SAVE =================
+// const onSubmit = async (data, methods) => {
+//   try {
+//     const { setError } = methods;
+
+//     const isEdit = Boolean(selectedItem);
+//     const empIdNum = Number(data.employee_id);
+
+//     // 🔥 UNIQUE EMPLOYEE VALIDATION
+//     const alreadyExists = documents.some(doc => {
+//       if (selectedItem && doc.id === selectedItem.id) return false;
+//       return Number(doc.employee_id) === empIdNum;
+//     });
+
+//     if (alreadyExists) {
+//       alert("Documents already exist for this employee!");
+//       return;
+//     }
+
+//     // 🔥 REQUIRED FILE VALIDATION (ONLY ADD)
+//     const requiredFiles = [
+//       "photo",
+//       "aadhar_front",
+//       "aadhar_back",
+//       "pan_card",
+//       "driving_license_front",
+//       "driving_license_back",
+//     ];
+
+// if (!isEdit) {
+//   let hasError = false;
+
+//   for (let key of requiredFiles) {
+//     if (!data[key] || data[key].length === 0) {
+//       setError(key, {
+//         type: "manual",
+//         message: "This file is required",
+//       });
+//       hasError = true;
+//     }
+//   }
+
+//   if (hasError) return;
+// }
+
+
+//     const formData = new FormData();
+
+//     Object.keys(data).forEach(key => {
+//       const value = data[key];
+//       if (value instanceof FileList) {
+//         if (value.length > 0) formData.append(key, value[0]);
+//       } else if (value !== "" && value !== null && value !== undefined) {
+//         formData.append(key, value);
+//       }
+//     });
+
+//     selectedItem
+//       ? await EmployeeDocsAPI.update(selectedItem.id, formData)
+//       : await EmployeeDocsAPI.create(formData);
+
+//     alert("Saved successfully");
+//     setMode("list");
+//     fetchDocuments(employees);
+
+//   } catch (err) {
+//     console.error(err);
+//     alert("Save failed");
+//   }
+// };
+
+//   const handleDelete = async (id) => {
+//     await EmployeeDocsAPI.delete(id);
+//     fetchDocuments(employees);
+//   };
+
+
+// const documentFields = [
+//   { key: "employeeName", label: "Employee" },
+//   { key: "pancard_number", label: "PAN Number" },
+//   { key: "aadhar_number", label: "Aadhar Number" },
+//   { key: "driving_license_number", label: "Driving License Number" },
+
+//   { key: "photo", label: "Photo", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+//   { key: "aadhar_front", label: "Aadhar Front", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+//   { key: "aadhar_back", label: "Aadhar Back", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+//   { key: "pan_card", label: "PAN Card", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+//   { key: "driving_license_front", label: "DL Front", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+//   { key: "driving_license_back", label: "DL Back", render: v => v && <img
+//   src={v}
+//   className="h-24 rounded"
+//   style={{ border: `1px solid ${themes.borderLight}` }}
+// />
+//  },
+
+// ];
+
+//   // ================= LIST =================
+//   if (mode === "list") {
+//     return (
+//       <PageContainer>
+//        <div className="flex justify-between items-center mb-4">
+//   <SectionTitle title="Employee Documents" />
+
+//   <div className="flex gap-3">
+//     <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
+//     <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
+//   </div>
+// </div>
+
+
+//         <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
+// {filteredDocuments.map((doc, index) => (
+//             <EntityTableRow
+//               key={doc.id}
+//               row={doc}
+//               index={index}
+//               columns={[
+//                 { key: "employeeName" },
+//                 { key: "pancard_number" },
+//                 { key: "aadhar_number" },
+//                 { key: "driving_license_number" },
+//                 { key: "uploaded_at", render: r =>  formatDate(r.uploaded_at)?.slice(0, 10) },
+//               ]}
+//               onView={(r) => { setSelectedItem(r); setMode("view"); }}
+//               onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+//               onDelete={handleDelete}
+//             />
+//           ))}
+//         </Table>
+//       </PageContainer>
+//     );
+//   }
+
+//   // ================= VIEW =================
+//   if (mode === "view" && selectedItem) {
+//     return (
+//       <EntityPageLayout title="Employee Documents" showBack onBack={() => setMode("list")}>
+//         <EntityViewCard
+//           title="Employee Documents"
+//           data={selectedItem}
+//           fields={documentFields}
+//           api={EmployeeDocsAPI}
+//           onUpdated={() => fetchDocuments(employees)}
+//           onDeleted={() => fetchDocuments(employees)}
+//           headerKeys={["employeeName"]}
+//         />
+//       </EntityPageLayout>
+//     );
+//   }
+
+//   // ================= FORM =================
+//   return (
+//     <EntityPageLayout title="Employee Documents" showBack onBack={() => setMode("list")}>
+//       <EntityForm
+//         title={selectedItem ? "Edit Documents" : "Upload Documents"}
+//         selectedItem={selectedItem}
+//         onSubmit={onSubmit}
+//         setMode={setMode}
+//         fields={[
+//           {
+//             label: "Employee",
+//             name: "employee_id",
+//             type: "select",
+//             required: true,
+//             options: employees.map(e => ({
+//               label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+//               value: e.id,
+//             })),
+//           },
+//           { label: "PAN Number", name: "pancard_number" },
+//           { label: "Aadhar Number", name: "aadhar_number" },
+//           { label: "Driving License Number", name: "driving_license_number" },
+
+//           { label: "Photo", name: "photo", type: "file",required: true, },
+//           { label: "Aadhar Front", name: "aadhar_front", type: "file",required: true, },
+//           { label: "Aadhar Back", name: "aadhar_back", type: "file",required: true, },
+//           { label: "PAN Card", name: "pan_card", type: "file",required: true, },
+//           { label: "DL Front", name: "driving_license_front", type: "file",required: true, },
+//           { label: "DL Back", name: "driving_license_back", type: "file",required: true, },
+//         ]}
+//       />
+//     </EntityPageLayout>
+//   );
+// }
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -10,23 +277,33 @@ import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
-
 import { themes } from "../config/theme.config";
 
 import { EmployeeAPI, EmployeeDocsAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 
+// 🔥 ROLE HOOK
+import { useUser } from "../hooks/useUser";
+
 export default function EmployeeDocuments() {
+
+  const { employeeId, isHR } = useUser();
+
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
 
   // ================= FETCH =================
   const fetchDocuments = async (empList) => {
     const res = await EmployeeDocsAPI.getAll();
-    const data = res.data?.data || [];
+    let data = res.data?.data || [];
+
+    // 🔒 non-HR → only own documents
+    if (!isHR) {
+      data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+    }
 
     const formatted = data.map(d => {
       const emp = empList.find(e => e.id === d.employee_id);
@@ -41,159 +318,134 @@ const [search, setSearch] = useState("");
     setDocuments(formatted);
   };
 
+  // ================= LOAD =================
   useEffect(() => {
     const load = async () => {
       const resEmp = await EmployeeAPI.getAll();
-      const empData = resEmp.data?.data || [];
+      let empData = resEmp.data?.data || [];
+
+      // 🔒 non-HR → only own employee in dropdown
+      if (!isHR) {
+        empData = empData.filter(e => e.id === employeeId);
+      }
+
       setEmployees(empData);
       await fetchDocuments(empData);
     };
+
     load();
-  }, []);
-const filteredDocuments = documents.filter(doc =>
-  `${doc.employeeName} ${doc.pancard_number} ${doc.aadhar_number} ${doc.driving_license_number}`
-    .toLowerCase()
-    .includes(search.toLowerCase())
-);
+  }, [isHR, employeeId]);
+
+  // ================= SEARCH =================
+  const filteredDocuments = documents.filter(doc =>
+    `${doc.employeeName} ${doc.pancard_number} ${doc.aadhar_number} ${doc.driving_license_number}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   // ================= SAVE =================
-const onSubmit = async (data, methods) => {
-  try {
-    const { setError } = methods;
+  const onSubmit = async (data, methods) => {
+    try {
+      const { setError } = methods;
 
-    const isEdit = Boolean(selectedItem);
-    const empIdNum = Number(data.employee_id);
+      const isEdit = Boolean(selectedItem);
+      const empIdNum = Number(data.employee_id);
 
-    // 🔥 UNIQUE EMPLOYEE VALIDATION
-    const alreadyExists = documents.some(doc => {
-      if (selectedItem && doc.id === selectedItem.id) return false;
-      return Number(doc.employee_id) === empIdNum;
-    });
-
-    if (alreadyExists) {
-      alert("Documents already exist for this employee!");
-      return;
-    }
-
-    // 🔥 REQUIRED FILE VALIDATION (ONLY ADD)
-    const requiredFiles = [
-      "photo",
-      "aadhar_front",
-      "aadhar_back",
-      "pan_card",
-      "driving_license_front",
-      "driving_license_back",
-    ];
-
-if (!isEdit) {
-  let hasError = false;
-
-  for (let key of requiredFiles) {
-    if (!data[key] || data[key].length === 0) {
-      setError(key, {
-        type: "manual",
-        message: "This file is required",
+      // 🔥 UNIQUE EMPLOYEE VALIDATION
+      const alreadyExists = documents.some(doc => {
+        if (selectedItem && doc.id === selectedItem.id) return false;
+        return Number(doc.employee_id) === empIdNum;
       });
-      hasError = true;
-    }
-  }
 
-  if (hasError) return;
-}
-
-
-    const formData = new FormData();
-
-    Object.keys(data).forEach(key => {
-      const value = data[key];
-      if (value instanceof FileList) {
-        if (value.length > 0) formData.append(key, value[0]);
-      } else if (value !== "" && value !== null && value !== undefined) {
-        formData.append(key, value);
+      if (alreadyExists) {
+        alert("Documents already exist for this employee!");
+        return;
       }
-    });
 
-    selectedItem
-      ? await EmployeeDocsAPI.update(selectedItem.id, formData)
-      : await EmployeeDocsAPI.create(formData);
+      // 🔥 REQUIRED FILE VALIDATION (ONLY ADD)
+      const requiredFiles = [
+        "photo",
+        "aadhar_front",
+        "aadhar_back",
+        "pan_card",
+        "driving_license_front",
+        "driving_license_back",
+      ];
 
-    alert("Saved successfully");
-    setMode("list");
-    fetchDocuments(employees);
+      if (!isEdit) {
+        let hasError = false;
 
-  } catch (err) {
-    console.error(err);
-    alert("Save failed");
-  }
-};
+        for (let key of requiredFiles) {
+          if (!data[key] || data[key].length === 0) {
+            setError(key, {
+              type: "manual",
+              message: "This file is required",
+            });
+            hasError = true;
+          }
+        }
+
+        if (hasError) return;
+      }
+
+      const formData = new FormData();
+
+      Object.keys(data).forEach(key => {
+        const value = data[key];
+        if (value instanceof FileList) {
+          if (value.length > 0) formData.append(key, value[0]);
+        } else if (value !== "" && value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      selectedItem
+        ? await EmployeeDocsAPI.update(selectedItem.id, formData)
+        : await EmployeeDocsAPI.create(formData);
+
+      alert("Saved successfully");
+      setMode("list");
+      fetchDocuments(employees);
+
+    } catch (err) {
+      console.error(err);
+      alert("Save failed");
+    }
+  };
 
   const handleDelete = async (id) => {
     await EmployeeDocsAPI.delete(id);
     fetchDocuments(employees);
   };
 
-
-const documentFields = [
-  { key: "employeeName", label: "Employee" },
-  { key: "pancard_number", label: "PAN Number" },
-  { key: "aadhar_number", label: "Aadhar Number" },
-  { key: "driving_license_number", label: "Driving License Number" },
-
-  { key: "photo", label: "Photo", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-  { key: "aadhar_front", label: "Aadhar Front", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-  { key: "aadhar_back", label: "Aadhar Back", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-  { key: "pan_card", label: "PAN Card", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-  { key: "driving_license_front", label: "DL Front", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-  { key: "driving_license_back", label: "DL Back", render: v => v && <img
-  src={v}
-  className="h-24 rounded"
-  style={{ border: `1px solid ${themes.borderLight}` }}
-/>
- },
-
-];
+  const documentFields = [
+    { key: "employeeName", label: "Employee" },
+    { key: "pancard_number", label: "PAN Number" },
+    { key: "aadhar_number", label: "Aadhar Number" },
+    { key: "driving_license_number", label: "Driving License Number" },
+    { key: "photo", label: "Photo", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+    { key: "aadhar_front", label: "Aadhar Front", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+    { key: "aadhar_back", label: "Aadhar Back", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+    { key: "pan_card", label: "PAN Card", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+    { key: "driving_license_front", label: "DL Front", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+    { key: "driving_license_back", label: "DL Back", render: v => v && <img src={v} className="h-24 rounded" style={{ border: `1px solid ${themes.borderLight}` }} /> },
+  ];
 
   // ================= LIST =================
   if (mode === "list") {
     return (
       <PageContainer>
-       <div className="flex justify-between items-center mb-4">
-  <SectionTitle title="Employee Documents" />
+        <div className="flex justify-between items-center mb-4">
+          <SectionTitle title="Employee Documents" />
 
-  <div className="flex gap-3">
-    <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
-    <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
-  </div>
-</div>
-
+          <div className="flex gap-3">
+            <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
+            <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
+          </div>
+        </div>
 
         <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
-{filteredDocuments.map((doc, index) => (
+          {filteredDocuments.map((doc, index) => (
             <EntityTableRow
               key={doc.id}
               row={doc}
@@ -203,7 +455,7 @@ const documentFields = [
                 { key: "pancard_number" },
                 { key: "aadhar_number" },
                 { key: "driving_license_number" },
-                { key: "uploaded_at", render: r =>  formatDate(r.uploaded_at)?.slice(0, 10) },
+                { key: "uploaded_at", render: r => formatDate(r.uploaded_at)?.slice(0, 10) },
               ]}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
               onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
@@ -255,12 +507,12 @@ const documentFields = [
           { label: "Aadhar Number", name: "aadhar_number" },
           { label: "Driving License Number", name: "driving_license_number" },
 
-          { label: "Photo", name: "photo", type: "file",required: true, },
-          { label: "Aadhar Front", name: "aadhar_front", type: "file",required: true, },
-          { label: "Aadhar Back", name: "aadhar_back", type: "file",required: true, },
-          { label: "PAN Card", name: "pan_card", type: "file",required: true, },
-          { label: "DL Front", name: "driving_license_front", type: "file",required: true, },
-          { label: "DL Back", name: "driving_license_back", type: "file",required: true, },
+          { label: "Photo", name: "photo", type: "file", required: true },
+          { label: "Aadhar Front", name: "aadhar_front", type: "file", required: true },
+          { label: "Aadhar Back", name: "aadhar_back", type: "file", required: true },
+          { label: "PAN Card", name: "pan_card", type: "file", required: true },
+          { label: "DL Front", name: "driving_license_front", type: "file", required: true },
+          { label: "DL Back", name: "driving_license_back", type: "file", required: true },
         ]}
       />
     </EntityPageLayout>

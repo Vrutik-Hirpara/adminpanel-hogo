@@ -116,12 +116,15 @@ export default function Login() {
       });
 
       const result = res.data;
-
+      console.log("🔐 ACCESS TOKEN:", result.access_token);
+      console.log("🔁 REFRESH TOKEN:", result.refresh_token);
+      console.log("👤 RETURN USER DATA:", result.data);
       if (result.access_token) {
         // 🔐 Store tokens
         localStorage.setItem("token", result.access_token);
         localStorage.setItem("refresh", result.refresh_token);
         localStorage.setItem("user", JSON.stringify(result.data));
+        localStorage.setItem("user_data", JSON.stringify(result.data));
 
         // 🚀 Redirect
         navigate("/dashboard", { replace: true });
