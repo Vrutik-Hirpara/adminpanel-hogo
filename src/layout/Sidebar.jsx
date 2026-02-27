@@ -55,7 +55,7 @@ const Sidebar = () => {
           style={{ color: themes.textMuted }}
         >
           <div className="flex items-center gap-3">
-<Icon className="w-5 h-5" style={{ color }} />
+            <Icon className="w-5 h-5" style={{ color }} />
             {label}
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -75,7 +75,7 @@ const Sidebar = () => {
         color: isActive ? themes.textWhite : themes.textMuted,
       })}
     >
-<Icon className="w-5 h-5" style={{ color }} />
+      <Icon className="w-5 h-5" style={{ color }} />
       {label}
     </NavLink>
   );
@@ -92,7 +92,7 @@ const Sidebar = () => {
 
         <LinkItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" color={themes.cardEmployee} />
 
-      {/* <Dropdown id="office" label="Office" icon={Briefcase} color={themes.cardDepartment}>
+        {/* <Dropdown id="office" label="Office" icon={Briefcase} color={themes.cardDepartment}>
 
         
           <LinkItem to="/department" icon={Building2} label="Department" style={{ color: themes.cardDepartment }}
@@ -101,10 +101,10 @@ const Sidebar = () => {
           <LinkItem to="/officebranches" icon={Layers} label="Office Branches" style={{ color: themes.cardHoliday }} />
         </Dropdown> */}
         <Dropdown id="office" label="Office" icon={Briefcase} color={themes.cardDepartment}>
-  <LinkItem to="/department" icon={Building2} label="Department" color={themes.cardDepartment} />
-  <LinkItem to="/role" icon={ShieldCheck} label="Roles" color={themes.cardRole} />
-  <LinkItem to="/officebranches" icon={Layers} label="Office Branches" color={themes.cardHoliday} />
-</Dropdown>
+          <LinkItem to="/department" icon={Building2} label="Department" color={themes.cardDepartment} />
+          <LinkItem to="/role" icon={ShieldCheck} label="Roles" color={themes.cardRole} />
+          <LinkItem to="/officebranches" icon={Layers} label="Office Branches" color={themes.cardHoliday} />
+        </Dropdown>
 
 
         {/* <Dropdown id="employee" label="Employee" icon={Users} color={themes.cardEmployee}>
@@ -116,13 +116,13 @@ const Sidebar = () => {
           <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" style={{ color: themes.cardDocuments }} />
         </Dropdown> */}
         <Dropdown id="employee" label="Employee" icon={Users} color={themes.cardEmployee}>
-  <LinkItem to="/employee" icon={Users} label="Employee" color={themes.cardEmployee} />
-  <LinkItem to="/users" icon={Users} label="Users" color={themes.cardUsers} />
+          <LinkItem to="/employee" icon={Users} label="Employee" color={themes.cardEmployee} />
+          <LinkItem to="/users" icon={Users} label="Users" color={themes.cardUsers} />
 
-  <LinkItem to="/employee-personal-details" icon={UserCircle2} label="Personal Details" color={themes.cardPersonalDetails} />
-  <LinkItem to="/employee-salary" icon={Wallet} label="Employee Salary" color={themes.cardSalary} />
-  <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color={themes.cardDocuments} />
-</Dropdown>
+          <LinkItem to="/employee-personal-details" icon={UserCircle2} label="Personal Details" color={themes.cardPersonalDetails} />
+          <LinkItem to="/employee-salary" icon={Wallet} label="Employee Salary" color={themes.cardSalary} />
+          <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color={themes.cardDocuments} />
+        </Dropdown>
 
 
         {/* <Dropdown id="sales" label="Sales" icon={TrendingUp} style={{ color: themes.cardUsers }}>
@@ -130,9 +130,9 @@ const Sidebar = () => {
           <LinkItem to="/visits" icon={MapPin} label="Visits" style={{ color: themes.cardSalary }} />
         </Dropdown> */}
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color={themes.cardUsers}>
-  <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
-  <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
-</Dropdown>
+          <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
+          <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
+        </Dropdown>
 
 
         {/* <Dropdown id="hr" label="HR" icon={UserCheck} style={{ color: themes.cardDepartment }}>
@@ -143,16 +143,16 @@ const Sidebar = () => {
 
         </Dropdown> */}
         <Dropdown id="hr" label="HR" icon={UserCheck} color={themes.cardDepartment}>
-  <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color={themes.cardHoliday} />
-  <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
-  <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
-  <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
-</Dropdown>
+          <LinkItem to="/holiday" icon={CalendarDays} label="Holiday" color={themes.cardHoliday} />
+          <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
+          <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
+          <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
+        </Dropdown>
 
 
         {/* <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" style={{ color: themes.cardUsers }}
  /> */}
- <LinkItem to="/lead-followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
+        <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
 
 
       </ul>

@@ -1,4 +1,5 @@
 
+import { themes } from "../../config/theme.config";
 
 export default function LeadsTableHeader() {
   return (

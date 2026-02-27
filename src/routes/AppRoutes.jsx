@@ -118,7 +118,7 @@ export default function AppRoutes() {
         <Route path="/leave-balance" element={<LeaveBalance />} />
         <Route path="/leave-requests" element={<LeaveRequests />} />
         <Route path="/expense" element={<Expenses />} />
-        <Route path="/lead-followups" element={<LeadFollowups />} />
+        <Route path="/lead_followups" element={<LeadFollowups />} />
 
       </Route>
 

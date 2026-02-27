@@ -8,6 +8,7 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
+import { themes } from "../config/theme.config";
 
 import { VisitsAPI, EmployeeAPI } from "../services";
 import EntityViewCard from "../components/view/EntityViewCard";
@@ -72,24 +73,34 @@ export default function Visits() {
       fetchData();
 
     } catch (err) {
-      const res = err.response?.data;
+  const res = err.response?.data;
 
-      if (!res) {
-        alert("Network error. Please try again.");
-        return;
-      }
+  if (!res) {
+    alert("Network error. Please try again.");
+    return;
+  }
 
-      const message = Object.entries(res)
-        .map(([field, errors]) => {
-          const text = Array.isArray(errors) ? errors.join(", ") : errors;
-          return `${field.replaceAll("_", " ")}: ${text}`;
-        })
-        .join("\n");
+  let message = "";
 
-      alert(message);
-    }
+  // ✅ if backend sends { errors: { field: [msg] } }
+  if (res.errors && typeof res.errors === "object") {
+    message = Object.entries(res.errors)
+      .map(([field, errors]) => {
+        const text = Array.isArray(errors) ? errors.join(", ") : errors;
+        return `${field.replaceAll("_", " ")}: ${text}`;
+      })
+      .join("\n");
+  } 
+  // fallback
+  else if (res.message) {
+    message = res.message;
+  } else {
+    message = JSON.stringify(res);
+  }
+
+  alert(message);
+}
   };
-
   // 🔥 VIEW FIELDS (FOR EntityViewCard)
   const visitFields = [
     { key: "employee_name", label: "Employee", column: "left" },
@@ -277,17 +288,17 @@ export default function Visits() {
           //   type: "select",
           //   options: uniqueLeadTypes, // FIXED UNIQUE
           // },
-          // {
-          //   label: "Lead Type",
-          //   name: "lead_type",   // correct
-          //   type: "select",
-          //   options: [
-          //     { label: "Distributor", value: "Distributor" },
-          //     { label: "Direct", value: "Direct" },
-          //     { label: "Retailer", value: "Retailer" },
-          //   ],
-          //   required: true,
-          // },
+          {
+            label: "Lead Type",
+            name: "lead_type",   // correct
+            type: "select",
+            options: [
+              { label: "Distributor", value: "Distributor" },
+              { label: "Direct", value: "Direct" },
+              { label: "Retailer", value: "Retailer" },
+            ],
+            required: true,
+          },
 
 
 
