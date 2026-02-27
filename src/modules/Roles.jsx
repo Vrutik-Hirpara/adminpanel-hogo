@@ -108,7 +108,10 @@ const roleFields = [
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Roles" />
-          <ActionButtons showAdd addText="+ Add " onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add " onAdd={() => {
+  setSelectedRole(null);   // ⭐ IMPORTANT RESET
+  setMode("form");
+}} />
         </div>
 
         <Table header={<TableHeader columns={["Name", "Description", "Status", "Action"]} />}>

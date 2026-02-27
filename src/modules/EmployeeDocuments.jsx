@@ -266,6 +266,7 @@
 //     </EntityPageLayout>
 //   );
 // }
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -507,12 +508,18 @@ export default function EmployeeDocuments() {
           { label: "Aadhar Number", name: "aadhar_number" },
           { label: "Driving License Number", name: "driving_license_number" },
 
-          { label: "Photo", name: "photo", type: "file", required: true },
-          { label: "Aadhar Front", name: "aadhar_front", type: "file", required: true },
-          { label: "Aadhar Back", name: "aadhar_back", type: "file", required: true },
-          { label: "PAN Card", name: "pan_card", type: "file", required: true },
-          { label: "DL Front", name: "driving_license_front", type: "file", required: true },
-          { label: "DL Back", name: "driving_license_back", type: "file", required: true },
+          // { label: "Photo", name: "photo", type: "file", required: true },
+          // { label: "Aadhar Front", name: "aadhar_front", type: "file", required: true },
+          // { label: "Aadhar Back", name: "aadhar_back", type: "file", required: true },
+          // { label: "PAN Card", name: "pan_card", type: "file", required: true },
+          // { label: "DL Front", name: "driving_license_front", type: "file", required: true },
+          // { label: "DL Back", name: "driving_license_back", type: "file", required: true },
+          { label: "Photo", name: "photo", type: "file", required: !selectedItem, previewKey: "photo" },
+{ label: "Aadhar Front", name: "aadhar_front", type: "file", required: !selectedItem, previewKey: "aadhar_front" },
+{ label: "Aadhar Back", name: "aadhar_back", type: "file", required: !selectedItem, previewKey: "aadhar_back" },
+{ label: "PAN Card", name: "pan_card", type: "file", required: !selectedItem, previewKey: "pan_card" },
+{ label: "DL Front", name: "driving_license_front", type: "file", required: !selectedItem, previewKey: "driving_license_front" },
+{ label: "DL Back", name: "driving_license_back", type: "file", required: !selectedItem, previewKey: "driving_license_back" },
         ]}
       />
     </EntityPageLayout>

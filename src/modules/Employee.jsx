@@ -1038,7 +1038,10 @@ style={{
             <ActionButtons
               showAdd
               addText="+ Add"
-              onAdd={() => setMode("form")}
+              onAdd={() => {
+  setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
+  setMode("form");
+}}
             />
           </div>
         </div>

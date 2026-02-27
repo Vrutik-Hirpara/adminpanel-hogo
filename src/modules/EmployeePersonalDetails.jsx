@@ -423,7 +423,10 @@ export default function EmployeePersonalDetails() {
 
           <div className="flex gap-3">
             <SearchBar value={search} onChange={setSearch} placeholder="Search details..." />
-            <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+            <ActionButtons showAdd addText="+ Add" onAdd={() => {
+  setSelectedItem(null);   // ⭐ IMPORTANT RESET
+  setMode("form");
+}} />
           </div>
         </div>
 

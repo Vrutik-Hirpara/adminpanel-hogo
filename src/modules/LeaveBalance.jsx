@@ -69,6 +69,15 @@ export default function LeaveBalance() {
 
 
   const leaveColumns = [
+      {
+    key: "employee_id",
+    render: (row) => {
+      const emp = employees.find(e => e.id === row.employee_id);
+      return emp
+        ? `${emp.first_name} ${emp.last_name}`
+        : "—";
+    },
+  },
     { key: "leave_type" },
     { key: "total_allocated" },
     { key: "used_days" },
@@ -107,10 +116,12 @@ export default function LeaveBalance() {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="LEAVE BALANCE" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add" onAdd={() => {
+  setSelected(null);   // ⭐ RESET
+  setMode("form");}}/>
         </div>
 
-        <Table header={<TableHeader columns={["Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
+        <Table header={<TableHeader columns={["Employee","Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (
             <EntityTableRow
               key={l.id}

@@ -121,7 +121,10 @@ export default function Department() {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Department" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add" onAdd={() => {
+  setSelectedDept(null);   // ⭐ RESET
+  setMode("form");
+}} />
         </div>
 
         <Table header={<TableHeader columns={["Name", "Description", "Status", "Action"]} />}>
@@ -137,6 +140,7 @@ export default function Department() {
               }}
               onEdit={(r) => {
                 setSelectedDept(r);
+                
                 setMode("form");
               }}
               onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
@@ -156,7 +160,10 @@ export default function Department() {
       <EntityPageLayout
         title="Department Details"
         showBack
-        onBack={() => setMode("list")}
+        onBack={() => {
+  setSelectedDept(null);
+  setMode("list");
+}}
       >
         <EntityViewCard
           title="Department"

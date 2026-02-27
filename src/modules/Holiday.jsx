@@ -99,7 +99,9 @@ const holidayFields = [
         {/* 🔥 HEADER SECTION (YOU ASKED THIS) */}
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="HOLIDAYS" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
+          <ActionButtons showAdd addText="+ Add" onAdd={() => {
+  setSelectedHoliday(null);   // ⭐ RESET
+  setMode("form");}} />
         </div>
 
         <Table

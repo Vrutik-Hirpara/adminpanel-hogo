@@ -675,7 +675,7 @@
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { dashboardModules } from "../config/dashboardModules";
-
+import { useUser } from "../hooks/useUser";
 import {
   Calendar,
   ChevronRight,

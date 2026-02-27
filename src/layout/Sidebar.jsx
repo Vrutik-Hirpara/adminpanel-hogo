@@ -437,6 +437,8 @@ const Sidebar = () => {
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color={themes.cardUsers}>
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
           <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
+                  <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
+
         </Dropdown>
 
         {/* 🧾 HR MODULE - only HR */}
@@ -450,7 +452,6 @@ const Sidebar = () => {
         )}
 
         {/* 📞 Lead Followups - all roles */}
-        <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
 
       </ul>
     </div>
