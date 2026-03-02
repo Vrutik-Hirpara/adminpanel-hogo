@@ -94,7 +94,7 @@
 
 //         {/* <Dropdown id="office" label="Office" icon={Briefcase} color={themes.cardDepartment}>
 
-        
+
 //           <LinkItem to="/department" icon={Building2} label="Department" style={{ color: themes.cardDepartment }}
 //           />
 //           <LinkItem to="/role" icon={ShieldCheck} label="Roles" style={{ color: themes.cardRole }} />
@@ -437,7 +437,7 @@ const Sidebar = () => {
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color={themes.cardUsers}>
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
           <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
-                  <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
+          <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
 
         </Dropdown>
 

@@ -434,7 +434,7 @@ export default function Users() {
               onChange={setSearch}
               placeholder="Search users..."
             />
-
+{isHR && (
             <ActionButtons
               showAdd
               addText="+ Add"
@@ -443,6 +443,7 @@ export default function Users() {
                 setMode("form");
               }}
             />
+)}
           </div>
         </div>
 

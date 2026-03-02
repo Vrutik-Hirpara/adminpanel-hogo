@@ -361,7 +361,7 @@ export default function Visits() {
 
   // ================= FETCH =================
   const fetchData = async () => {
-    const [v, e,l] = await Promise.all([
+    const [v, e, l] = await Promise.all([
       VisitsAPI.getAll(),
       EmployeeAPI.getAll(),
       LeadsAPI.getAll(),   // 👈 ADD THIS
@@ -387,7 +387,7 @@ export default function Visits() {
     }
 
     setEmployees(empList);
-      setLeads(l.data.data || []);
+    setLeads(l.data.data || []);
 
   };
 
@@ -475,7 +475,7 @@ export default function Visits() {
   // ================= TABLE =================
   const visitColumns = [
     { key: "employee_name" },
-    { key: "lead_type" },
+    { key: "lead_name" },
     {
       key: "time",
       render: (row) =>
@@ -550,18 +550,32 @@ export default function Visits() {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Visits" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelectedVisit(null);   // ⭐ RESET
-  setMode("form");}} />
+          {isHR && (
+            <ActionButtons showAdd addText="+ Add" onAdd={() => {
+              setSelectedVisit(null);   // ⭐ RESET
+              setMode("form");
+            }} />
+          )}
         </div>
 
         <Table
           header={
             <TableHeader
+              // columns={[
+              //   "Employee Name",
+              //   "Bussiness Name",
+              //   "Check-In / Check-Out",
+              //   "Followup Type",
+              //   "Notes",
+              //   "Action",
+              // ]}
               columns={[
                 "Employee Name",
-                "Lead Type",
-                "Check-In / Check-Out",
+                "Bussiness Name",
+                <div className="flex flex-col leading-tight text-center">
+                  <span>Check-In /</span>
+                  <span>Check-Out</span>
+                </div>,
                 "Followup Type",
                 "Notes",
                 "Action",

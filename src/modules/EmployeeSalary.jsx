@@ -360,10 +360,13 @@ export default function EmployeeSalary() {
 
           <div className="flex gap-3">
             <SearchBar value={search} onChange={setSearch} placeholder="Search salary..." />
+
+            {isHR &&(
             <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelectedItem(null);   // ⭐ IMPORTANT RESET
-  setMode("form");
-}} />
+              setSelectedItem(null);   // ⭐ IMPORTANT RESET
+              setMode("form");
+            }} />
+          )}
           </div>
         </div>
 

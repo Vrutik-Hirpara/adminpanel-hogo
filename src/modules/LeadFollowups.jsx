@@ -256,6 +256,8 @@
 //     </EntityPageLayout>
 //   );
 // }
+
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -359,6 +361,8 @@ export default function LeadFollowups() {
   // ================= TABLE COLUMNS =================
   const columns = [
     { key: "employee_name" },
+        { key: "lead_name" },
+
     {
       key: "followup_date",
       render: (r) => formatDate(r.followup_date),
@@ -417,12 +421,14 @@ export default function LeadFollowups() {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Lead Followups" />
+          {isHR &&(
           <ActionButtons showAdd addText="+ Add" onAdd={() => {
   setSelectedItem(null);   // ⭐ RESET
   setMode("form");}} />
+          )}
         </div>
 
-        <Table header={<TableHeader columns={["Employee", "Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
+        <Table header={<TableHeader columns={["Employee","bussiness name","Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
           {followups.map((r, index) => (
             <EntityTableRow
               key={r.id}
@@ -490,7 +496,7 @@ export default function LeadFollowups() {
             })),
           },
           {
-            label: "Lead",
+            label: "Bussiness name",
             name: "lead_id",
             type: "select",
             options: leads.map(l => ({

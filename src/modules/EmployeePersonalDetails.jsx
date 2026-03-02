@@ -423,10 +423,12 @@ export default function EmployeePersonalDetails() {
 
           <div className="flex gap-3">
             <SearchBar value={search} onChange={setSearch} placeholder="Search details..." />
-            <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelectedItem(null);   // ⭐ IMPORTANT RESET
-  setMode("form");
-}} />
+            {isHR && (
+              <ActionButtons showAdd addText="+ Add" onAdd={() => {
+                setSelectedItem(null);   // ⭐ IMPORTANT RESET
+                setMode("form");
+              }} />
+            )}
           </div>
         </div>
 
@@ -497,14 +499,14 @@ export default function EmployeePersonalDetails() {
         selectedItem={
           selectedItem
             ? {
-                ...selectedItem,
-                marital_status:
-                  selectedItem.marital_status?.toLowerCase() === "married"
-                    ? "married"
-                    : selectedItem.marital_status?.toLowerCase() === "single"
+              ...selectedItem,
+              marital_status:
+                selectedItem.marital_status?.toLowerCase() === "married"
+                  ? "married"
+                  : selectedItem.marital_status?.toLowerCase() === "single"
                     ? "single"
                     : "",
-              }
+            }
             : null
         }
         onSubmit={onSubmit}

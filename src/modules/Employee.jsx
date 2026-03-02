@@ -810,67 +810,67 @@ export default function Employee() {
 
 
   // FETCH EMPLOYEES
- const fetchEmployees = async () => {
-  try {
-    let res;
+  const fetchEmployees = async () => {
+    try {
+      let res;
 
-    if (isHR) {
-      res = await EmployeeAPI.getAll();   // HR → all
-      const data = res.data?.data || [];
+      if (isHR) {
+        res = await EmployeeAPI.getAll();   // HR → all
+        const data = res.data?.data || [];
 
-      const formatted = data.map(e => ({
-        id: e.id,
-        employee_code: e.employee_code,
-        first_name: e.first_name,
-        last_name: e.last_name,
-        date_of_birth: e.date_of_birth,
-        email: e.email,
-        phone: e.phone,
-        role_name: e.role_name || e.role?.name || "-",
-        office_branch_name: e.office_branch_name || e.branch?.name || "-",
-        joining_date: e.joining_date,
-        employment_type: e.employment_type,
-        status: e.status === "Active",
-        raw: e,
-      }));
+        const formatted = data.map(e => ({
+          id: e.id,
+          employee_code: e.employee_code,
+          first_name: e.first_name,
+          last_name: e.last_name,
+          date_of_birth: e.date_of_birth,
+          email: e.email,
+          phone: e.phone,
+          role_name: e.role_name || e.role?.name || "-",
+          office_branch_name: e.office_branch_name || e.branch?.name || "-",
+          joining_date: e.joining_date,
+          employment_type: e.employment_type,
+          status: e.status === "Active",
+          raw: e,
+        }));
 
-      setEmployees(formatted);
-    } else {
-      // 🔒 Only logged user
-      res = await api.get(`/employee/${employeeId}/`);
-      const e = res.data.data;
-      
-      // Log the response to debug if needed
-      console.log("Single employee response:", e);
+        setEmployees(formatted);
+      } else {
+        // 🔒 Only logged user
+        res = await api.get(`/employee/${employeeId}/`);
+        const e = res.data.data;
 
-      // Get branch name from the response - handle different possible structures
-      const branchName = e.office_branch?.name || 
-                         e.branch?.name || 
-                         e.office_branch_name || 
-                         e.branch_name || "-";
+        // Log the response to debug if needed
+        console.log("Single employee response:", e);
 
-      const formatted = [{
-        id: e.id,
-        employee_code: e.employee_code,
-        first_name: e.first_name,
-        last_name: e.last_name,
-        date_of_birth: e.date_of_birth,
-        email: e.email,
-        phone: e.phone,
-        role_name: e.role_name || e.role?.name || "-",
-        office_branch_name: branchName,
-        joining_date: e.joining_date,
-        employment_type: e.employment_type,
-        status: e.status === "Active",
-        raw: e,
-      }];
+        // Get branch name from the response - handle different possible structures
+        const branchName = e.office_branch?.name ||
+          e.branch?.name ||
+          e.office_branch_name ||
+          e.branch_name || "-";
 
-      setEmployees(formatted);
+        const formatted = [{
+          id: e.id,
+          employee_code: e.employee_code,
+          first_name: e.first_name,
+          last_name: e.last_name,
+          date_of_birth: e.date_of_birth,
+          email: e.email,
+          phone: e.phone,
+          role_name: e.role_name || e.role?.name || "-",
+          office_branch_name: branchName,
+          joining_date: e.joining_date,
+          employment_type: e.employment_type,
+          status: e.status === "Active",
+          raw: e,
+        }];
+
+        setEmployees(formatted);
+      }
+    } catch (err) {
+      console.log("EMPLOYEE FETCH ERROR:", err);
     }
-  } catch (err) {
-    console.log("EMPLOYEE FETCH ERROR:", err);
-  }
-};
+  };
 
   // FETCH DEPARTMENTS & ROLES
   const fetchMeta = async () => {
@@ -887,13 +887,13 @@ export default function Employee() {
     fetchEmployees();
     fetchMeta();
   }, [isHR, employeeId]);
-  
+
   const filteredEmployees = employees.filter(emp =>
     `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone} ${emp.role_name}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
-  
+
   // STATUS TOGGLE
   const handleStatusToggle = async (emp) => {
     const newStatus = !emp.status;
@@ -935,28 +935,28 @@ export default function Employee() {
 
       setMode("list");
       fetchEmployees();
-    }catch (error) {
-  console.log("SERVER ERROR:", error.response?.data);
+    } catch (error) {
+      console.log("SERVER ERROR:", error.response?.data);
 
-  const serverData = error.response?.data;
+      const serverData = error.response?.data;
 
-  if (serverData?.email) {
-    methods.setError("email", {
-      type: "manual",
-      message: serverData.email[0] || "This email id already exists",
-    });
-  } else if (serverData?.detail) {
-    methods.setError("email", {
-      type: "manual",
-      message: serverData.detail,
-    });
-  } else {
-    methods.setError("email", {
-      type: "manual",
-      message: "This email id already exists",
-    });
-  }
-}
+      if (serverData?.email) {
+        methods.setError("email", {
+          type: "manual",
+          message: serverData.email[0] || "This email id already exists",
+        });
+      } else if (serverData?.detail) {
+        methods.setError("email", {
+          type: "manual",
+          message: serverData.detail,
+        });
+      } else {
+        methods.setError("email", {
+          type: "manual",
+          message: "This email id already exists",
+        });
+      }
+    }
 
 
   }
@@ -981,14 +981,14 @@ export default function Employee() {
       render: (row) => (
         <button
           onClick={() => handleStatusToggle(row)}
-className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
-style={{
-  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
-}}
+          className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
+          style={{
+            backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+          }}
 
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1" }`}   style={{ backgroundColor: themes.textWhite }}
+            className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"}`} style={{ backgroundColor: themes.textWhite }}
 
           />
         </button>
@@ -1026,23 +1026,34 @@ style={{
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-className="px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2"
-style={{
-  border: `1px solid ${themes.borderLight}`,
-  color: themes.textPrimary,
-  backgroundColor: themes.surfaceLight,
-  boxShadow: `0 0 0 2px ${themes.cardEmployee}`, // blue focus ring
-}}
+              className="px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2"
+              style={{
+                border: `1px solid ${themes.borderLight}`,
+                color: themes.textPrimary,
+                backgroundColor: themes.surfaceLight,
+                boxShadow: `0 0 0 2px ${themes.cardEmployee}`, // blue focus ring
+              }}
             />
 
-            <ActionButtons
+            {/* <ActionButtons
               showAdd
               addText="+ Add"
               onAdd={() => {
-  setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
-  setMode("form");
-}}
-            />
+                setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
+                setMode("form");
+              }}
+            /> */}
+
+            {isHR && (
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
+                  setMode("form");
+                }}
+              />
+            )}
           </div>
         </div>
 

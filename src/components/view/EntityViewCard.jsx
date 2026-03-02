@@ -59,7 +59,7 @@ export default function EntityViewCard({
 
     return (
       <div key={field.key}>
-        <p className="text-sm"style={{ color: themes.textMuted }}>{field.label}</p>
+        <p className="text-sm" style={{ color: themes.backgroundBlack }}>{field.label}</p>
         <div className="font-semibold " style={{ color: themes.backgroundBlack }}>
           {(() => {
             if (!value) return emptyText;
@@ -69,8 +69,8 @@ export default function EntityViewCard({
             }
 
             if (typeof fullUrl === "string" && /\.(pdf|doc|docx)$/i.test(fullUrl)) {
-              return <a href={fullUrl} target="_blank" className=" underline"style={{ color: themes.cardEmployee }}
->View Document</a>;
+              return <a href={fullUrl} target="_blank" className=" underline" style={{ color: themes.cardEmployee }}
+              >View Document</a>;
             }
 
             return field.format ? field.format(value) : value;
@@ -84,7 +84,7 @@ export default function EntityViewCard({
     <div className=" rounded-2xl shadow-lg overflow-hidden border" style={{ backgroundColor: themes.textWhite }}>
 
       {/* 🔴 HEADER */}
-      <div className="bg-red-600  p-5"  style={{ color: themes.textWhite }}>
+      <div className="bg-red-600  p-5" style={{ color: themes.textWhite }}>
         <h2 className="text-xl font-bold">
           {headerKeys.length
             ? headerKeys.map(k => data?.[k]).filter(Boolean).join(" - ")
@@ -100,8 +100,8 @@ export default function EntityViewCard({
       </div>
 
       {/* ⚙ ACTIONS */}
-      <div className="p-5 border-t flex justify-end gap-3 "   style={{ backgroundColor: themes.surfaceLight }}
->
+      <div className="p-5 border-t flex justify-end gap-3 " style={{ backgroundColor: themes.surfaceLight }}
+      >
         <ActionButtons onEdit={() => setEditMode(true)} onDelete={handleDelete} />
       </div>
     </div>

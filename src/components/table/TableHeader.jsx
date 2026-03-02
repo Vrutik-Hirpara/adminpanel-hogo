@@ -12,7 +12,7 @@ export default function TableHeader({ columns }) {
     >
       <tr>
   {/* SERIAL NUMBER HEADER */}
-  <th className="px-4 py-3 text-center font-semibold whitespace-nowrap w-[5%]">
+  <th className="px-4 py-3 text-center font-semibold whitespace-nowrap w-[4%]">
     No
   </th>
 
