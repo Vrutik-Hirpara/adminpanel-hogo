@@ -359,7 +359,6 @@ import { useUser } from "../hooks/useUser";
 export default function Leads() {
 
   const { employeeId, isHR } = useUser();
-  const [visitsMap, setVisitsMap] = useState({});
   const [selectedVisits, setSelectedVisits] = useState([]);
   const [leads, setLeads] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -395,23 +394,22 @@ export default function Leads() {
 
     setEmployees(list);
   };
-  const fetchVisits = async () => {
-    const res = await VisitsAPI.getAll();
-    const data = res.data.data || [];
+  const fetchVisitsByLead = async (leadId) => {
+    try {
+      const res = await VisitsAPI.getByLeadId(leadId);
+      const data = res.data.data || [];
 
-    const map = {};
-    data.forEach(v => {
-      if (!map[v.lead_id]) map[v.lead_id] = [];
-      map[v.lead_id].push(v);
-    });
-
-    setVisitsMap(map);
+      setSelectedVisits(data);
+      setMode("visits");
+    } catch (err) {
+      console.log("Visit fetch error", err);
+      alert("Failed to load visits");
+    }
   };
 
   useEffect(() => {
     fetchLeads();
     fetchEmployees();
-    fetchVisits();   // 👈 add this line only
 
   }, [isHR, employeeId]);
 
@@ -432,9 +430,24 @@ export default function Leads() {
       setMode("list");
       fetchLeads();
     } catch (err) {
-      console.log("API ERROR 👉", err.response?.data);
-      alert("Check console error");
+  const data = err.response?.data;
+
+  console.log("API ERROR 👉", data);
+
+  let message = "Something went wrong";
+
+  // 🔥 Handle Django-style error structure
+  if (data?.errors) {
+    if (data.errors.email) {
+      message = data.errors.email[0];
     }
+    else if (data.errors.phone) {
+      message = data.errors.phone[0];
+    }
+  }
+
+  alert(message);
+}
   };
 
   const handleDelete = async (id) => {
@@ -494,29 +507,28 @@ export default function Leads() {
     },
 
 
-{
-  key: "visit_list",
-  className: "whitespace-nowrap min-w-[120px] text-center",
-  render: (row) => (
-    <div className="flex justify-center">
-      <button
-        onClick={() => {
-          setSelectedVisits(visitsMap[row.id] || []);
-          setSelectedItem(row);
-          setMode("visits");
-        }}
-        className="rounded px-2 py-1 text-xs font-semibold"
-        style={{
-          border: `1px solid ${themes.borderLight}`,
-          backgroundColor: themes.textWhite,
-          color: themes.textPrimary,
-        }}
-      >
-        Read More
-      </button>
-    </div>
-  ),
-},
+    {
+      key: "visit_list",
+      className: "whitespace-nowrap min-w-[120px] text-center",
+      render: (row) => (
+        <div className="flex justify-center">
+          <button
+            onClick={() => {
+              setSelectedItem(row);
+              fetchVisitsByLead(row.id);   // 🔥 direct API call
+            }}
+            className="rounded px-2 py-1 text-xs font-semibold"
+            style={{
+              border: `1px solid ${themes.borderLight}`,
+              backgroundColor: themes.textWhite,
+              color: themes.textPrimary,
+            }}
+          >
+            Read More
+          </button>
+        </div>
+      ),
+    },
 
 
     // {
@@ -546,32 +558,32 @@ export default function Leads() {
     // },
 
 
-      // 🔥 CONDITIONAL COLUMN - only for HR
-  ...(isHR ? [{
-    key: "assigned_to_name",
-    className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
-    render: (row) => (
-      <div className="w-[100px]">
-        <select
-          value={row.assigned_to || ""}
-          onChange={(e) => handleAssignChange(row, e.target.value)}
-          className="w-full rounded px-2 py-1 text-sm"
-          style={{
-            border: `1px solid ${themes.borderLight}`,
-            backgroundColor: themes.textWhite,
-            color: themes.textPrimary,
-          }}
-        >
-          <option value="">Unassigned</option>
-          {employees.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.first_name} {emp.last_name}
-            </option>
-          ))}
-        </select>
-      </div>
-    ),
-  }] : []),
+    // 🔥 CONDITIONAL COLUMN - only for HR
+    ...(isHR ? [{
+      key: "assigned_to_name",
+      className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
+      render: (row) => (
+        <div className="w-[100px]">
+          <select
+            value={row.assigned_to || ""}
+            onChange={(e) => handleAssignChange(row, e.target.value)}
+            className="w-full rounded px-2 py-1 text-sm"
+            style={{
+              border: `1px solid ${themes.borderLight}`,
+              backgroundColor: themes.textWhite,
+              color: themes.textPrimary,
+            }}
+          >
+            <option value="">Unassigned</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.first_name} {emp.last_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
+    }] : []),
   ];
 
   const leadFields = [
@@ -598,15 +610,15 @@ export default function Leads() {
       <PageContainer>
         <div className="flex justify-between items-center mb-4">
           <SectionTitle title="Leads" />
-          {isHR &&(
-          <ActionButtons
-            showAdd
-            addText="+ Add"
-            onAdd={() => {
-              setSelectedItem(null);
-              setMode("form");
-            }}
-          />
+          {isHR && (
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedItem(null);
+                setMode("form");
+              }}
+            />
           )}
         </div>
 
@@ -736,7 +748,7 @@ export default function Leads() {
           { label: "Business Name", name: "business_name", required: true },
           { label: "Contact Person", name: "contact_person", required: true },
           { label: "Phone", name: "phone", required: true },
-{ label: "Email", name: "email", type: "email", required: true },
+          { label: "Email", name: "email", type: "email", required: true },
 
           { label: "Address", name: "address", type: "textarea", required: true },
           { label: "City", name: "city", required: true },

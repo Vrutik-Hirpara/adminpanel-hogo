@@ -88,7 +88,7 @@
 // }
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import FormWrapper from "../components/form/FormWrapper";
 import FormContainer from "../components/form/FormContainer";
 import FormInput from "../components/form/FormInput";
@@ -97,39 +97,57 @@ import { themes } from "../config/theme.config";
 import api from "../services/api";
 
 export default function Login() {
-  const navigate = useNavigate();
+   const navigate = useNavigate();
+  const location = useLocation();
 
-  // 🔒 Skip login page if already logged in
+  const isValidToken = (t) =>
+    !!t && t !== "undefined" && t !== "null" && String(t).trim() !== "";
+
+  // 🔒 Skip login if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!isValidToken(token)) navigate("/dashboard", { replace: true });
+  }, [navigate]);
 
-    if (token && window.location.pathname === "/login") {
-      navigate("/dashboard", { replace: true });
-    }
-  }, []);
-
-  const onSubmit = async (data) => {
+const onSubmit = async (data) => {
     try {
       const res = await api.post("employee_login/", {
         email: data.email,
         password: data.password,
       });
 
-      const result = res.data;
-      console.log("🔐 ACCESS TOKEN:", result.access_token);
-      console.log("🔁 REFRESH TOKEN:", result.refresh_token);
-      console.log("👤 RETURN USER DATA:", result.data);
-      if (result.access_token) {
-        // 🔐 Store tokens
-        localStorage.setItem("token", result.access_token);
-        localStorage.setItem("refresh", result.refresh_token);
-        localStorage.setItem("user", JSON.stringify(result.data));
-        localStorage.setItem("user_data", JSON.stringify(result.data));
+      console.log("FULL RESPONSE:", res);
 
-        // 🚀 Redirect
-        navigate("/dashboard", { replace: true });
+      const resData = res?.data || {};
+
+      // defensive extraction
+      const access_token =
+        resData.access_token ||
+        resData.token ||
+        resData.data?.access_token ||
+        resData.data?.token ||
+        resData.accessToken;
+      const refresh_token =
+        resData.refresh_token ||
+        resData.data?.refresh_token ||
+        resData.refreshToken;
+      const user = resData.data?.user || resData.data || resData.user || null;
+
+      console.log("ACCESS:", access_token);
+      console.log("REFRESH:", refresh_token);
+      console.log("USER:", user);
+
+      if (access_token) {
+        localStorage.setItem("token", access_token);
+        if (refresh_token) localStorage.setItem("refresh", refresh_token);
+        if (user) localStorage.setItem("user", JSON.stringify(user));
+
+        console.log("Stored token:", localStorage.getItem("token"));
+
+        const dest =  "/dashboard";
+        navigate(dest, { replace: true });
       } else {
-        alert(result.message || "Login failed");
+        alert("Token missing in response");
       }
     } catch (error) {
       console.log("LOGIN ERROR:", error);

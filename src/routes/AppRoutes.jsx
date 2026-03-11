@@ -76,6 +76,10 @@ import Expenses from "../modules/Expenses";
 import LeadFollowups from "../modules/LeadFollowups";
 
 export default function AppRoutes() {
+  const token = localStorage.getItem("token");
+  const isLoggedIn =
+    !!token && token !== "undefined" && token !== "null" && String(token).trim() !== "";
+
   return (
     <Routes>
 
@@ -83,7 +87,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
 
       {/* Redirect root to login */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} replace />} />
 
       {/* 🔒 PROTECTED LAYOUT WRAPPER */}
       <Route

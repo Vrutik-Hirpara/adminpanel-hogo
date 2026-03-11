@@ -11,10 +11,14 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import api from "../services/api";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
-
+import SearchBar from "../components/table/SearchBar";
 import { ExpenseAPI } from "../services";
+import { useUser } from "../hooks/useUser";
 
 export default function Expenses() {
+      const { employeeId, isHR } = useUser();
+    
+    const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
@@ -74,7 +78,11 @@ export default function Expenses() {
             fetchExpenses();
         }
     };
-
+    const filteredExpenses = expenses.filter(exp =>
+        `${exp.vendor_name} ${exp.expense_type} ${exp.amount}`
+            .toLowerCase()
+            .includes(search.toLowerCase())
+    );
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
         { key: "vendor_name" },
@@ -89,15 +97,15 @@ export default function Expenses() {
             render: (row) => (
                 <button
                     onClick={() => handleStatusToggle(row)}
-                   className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
-style={{
-  backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
-}}
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500"
+                    style={{
+                        backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
+                    }}
 
                 >
                     <span
                         className={`inline-block h-4 w-4 transform rounded-full  transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"
-                            }`}   style={{ backgroundColor: themes.textWhite }}
+                            }`} style={{ backgroundColor: themes.textWhite }}
 
                     />
                 </button>
@@ -122,14 +130,14 @@ style={{
             format: (url) =>
                 url ? (
                     <img
-  src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
-  alt="receipt"
-  className="w-40 rounded shadow"
-  style={{
-    border: `1px solid ${themes.borderLight}`,
-    backgroundColor: themes.surfaceLight,
-  }}
-/>
+                        src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
+                        alt="receipt"
+                        className="w-40 rounded shadow"
+                        style={{
+                            border: `1px solid ${themes.borderLight}`,
+                            backgroundColor: themes.surfaceLight,
+                        }}
+                    />
 
                     // <img
                     //     src={url.startsWith("http") ? url : `${api.defaults.baseURL}${url}`}
@@ -137,7 +145,7 @@ style={{
                     //     className="w-40 rounded shadow border"
                     // />
                 ) : "No Image",
-        }    ];
+        }];
 
     // ================= LIST PAGE =================
     if (mode === "list") {
@@ -145,7 +153,24 @@ style={{
             <PageContainer>
                 <div className="flex justify-between items-center mb-4">
                     <SectionTitle title="Expenses" />
-                    <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
+
+                    <div className="flex gap-3">
+                        <SearchBar
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Search expenses..."
+                        />
+                        {isHR && (
+                            <ActionButtons
+                                showAdd
+                                addText="+ Add"
+                                onAdd={() => {
+                                    setSelectedItem(null);
+                                    setMode("form");
+                                }}
+                            />
+                        )}
+                    </div>
                 </div>
 
                 <Table header={<TableHeader columns={["Vendor", "Type", "Amount", "Date", "Status", "Action"]} />}>
@@ -216,27 +241,27 @@ style={{
 
                 // ]}
                 fields={[
-  { label: "Vendor Name", name: "vendor_name", required: true },
+                    { label: "Vendor Name", name: "vendor_name", required: true },
 
-  { label: "Expense Type", name: "expense_type", required: true },
+                    { label: "Expense Type", name: "expense_type", required: true },
 
-  { label: "Amount", name: "amount", type: "number", required: true },
+                    { label: "Amount", name: "amount", type: "number", required: true },
 
-  {
-    label: "Status",
-    name: "status",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Approved", value: "true" },
-      { label: "Pending", value: "false" },
-    ],
-  },
+                    {
+                        label: "Status",
+                        name: "status",
+                        type: "select",
+                        required: true,
+                        options: [
+                            { label: "Approved", value: "true" },
+                            { label: "Pending", value: "false" },
+                        ],
+                    },
 
-  { label: "Date", name: "date", type: "date", required: true },
+                    { label: "Date", name: "date", type: "date", required: true },
 
-  { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional
-]}
+                    { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional
+                ]}
 
             />
         </EntityPageLayout>

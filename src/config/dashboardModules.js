@@ -123,6 +123,8 @@
 //     icon: PhoneCall,
 //   },
 // ];
+
+import axios from "axios";
 import {
   DepartmentAPI,
   RolesAPI,
@@ -133,12 +135,14 @@ import {
   EmployeeDocsAPI,
   LeaveBalanceAPI,
   UserAPI,
-  LeadsAPI,
-  VisitsAPI,
+  // LeadsAPI,
+  // VisitsAPI,
   HolidayAPI,
   ExpenseAPI,
   LeadFollowupsAPI,
 } from "../services";
+import { VisitsAPI } from "../services/visits.service";
+import { LeadsAPI } from "../services/leads.service";
 
 import {
   Briefcase,
@@ -154,6 +158,7 @@ import {
   ClipboardList,
   PhoneCall,
   Receipt,
+  CalendarCheck,
 } from "lucide-react";
 
 import { themes } from "./theme.config";
@@ -215,20 +220,72 @@ export const dashboardModules = [
     path: "/employee-documents",
     icon: FileText,
   },
-  {
+  // {
+  //   title: "Leads",
+  //   api: () => LeadsAPI.getAll(),
+  //   color: themes.cardUsers,
+  //   path: "/leads",
+  //   icon: UserPlus,
+  // },
+  // {
+  //   title: "Visits",
+  //   api: () => VisitsAPI.getAll(),
+  //   color: themes.cardSalary,
+  //   path: "/visits",
+  //   icon: MapPin,
+  // },
+
+{
+  title: "Visits",
+  api: (employeeId, leadId) => {
+    // 🔥 priority: leadId hoy to ena thi fetch karo
+    if (leadId) {
+      return VisitsAPI.getByLeadId(leadId);
+    }
+
+    // fallback employee based
+    if (employeeId) {
+      return VisitsAPI.getByEmployee(employeeId);
+    }
+
+    return VisitsAPI.getAll();
+  },
+  path: "/visits",
+  color: themes.cardUsers,
+  icon: MapPin,
+},
+
+{
     title: "Leads",
-    api: () => LeadsAPI.getAll(),
+    api: (employeeId) => {
+        // 🔥 Non-HR mate: assigned_to=[employeeId] API
+        return axios.get(`https://hogofilm.pythonanywhere.com/leads/?assigned_to=${employeeId}`);
+    },
     color: themes.cardUsers,
     path: "/leads",
     icon: UserPlus,
+    gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+    accentColor: "blue",
+},
+
+{
+  title: "Today's Followups",
+  api: (employeeId) => {
+    if (!employeeId) {
+      return Promise.resolve({ data: { data: [] } });
+    }
+
+    return axios.get(
+      `https://hogofilm.pythonanywhere.com/today-followups/${employeeId}/`
+    );
   },
-  {
-    title: "Visits",
-    api: () => VisitsAPI.getAll(),
-    color: themes.cardSalary,
-    path: "/visits",
-    icon: MapPin,
-  },
+  path: "/lead-followups",
+  color: "from-green-500 to-green-600",
+  icon: CalendarCheck,
+  gradient: "bg-gradient-to-br from-green-500 to-green-600",
+  accentColor: "green",
+},
+
   {
     title: "Holiday",
     api: () => HolidayAPI.getAll(),

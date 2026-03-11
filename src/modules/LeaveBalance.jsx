@@ -1,3 +1,4 @@
+import { useUser } from "../hooks/useUser";
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -11,27 +12,37 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { LeaveBalanceAPI } from "../services";
 import api from "../services/api";
 import { themes } from "../config/theme.config";
-
+import SearchBar from "../components/table/SearchBar";
 export default function LeaveBalance() {
+  const { employeeId, isHR } = useUser();
   const [data, setData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selected, setSelected] = useState(null);
+const [search, setSearch] = useState("");
+const fetchData = async () => {
+  const res = await LeaveBalanceAPI.getAll();
+  let list = res.data?.data || [];
 
-  const fetchData = async () => {
-    const res = await LeaveBalanceAPI.getAll();
-    setData(res.data?.data || []);
-  };
+  // 🔒 NON-HR → only own leave balance
+  if (!isHR) {
+    list = list.filter(
+      item => Number(item.employee_id) === Number(employeeId)
+    );
+  }
+
+  setData(list);
+};
 
   const fetchEmployees = async () => {
     const res = await api.get("employee/");
     setEmployees(res.data?.data || []);
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchEmployees();
-  }, []);
+useEffect(() => {
+  fetchData();
+  fetchEmployees();
+}, [employeeId, isHR]);
 
   const onSubmit = async (form) => {
     const total = Number(form.total_allocated || 0);
@@ -67,7 +78,14 @@ export default function LeaveBalance() {
     }
   };
 
+const filteredData = data.filter(item => {
+  const emp = employees.find(e => e.id === item.employee_id);
+  const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
 
+  return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
+    .toLowerCase()
+    .includes(search.toLowerCase());
+});
   const leaveColumns = [
       {
     key: "employee_id",
@@ -114,12 +132,28 @@ export default function LeaveBalance() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle title="LEAVE BALANCE" />
-          <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelected(null);   // ⭐ RESET
-  setMode("form");}}/>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+  <SectionTitle title="LEAVE BALANCE" />
+
+  <div className="flex gap-3">
+    <SearchBar
+      value={search}
+      onChange={setSearch}
+      placeholder="Search leave balance..."
+    />
+
+    {isHR && (
+      <ActionButtons
+        showAdd
+        addText="+ Add"
+        onAdd={() => {
+          setSelected(null);
+          setMode("form");
+        }}
+      />
+    )}
+  </div>
+</div>
 
         <Table header={<TableHeader columns={["Employee","Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (

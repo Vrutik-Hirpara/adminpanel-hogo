@@ -1,4 +1,4 @@
-
+import { useUser } from "../hooks/useUser";
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -15,6 +15,8 @@ import { LeaveRequestsAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 
 export default function LeaveRequests() {
+  const { employeeId, isHR } = useUser();
+
   const [leaves, setLeaves] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
@@ -23,27 +25,34 @@ export default function LeaveRequests() {
   const filteredLeaves = leaves.filter(l => {
     const emp = employees.find(e => e.id === l.employee_id);
     const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
-
     return `${empName} ${l.leave_type} ${l.reason} ${l.status}`
       .toLowerCase()
       .includes(search.toLowerCase());
   });
 
   // ================= FETCH =================
-  const fetchLeaves = async () => {
-    const res = await LeaveRequestsAPI.getAll();
-    setLeaves(res.data?.data || []);
-  };
+const fetchLeaves = async () => {
+  const res = await LeaveRequestsAPI.getAll();
+  let data = res.data?.data || [];
+
+  // 🔒 NON-HR → only own leave requests
+  if (!isHR) {
+    data = data.filter(
+      (leave) => Number(leave.employee_id) === Number(employeeId)
+    );
+  }
+
+  setLeaves(data);
+};
 
   const fetchEmployees = async () => {
     const res = await EmployeeAPI.getAll();
     setEmployees(res.data?.data || []);
   };
-
-  useEffect(() => {
-    fetchLeaves();
-    fetchEmployees();
-  }, []);
+useEffect(() => {
+  fetchLeaves();
+  fetchEmployees();
+}, [employeeId, isHR]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -165,10 +174,16 @@ export default function LeaveRequests() {
 
           <div className="flex gap-3">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
-            <ActionButtons showAdd addText="+ Add" onAdd={() => {
-              setSelectedItem(null);
-              setMode("form");
-            }} />
+         {isHR && (
+  <ActionButtons
+    showAdd
+    addText="+ Add"
+    onAdd={() => {
+      setSelectedItem(null);
+      setMode("form");
+    }}
+  />
+)}
           </div>
         </div>
 
