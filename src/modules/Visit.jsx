@@ -423,9 +423,9 @@ export default function Visits() {
 
     } catch (err) {
       const res = err.response?.data;
-
+      console.log("ERROR RESPONSE 👉", res);
       if (!res) {
-        alert("Network error. Please try again.");
+        alert(" error. Please try again.");
         return;
       }
 

@@ -16,10 +16,12 @@ export default function LeadsTableHeader() {
         <th className="w-[6%] py-3 text-center">Interest</th>
         {/* <th className="w-[6%] py-3 text-center">Status</th> */}
         <th className="w-[13%] py-3 text-center">Visit List</th>
-        {isHR && (
+        {/* {isHR && (
         <th className="w-[10%] py-3 text-center">Assigned To</th>
                 
-)}
+)} */}
+        <th className="w-[10%] py-3 text-center">Assigned To</th>
+
         <th className="w-[10%] py-3 text-center">Action</th>
 
       </tr>
