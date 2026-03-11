@@ -493,7 +493,7 @@ const Sidebar = () => {
   const location = useLocation();
   getUserFromToken();
 
-  const extra = JSON.parse(localStorage.getItem("user_data"));
+  const extra = JSON.parse(localStorage.getItem("user"));
   const role = extra?.role_name?.toLowerCase();
   const isHR = role === "hr";
 

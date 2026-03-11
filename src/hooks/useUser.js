@@ -1,5 +1,5 @@
 export const useUser = () => {
-  const extra = JSON.parse(localStorage.getItem("user_data")) || {};
+  const extra = JSON.parse(localStorage.getItem("user")) || {};
 
   const employeeId = extra?.id;
   const role = extra?.role_name?.toLowerCase();

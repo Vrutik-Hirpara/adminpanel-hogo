@@ -549,7 +549,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
-  const { employeeId, isHR, leadId } = useUser(); // 🔥 આ લાઇન ઉમેરો
+  const { employeeId, isHR,leadId } = useUser(); // 🔥 આ લાઇન ઉમેરો
 
 
 
@@ -569,75 +569,75 @@ export default function Dashboard() {
           }
         });
         // ✅ SAFE MULTI API CALL
-        // ✅ SAFE MULTI API CALL
-        const results = await Promise.allSettled(
-          modulesToShow.map((mod) => {
-            if (!isHR) {
-              return mod.api(employeeId, leadId); // 👈 aa line add kar
-            } else {
-              return mod.api();
-            }
-          })
-        );
+       // ✅ SAFE MULTI API CALL
+const results = await Promise.allSettled(
+  modulesToShow.map((mod) => {
+    if (!isHR) {
+      return mod.api(employeeId, leadId); // 👈 aa line add kar
+    } else {
+      return mod.api();
+    }
+  })
+);
 
         // ✅ BUILD FINAL STATS
-        const finalStats = results.map((res, index) => {
-          const module = modulesToShow[index];
+      const finalStats = results.map((res, index) => {
+  const module = modulesToShow[index];
 
-          if (res.status === "rejected") {
-            console.error("❌ API Failed:", module.title, res.reason);
-            return {
-              title: module.title,
-              value: 0,
-              color: module.color,
-              icon: module.icon,
-              path: module.path,
-              gradient: module.gradient,
-              accentColor: module.accentColor,
-            };
-          }
+  if (res.status === "rejected") {
+    console.error("❌ API Failed:", module.title, res.reason);
+    return {
+      title: module.title,
+      value: 0,
+      color: module.color,
+      icon: module.icon,
+      path: module.path,
+      gradient: module.gradient,
+      accentColor: module.accentColor,
+    };
+  }
 
-          const response = res.value?.data;
+  const response = res.value?.data;
 
-          let count = 0;
+  let count = 0;
 
-          // ✅ SPECIAL CASE: TODAY FOLLOWUPS
-          if (module.title === "Today's Followups") {
-            count = response?.count || 0;
-          }
+  // ✅ SPECIAL CASE: TODAY FOLLOWUPS
+  if (module.title === "Today's Followups") {
+    count = response?.count || 0;
+  }
 
-          // ✅ NORMAL APIs (array)
-          else if (Array.isArray(response?.data)) {
+  // ✅ NORMAL APIs (array)
+else if (Array.isArray(response?.data)) {
 
-            // 🔥 SPECIAL FILTER FOR LEADS ONLY
-            if (module.title === "Leads") {
-              const filtered = response.data.filter(
-                (item) =>
-                  item.lead_status === "Lead" ||
-                  item.lead_status === "Prospect"
-              );
+  // 🔥 SPECIAL FILTER FOR LEADS ONLY
+  if (module.title === "Leads") {
+    const filtered = response.data.filter(
+      (item) =>
+        item.lead_status === "Lead" ||
+        item.lead_status === "Prospect"
+    );
 
-              count = filtered.length;
-            } else {
-              count = response.data.length;
-            }
-          }
+    count = filtered.length;
+  } else {
+    count = response.data.length;
+  }
+}
 
-          // ✅ object type response
-          else if (typeof response?.data === "object" && response.data !== null) {
-            count = Object.keys(response.data).length;
-          }
+  // ✅ object type response
+  else if (typeof response?.data === "object" && response.data !== null) {
+    count = Object.keys(response.data).length;
+  }
 
-          return {
-            title: module.title,
-            value: count,
-            color: module.color,
-            icon: module.icon,
-            path: module.path,
-            gradient: module.gradient,
-            accentColor: module.accentColor,
-          };
-        });
+  return {
+    title: module.title,
+    value: count,
+    color: module.color,
+    icon: module.icon,
+    path: module.path,
+    gradient: module.gradient,
+    accentColor: module.accentColor,
+  };
+});
 
         setStats(finalStats);
 
