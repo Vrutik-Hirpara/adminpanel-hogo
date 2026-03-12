@@ -559,31 +559,55 @@ export default function Leads() {
 
 
     // 🔥 CONDITIONAL COLUMN - only for HR
-    ...(isHR ? [{
-      key: "assigned_to_name",
-      className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
-      render: (row) => (
-        <div className="w-[100px]">
-          <select
-            value={row.assigned_to || ""}
-            onChange={(e) => handleAssignChange(row, e.target.value)}
-            className="w-full rounded px-2 py-1 text-sm"
-            style={{
-              border: `1px solid ${themes.borderLight}`,
-              backgroundColor: themes.textWhite,
-              color: themes.textPrimary,
-            }}
-          >
-            <option value="">Unassigned</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.first_name} {emp.last_name}
-              </option>
-            ))}
-          </select>
-        </div>
-      ),
-    }] : []),
+    // ...(isHR ? [{
+    //   key: "assigned_to_name",
+    //   className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
+    //   render: (row) => (
+    //     <div className="w-[100px]">
+    //       <select
+    //         value={row.assigned_to || ""}
+    //         onChange={(e) => handleAssignChange(row, e.target.value)}
+    //         className="w-full rounded px-2 py-1 text-sm"
+    //         style={{
+    //           border: `1px solid ${themes.borderLight}`,
+    //           backgroundColor: themes.textWhite,
+    //           color: themes.textPrimary,
+    //         }}
+    //       >
+    //         <option value="">Unassigned</option>
+    //         {employees.map((emp) => (
+    //           <option key={emp.id} value={emp.id}>
+    //             {emp.first_name} {emp.last_name}
+    //           </option>
+    //         ))}
+    //       </select>
+    //     </div>
+    //   ),
+    // }] : []),
+    {
+  key: "assigned_to_name",
+  className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
+  render: (row) => {
+    if (isHR) {
+      return (
+        <select
+          value={row.assigned_to || ""}
+          onChange={(e) => handleAssignChange(row, e.target.value)}
+          className="w-full rounded px-2 py-1 text-sm"
+        >
+          <option value="">Unassigned</option>
+          {employees.map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.first_name} {emp.last_name}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    return <span>{row.assigned_to_name || "Unassigned"}</span>;
+  },
+}
   ];
 
   const leadFields = [
@@ -732,6 +756,7 @@ export default function Leads() {
             ],
             required: true,
           },
+         
           {
             label: "Lead Source",
             name: "lead_source",

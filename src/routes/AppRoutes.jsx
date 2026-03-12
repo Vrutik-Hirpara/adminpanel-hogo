@@ -74,6 +74,7 @@ import LeaveBalance from "../modules/LeaveBalance";
 import LeaveRequests from "../modules/LeaveRequests";
 import Expenses from "../modules/Expenses";
 import LeadFollowups from "../modules/LeadFollowups";
+import EmployeeAttendance from "../modules/EmployeeAttendance";
 
 export default function AppRoutes() {
   const token = localStorage.getItem("token");
@@ -123,6 +124,7 @@ export default function AppRoutes() {
         <Route path="/leave-requests" element={<LeaveRequests />} />
         <Route path="/expense" element={<Expenses />} />
         <Route path="/lead_followups" element={<LeadFollowups />} />
+        <Route path="/employ_attendence" element={<EmployeeAttendance />} />
 
       </Route>
 

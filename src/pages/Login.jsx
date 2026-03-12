@@ -106,7 +106,7 @@ export default function Login() {
   // 🔒 Skip login if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!isValidToken(token)) navigate("/dashboard", { replace: true });
+    if (isValidToken(token)) navigate("/dashboard", { replace: true });
   }, [navigate]);
 
 const onSubmit = async (data) => {

@@ -529,7 +529,6 @@
 
 // aa perfect chhe details vag
 "use client";
-
 import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { dashboardModules } from "../config/dashboardModules";
@@ -549,7 +548,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
-  const { employeeId, isHR,leadId } = useUser(); // 🔥 આ લાઇન ઉમેરો
+  const { employeeId, isHR, leadId } = useUser();
 
 
 
