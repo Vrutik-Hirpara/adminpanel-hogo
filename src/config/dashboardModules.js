@@ -135,14 +135,14 @@ import {
   EmployeeDocsAPI,
   LeaveBalanceAPI,
   UserAPI,
-  // LeadsAPI,
-  // VisitsAPI,
+  LeadsAPI,
+  VisitsAPI,
   HolidayAPI,
   ExpenseAPI,
   LeadFollowupsAPI,
 } from "../services";
-import { VisitsAPI } from "../services/visits.service";
-import { LeadsAPI } from "../services/leads.service";
+
+
 
 import {
   Briefcase,

@@ -502,7 +502,7 @@ const Sidebar = () => {
   useEffect(() => {
     if (location.pathname.startsWith("/employee")) setOpenMenu("employee");
     else if (["/department", "/role", "/officebranches"].some(p => location.pathname.startsWith(p))) setOpenMenu("office");
-    else if (["/leads", "/visits","/employ_attendence","lead_followups"].some(p => location.pathname.startsWith(p))) setOpenMenu("sales");
+    else if (["/leads", "/visits", "lead_followups"].some(p => location.pathname.startsWith(p))) setOpenMenu("sales");
     else if (["/holiday"].some(p => location.pathname.startsWith(p))) setOpenMenu("hr");
   }, [location.pathname]);
 
@@ -582,6 +582,8 @@ const Sidebar = () => {
             <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
             <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
+            <LinkItem to="/employee_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} />
+
           </Dropdown>
         )}
 
@@ -589,7 +591,8 @@ const Sidebar = () => {
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
           <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
           <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
-          <LinkItem to="/employ_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} />
+          {/* <LinkItem to="/employ_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} /> */}
+          <LinkItem to="/travel-plan" icon={PhoneCall} label="travel-plan" color={themes.cardUsers} />
 
         </Dropdown>
 
@@ -612,6 +615,7 @@ const Sidebar = () => {
             <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
             <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
+              <LinkItem to="/employee_attendence" icon={PhoneCall} label="Employee Attendance" color={themes.cardUsers} />
           </Dropdown>
         </div>
       )}
