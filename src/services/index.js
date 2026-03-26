@@ -87,7 +87,7 @@
 
 import api from "./api";
 import { createCRUD } from "./apiFactory";
-
+import { appendQueryParams } from "../utils/apiFilter";
 /* ================= BASIC CRUD APIs ================= */
 export const DepartmentAPI = createCRUD("departments");
 export const EmployeeAPI = createCRUD("employee");
@@ -127,12 +127,29 @@ export const LeadsAPI = {
 //   getByLeadId: (leadId) =>
 //     api.get(`visits/?lead_id=${leadId}`),
 // };
+// export const VisitsAPI = {
+//   ...createCRUD("visits"),
+
+//   filter: (params) => {
+//     const url = appendQueryParams("visits/", params);
+//     return api.get(url);
+//   },
+// };
 export const VisitsAPI = {
   ...createCRUD("visits"),
 
-  filter: (params) => {
+  filter: async (params) => {
     const url = appendQueryParams("visits/", params);
-    return api.get(url);
+    const res = await api.get(url);
+    return res.data;
+  },
+
+  getByEmployee(employeeId) {
+    return this.filter({ employee_id: employeeId });
+  },
+
+  getByLeadId(leadId) {
+    return this.filter({ lead_id: leadId });
   },
 };
 /* ================= DASHBOARD ================= */

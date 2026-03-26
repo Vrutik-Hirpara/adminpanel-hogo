@@ -245,7 +245,7 @@ export const dashboardModules = [
 
     // fallback employee based
     if (employeeId) {
-      return VisitsAPI.getByEmployee(employeeId);
+      return VisitsAPI.filter({ employee_id: employeeId });
     }
 
     return VisitsAPI.getAll();
