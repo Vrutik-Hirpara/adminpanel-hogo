@@ -1584,7 +1584,6 @@ const onSubmit = async (data) => {
   delete payload.id;
   delete payload.employee_name;
   delete payload.total_hours;
-  // ❌ REMOVE THIS LINE: delete payload.employee;
   
   // ✅ Don't send status, full_leave, half_leave - backend calculates them
   delete payload.status;
@@ -1610,16 +1609,28 @@ const onSubmit = async (data) => {
 
   // ================= TABLE COLUMNS =================
   const attendanceColumns = [
+    // {
+    //   key: "employee",
+    //   render: (row) => {
+    //     if (roleName !== "hr") {
+    //       return row.employee_name || "-";
+    //     }
+    //     const emp = employees.find((e) => e.id === row.employee);
+    //     return emp ? `${emp.first_name} ${emp.last_name}` : row.employee_name || "-";
+    //   }
+    // },
     {
-      key: "employee",
-      render: (row) => {
-        if (roleName !== "hr") {
-          return row.employee_name || "-";
-        }
-        const emp = employees.find((e) => e.id === row.employee);
-        return emp ? `${emp.first_name} ${emp.last_name}` : row.employee_name || "-";
-      }
-    },
+  key: "employee",
+  render: (row) => {
+    const emp = employees.find((e) => e.id === row.employee);
+
+    if (emp) {
+      return `${emp.first_name} ${emp.last_name}`;
+    }
+
+    return row.employee_name || "-";
+  }
+},
     { 
       key: "date",
       render: (row) => row.date || "-"
@@ -1653,17 +1664,77 @@ const onSubmit = async (data) => {
   ];
 
   // ================= VIEW FIELDS =================
-  const attendanceFields = [
-    { key: "employee", label: "Employee" },
-    { key: "date", label: "Date" },
-    { key: "start_time", label: "Start Time" },
-    { key: "end_time", label: "End Time" },
-    { key: "status", label: "Status" },
-    { key: "full_leave", label: "Full Leave" },
-    { key: "half_leave", label: "Half Leave" },
-    { key: "total_hours", label: "Total Hours" },
-  ];
+  // const attendanceFields = [
+  //   { key: "employee", label: "Employee" },
+  //   { key: "date", label: "Date" },
+  //   { key: "start_time", label: "Start Time" },
+  //   { key: "end_time", label: "End Time" },
+  //   { key: "status", label: "Status" },
+  //   { key: "full_leave", label: "Full Leave" },
+  //   { key: "half_leave", label: "Half Leave" },
+  //   { key: "total_hours", label: "Total Hours" },
+  // ];
 
+// ================= VIEW FIELDS =================
+const attendanceFields = [
+  { 
+    key: "employee", 
+    label: "Employee",
+    format: (value, row) => {
+      if (roleName !== "hr") {
+        return row?.employee_name || "-";
+      }
+      const emp = employees.find((e) => e.id === value);
+      return emp ? `${emp.first_name} ${emp.last_name}` : "-";
+    }
+  },
+  { key: "date", label: "Date" },
+  { 
+    key: "start_time", 
+    label: "Start Time",
+    format: (value) => value ? formatTime(value) : "-"
+  },
+  { 
+    key: "end_time", 
+    label: "End Time",
+    format: (value) => value ? formatTime(value) : "-"
+  },
+  { 
+    key: "status", 
+    label: "Status",
+    format: (value) => {
+      // Convert to boolean first
+      const isActive = value === true || value === "true" || value === 1 || value === "1";
+      return isActive ? "Active" : "Inactive";
+    }
+  },
+  { 
+    key: "full_leave", 
+    label: "Full Leave",
+    format: (value) => {
+      const isYes = value === true || value === "true" || value === 1 || value === "1";
+      return isYes ? "Yes" : "No";
+    }
+  },
+  { 
+    key: "half_leave", 
+    label: "Half Leave",
+    format: (value) => {
+      const isYes = value === true || value === "true" || value === 1 || value === "1";
+      return isYes ? "Yes" : "No";
+    }
+  },
+  { 
+    key: "total_hours", 
+    label: "Total Hours",
+    format: (value) => {
+      if (!value && value !== 0) return "0.00";
+      if (typeof value === 'number') return value.toFixed(2);
+      if (typeof value === 'string') return parseFloat(value).toFixed(2);
+      return "0.00";
+    }
+  },
+];
   // ================= FILTER COMPONENT =================
   const FilterBar = () => {
     if (roleName !== "hr") return null;
@@ -1798,26 +1869,74 @@ const onSubmit = async (data) => {
   }
 
   // ================= VIEW PAGE =================
-  if (mode === "view" && selectedItem) {
-    return (
-      <EntityPageLayout
-        title="Attendance Details"
-        showBack
-        onBack={() => setMode("list")}
-      >
-        <EntityViewCard
-          title="Attendance"
-          data={selectedItem}
-          fields={attendanceFields}
-          api={EmployeeAttendanceAPI}
-          onUpdated={fetchAttendance}
-          onDeleted={fetchAttendance}
-          headerKeys={["employee"]}
-        />
-      </EntityPageLayout>
-    );
-  }
-
+  // if (mode === "view" && selectedItem) {
+  //   return (
+  //     <EntityPageLayout
+  //       title="Attendance Details"
+  //       showBack
+  //       onBack={() => setMode("list")}
+  //     >
+  //       <EntityViewCard
+  //         title="Attendance"
+  //         data={selectedItem}
+  //         fields={attendanceFields}
+  //         api={EmployeeAttendanceAPI}
+  //         onUpdated={fetchAttendance}
+  //         onDeleted={fetchAttendance}
+  //         headerKeys={["employee"]}
+  //       />
+  //     </EntityPageLayout>
+  //   );
+  // }
+// ================= VIEW PAGE =================
+if (mode === "view" && selectedItem) {
+  // Format all data before passing to EntityViewCard
+  const formattedData = {
+    ...selectedItem,
+    employee: (() => {
+      if (roleName !== "hr") return selectedItem.employee_name || "-";
+      const emp = employees.find((e) => e.id === selectedItem.employee);
+      return emp ? `${emp.first_name} ${emp.last_name}` : "-";
+    })(),
+    start_time: selectedItem.start_time ? formatTime(selectedItem.start_time) : "-",
+    end_time: selectedItem.end_time ? formatTime(selectedItem.end_time) : "-",
+    status: selectedItem.status ? "Active" : "Inactive",
+    full_leave: selectedItem.full_leave ? "Yes" : "No",
+    half_leave: selectedItem.half_leave ? "Yes" : "No",
+    total_hours: selectedItem.total_hours ? 
+      (typeof selectedItem.total_hours === 'number' ? 
+        selectedItem.total_hours.toFixed(2) : 
+        parseFloat(selectedItem.total_hours).toFixed(2)) 
+      : "0.00"
+  };
+  
+  return (
+    <EntityPageLayout
+      title="Attendance Details"
+      showBack
+      onBack={() => setMode("list")}
+    >
+      <EntityViewCard
+        title="Attendance"
+        data={formattedData}
+        fields={[
+          { key: "employee", label: "Employee" },
+          { key: "date", label: "Date" },
+          { key: "start_time", label: "Start Time" },
+          { key: "end_time", label: "End Time" },
+          { key: "status", label: "Status" },
+          { key: "full_leave", label: "Full Leave" },
+          { key: "half_leave", label: "Half Leave" },
+          { key: "total_hours", label: "Total Hours" },
+        ]}
+        api={EmployeeAttendanceAPI}
+        onUpdated={fetchAttendance}
+        onDeleted={fetchAttendance}
+        headerKeys={["employee"]}
+      />
+    </EntityPageLayout>
+  );
+}
   // ================= FORM PAGE =================
   const formattedSelected =
     selectedItem && {

@@ -1,14 +1,20 @@
 import api from "./api";
 
 /* Detect FormData automatically */
+// const withFormCheck = (data) => {
+//   const isForm = data instanceof FormData;
+//   return {
+//     body: data,
+//     config: isForm ? { headers: { "Content-Type": "multipart/form-data" } } : {},
+//   };
+// };
 const withFormCheck = (data) => {
   const isForm = data instanceof FormData;
   return {
     body: data,
-    config: isForm ? { headers: { "Content-Type": "multipart/form-data" } } : {},
+    config: isForm ? {} : { headers: { "Content-Type": "application/json" } },
   };
 };
-
 export const createCRUD = (endpoint) => ({
   getAll: () => api.get(`${endpoint}/`),
 

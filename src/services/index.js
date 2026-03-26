@@ -106,20 +106,35 @@ export const TravelPlanAPI = createCRUD("travel-plan");
 export const DailyPlanAPI = createCRUD("daily-plan");
 
 /* ================= LEADS CUSTOM ================= */
+// export const LeadsAPI = {
+//   ...createCRUD("leads"),
+//   getByEmployee: (employeeId) => api.get(`leads/${employeeId}/`),
+// };
+
 export const LeadsAPI = {
   ...createCRUD("leads"),
-  getByEmployee: (employeeId) => api.get(`leads/${employeeId}/`),
-};
 
+  filter: (params) => {
+    const url = appendQueryParams("leads/", params);
+    return api.get(url);
+  },
+};
 /* ================= VISITS CUSTOM ================= */
+// export const VisitsAPI = {
+//   ...createCRUD("visits"),
+//   getByEmployee: (employeeId) =>
+//     api.get(`visits/?employee_id=${employeeId}`),
+//   getByLeadId: (leadId) =>
+//     api.get(`visits/?lead_id=${leadId}`),
+// };
 export const VisitsAPI = {
   ...createCRUD("visits"),
-  getByEmployee: (employeeId) =>
-    api.get(`visits/?employee_id=${employeeId}`),
-  getByLeadId: (leadId) =>
-    api.get(`visits/?lead_id=${leadId}`),
-};
 
+  filter: (params) => {
+    const url = appendQueryParams("visits/", params);
+    return api.get(url);
+  },
+};
 /* ================= DASHBOARD ================= */
 const safeArr = (res) => res.data?.data || res.data || [];
 

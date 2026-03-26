@@ -255,11 +255,25 @@ export const dashboardModules = [
   icon: MapPin,
 },
 
+// {
+//     title: "Leads",
+//     api: (employeeId) => {
+//         // 🔥 Non-HR mate: assigned_to=[employeeId] API
+//         return axios.get(`https://hogofilm.pythonanywhere.com/leads/?assigned_to=${employeeId}`);
+//     },
+//     color: themes.cardUsers,
+//     path: "/leads",
+//     icon: UserPlus,
+//     gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+//     accentColor: "blue",
+// },
 {
     title: "Leads",
-    api: (employeeId) => {
-        // 🔥 Non-HR mate: assigned_to=[employeeId] API
-        return axios.get(`https://hogofilm.pythonanywhere.com/leads/?assigned_to=${employeeId}`);
+    api: (isHR, employeeId) => {
+        if (isHR) {
+            return LeadsAPI.getAll();
+        }
+        return LeadsAPI.filter({ assigned_to: employeeId });
     },
     color: themes.cardUsers,
     path: "/leads",
@@ -267,7 +281,6 @@ export const dashboardModules = [
     gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
     accentColor: "blue",
 },
-
 {
   title: "Today's Followups",
   api: (employeeId) => {

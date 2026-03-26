@@ -494,9 +494,9 @@ export default function Leads() {
           className="font-semibold"
           style={{
             color:
-              row.interest_level === "High"
+              row.interest_level === "Hot"
                 ? themes.danger
-                : row.interest_level === "Medium"
+                : row.interest_level === "Warm"
                   ? themes.warning
                   : themes.success,
           }}
@@ -794,9 +794,9 @@ export default function Leads() {
             type: "select",
             required: true,
             options: [
-              { label: "LOW", value: "Low" },
-              { label: "MEDIUM", value: "Medium" },
-              { label: "HIGH", value: "High" },
+              { label: "COLD", value: "Cold" },
+              { label: "WARM", value: "Warm" },
+              { label: "HOT", value: "Hot" },
             ],
           },
           {
