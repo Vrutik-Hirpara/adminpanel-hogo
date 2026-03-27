@@ -141,7 +141,16 @@ export const VisitsAPI = {
   filter: async (params) => {
     const url = appendQueryParams("visits/", params);
     const res = await api.get(url);
-    return res.data;
+    console.log("Filter response:", res.data); // Debug log
+    // Make sure we always return an array
+    if (Array.isArray(res.data)) {
+      return res.data;
+    } else if (res.data?.data && Array.isArray(res.data.data)) {
+      return res.data.data;
+    } else if (res.data?.results && Array.isArray(res.data.results)) {
+      return res.data.results;
+    }
+    return []; // Return empty array if nothing matches
   },
 
   getByEmployee(employeeId) {

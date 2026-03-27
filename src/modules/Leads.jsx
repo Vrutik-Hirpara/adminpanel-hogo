@@ -394,19 +394,54 @@ export default function Leads() {
 
     setEmployees(list);
   };
-  const fetchVisitsByLead = async (leadId) => {
-    try {
-      const res = await VisitsAPI.getByLeadId(leadId);
-      const data = res.data.data || [];
+  // const fetchVisitsByLead = async (leadId) => {
+  //   try {
+  //     const res = await VisitsAPI.getByLeadId(leadId);
+  //     const data = res.data.data || [];
 
-      setSelectedVisits(data);
-      setMode("visits");
-    } catch (err) {
-      console.log("Visit fetch error", err);
-      alert("Failed to load visits");
+  //     setSelectedVisits(data);
+  //     setMode("visits");
+  //   } catch (err) {
+  //     console.log("Visit fetch error", err);
+  //     alert("Failed to load visits");
+  //   }
+  // };
+const fetchVisitsByLead = async (leadId) => {
+  try {
+    console.log("🔍 Fetching visits for Lead ID:", leadId);
+    
+    const response = await VisitsAPI.getByLeadId(leadId);
+    console.log("📦 Response type:", typeof response);
+    console.log("📦 Response:", response);
+    
+    // Ensure we always have an array
+    let visits = [];
+    if (Array.isArray(response)) {
+      visits = response;
+    } else if (response && typeof response === 'object') {
+      // If it's an object, try to extract array from common patterns
+      if (Array.isArray(response.data)) {
+        visits = response.data;
+      } else if (Array.isArray(response.results)) {
+        visits = response.results;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        visits = response.data.data;
+      } else {
+        // If it's a single object, wrap it in array
+        console.warn("Response is not an array, wrapping:", response);
+        visits = [];
+      }
     }
-  };
-
+    
+    console.log("✅ Final visits array:", visits);
+    setSelectedVisits(visits);
+    setMode("visits");
+  } catch (err) {
+    console.error("❌ Visit fetch error:", err);
+    setSelectedVisits([]); // Set empty array on error
+    alert("Failed to load visits");
+  }
+};
   useEffect(() => {
     fetchLeads();
     fetchEmployees();
@@ -668,13 +703,104 @@ export default function Leads() {
       </PageContainer>
     );
   }
-  if (mode === "visits") {
-    return (
-      <EntityPageLayout
-        title="Visit List"
-        showBack
-        onBack={() => setMode("list")}
-      >
+  // if (mode === "visits") {
+  //   return (
+  //     <EntityPageLayout
+  //       title="Visit List"
+  //       showBack
+  //       onBack={() => setMode("list")}
+  //     >
+  //       <Table
+  //         header={
+  //           <TableHeader
+  //             columns={[
+  //               "Followup Date",
+  //               "Status",
+  //               "Employee",
+  //               "Notes",
+  //               "Action",
+  //             ]}
+  //           />
+  //         }
+  //       >
+  //         {selectedVisits.map((v, index) => (
+  //           <EntityTableRow
+  //             key={v.id}
+  //             row={v}
+  //             index={index}
+  //             columns={[
+  //               { key: "followup_date_display" },
+  //               { key: "status_display" },
+  //               { key: "employee_name" },
+  //               { key: "notes" },
+  //             ]}
+  //           />
+  //         ))}
+  //       </Table>
+  //     </EntityPageLayout>
+  //   );
+  // }
+
+//   if (mode === "visits") {
+//   // Ensure selectedVisits is always an array
+//   const visitsArray = Array.isArray(selectedVisits) ? selectedVisits : [];
+  
+//   return (
+//     <EntityPageLayout
+//       title={`Visits for ${selectedItem?.business_name || "Lead"}`}
+//       showBack
+//       onBack={() => setMode("list")}
+//     >
+//       {visitsArray.length === 0 ? (
+//         <div className="text-center py-12 bg-white rounded-lg shadow">
+//           <p className="text-gray-500">No visits recorded for this lead yet</p>
+//         </div>
+//       ) : (
+//         <Table
+//           header={
+//             <TableHeader
+//               columns={[
+//                 "Followup Date",
+//                 "Status",
+//                 "Employee",
+//                 "Notes",
+//                 "Actions",
+//               ]}
+//             />
+//           }
+//         >
+//           {visitsArray.map((v, index) => (
+//             <EntityTableRow
+//               key={v.id || index}
+//               row={v}
+//               index={index}
+//               columns={[
+//                 { key: "followup_date_display" },
+//                 { key: "status_display" },
+//                 { key: "employee_name" },
+//                 { key: "notes" },
+//               ]}
+//             />
+//           ))}
+//         </Table>
+//       )}
+//     </EntityPageLayout>
+//   );
+// }
+if (mode === "visits") {
+  const visitsArray = Array.isArray(selectedVisits) ? selectedVisits : [];
+  
+  return (
+    <EntityPageLayout
+      title={`Visits for ${selectedItem?.business_name || "Lead"}`}
+      showBack
+      onBack={() => setMode("list")}
+    >
+      {visitsArray.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <p className="text-gray-500">No visits recorded for this lead yet</p>
+        </div>
+      ) : (
         <Table
           header={
             <TableHeader
@@ -683,14 +809,14 @@ export default function Leads() {
                 "Status",
                 "Employee",
                 "Notes",
-                "Action",
+                // No "Actions" column needed
               ]}
             />
           }
         >
-          {selectedVisits.map((v, index) => (
+          {visitsArray.map((v, index) => (
             <EntityTableRow
-              key={v.id}
+              key={v.id || index}
               row={v}
               index={index}
               columns={[
@@ -699,12 +825,15 @@ export default function Leads() {
                 { key: "employee_name" },
                 { key: "notes" },
               ]}
+              // ❌ No onView, onEdit, onDelete props
+              // So hasActions = false, no actions column rendered
             />
           ))}
         </Table>
-      </EntityPageLayout>
-    );
-  }
+      )}
+    </EntityPageLayout>
+  );
+}
   // ================= VIEW =================
   if (mode === "view" && selectedItem) {
     return (
