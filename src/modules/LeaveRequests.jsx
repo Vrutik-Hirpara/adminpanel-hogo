@@ -31,28 +31,28 @@ export default function LeaveRequests() {
   });
 
   // ================= FETCH =================
-const fetchLeaves = async () => {
-  const res = await LeaveRequestsAPI.getAll();
-  let data = res.data?.data || [];
+  const fetchLeaves = async () => {
+    const res = await LeaveRequestsAPI.getAll();
+    let data = res.data?.data || [];
 
-  // 🔒 NON-HR → only own leave requests
-  if (!isHR) {
-    data = data.filter(
-      (leave) => Number(leave.employee_id) === Number(employeeId)
-    );
-  }
+    // 🔒 NON-HR → only own leave requests
+    if (!isHR) {
+      data = data.filter(
+        (leave) => Number(leave.employee_id) === Number(employeeId)
+      );
+    }
 
-  setLeaves(data);
-};
+    setLeaves(data);
+  };
 
   const fetchEmployees = async () => {
     const res = await EmployeeAPI.getAll();
     setEmployees(res.data?.data || []);
   };
-useEffect(() => {
-  fetchLeaves();
-  fetchEmployees();
-}, [employeeId, isHR]);
+  useEffect(() => {
+    fetchLeaves();
+    fetchEmployees();
+  }, [employeeId, isHR]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -68,9 +68,9 @@ useEffect(() => {
           formData.append(key, value);
         }
       });
-for (let pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
       selectedItem
         ? await LeaveRequestsAPI.update(selectedItem.id, formData)
         : await LeaveRequestsAPI.create(formData);
@@ -176,16 +176,16 @@ for (let pair of formData.entries()) {
 
           <div className="flex gap-3">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
-         {isHR && (
-  <ActionButtons
-    showAdd
-    addText="+ Add"
-    onAdd={() => {
-      setSelectedItem(null);
-      setMode("form");
-    }}
-  />
-)}
+            {isHR && (
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedItem(null);
+                  setMode("form");
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -241,7 +241,7 @@ for (let pair of formData.entries()) {
           { label: "End Date", name: "end_date", type: "date", required: true, },
           { label: "Total Leaves", name: "total_leaves", required: true, },
           { label: "Reason", name: "reason", type: "textarea", required: true, },
-          { label: "Upload Document", name: "upload_doc", type: "file" },
+          { label: "Upload Document", name: "upload_doc", type: "file",previewKey: "upload_doc" },
           {
             label: "Status",
             name: "status",

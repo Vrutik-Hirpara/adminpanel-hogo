@@ -186,44 +186,119 @@ export default function EntityForm({
                 }
 
                 // ===== FILE INPUT (🔥 WITH PREVIEW) =====
-                if (field.type === "file") {
-                  let imageUrl = null;
+//                 if (field.type === "file") {
+//                   let imageUrl = null;
 
-                  if (
-                    selectedItem &&
-                    field.previewKey &&
-                    selectedItem[field.previewKey]
-                  ) {
-                    const raw = selectedItem[field.previewKey];
+//                   if (
+//                     selectedItem &&
+//                     field.previewKey &&
+//                     selectedItem[field.previewKey]
+//                   ) {
+//                     const raw = selectedItem[field.previewKey];
 
-                    // full url કે relative path handle કર
-                    imageUrl = raw.startsWith("http")
-                      ? raw
-                      : `${api.defaults.baseURL}${raw}`;
-                  }
+//                     // full url કે relative path handle કર
+//                     imageUrl = raw.startsWith("http")
+//                       ? raw
+//                       : `${api.defaults.baseURL}${raw}`;
+//                   }
 
-                  return (
-                    <div key={field.name} className="flex flex-col gap-2">
-                      <FormInput
-                        label={field.label}
-                        name={field.name}
-                        type="file"
-                        register={register}
-                        rules={getRules(field)}
-                        error={errors[field.name]}
-                      />
+//                   return (
+//                     <div key={field.name} className="flex flex-col gap-2">
+//                       <FormInput
+//                         label={field.label}
+//                         name={field.name}
+//                         type="file"
+//                         register={register}
+//                         rules={getRules(field)}
+//                         error={errors[field.name]}
+//                       />
 
-                      {/* 🔥 Existing Image Preview */}
-                      {imageUrl && (
-                        <img
-                          src={imageUrl}
-                          alt="preview"
-className="h-24 w-auto object-contain rounded border self-start"                        />
-                      )}
-                    </div>
-                  );
-                }
+//                       {/* 🔥 Existing Image Preview */}
+//                       {imageUrl && (
+//                         <img
+//                           src={imageUrl}
+//                           alt="preview"
+// className="h-24 w-auto object-contain rounded border self-start"                        />
+//                       )}
+//                     </div>
+//                   );
+//                 }
+// if (field.type === "file") {
+//   let imageUrl = null;
 
+//   if (
+//     selectedItem &&
+//     field.previewKey &&
+//     selectedItem[field.previewKey]
+//   ) {
+//     const raw = selectedItem[field.previewKey];
+
+//     imageUrl = raw.startsWith("http")
+//       ? raw
+//       : `${api.defaults.baseURL}${raw}`;
+//   }
+
+//   return (
+//     <div key={field.name} className="flex flex-col gap-2">
+//       <FormInput
+//         label={field.label}
+//         name={field.name}
+//         type="file"
+//         register={register}
+//         rules={getRules(field)}
+//         error={errors[field.name]}
+//       />
+
+//       {imageUrl && (
+//         <img
+//           src={imageUrl}
+//           alt="preview"
+//           className="h-24 w-auto object-contain rounded border self-start"
+//         />
+//       )}
+//     </div>
+//   );
+// }
+if (field.type === "file") {
+  let imageUrl = null;
+
+  if (
+    selectedItem &&
+    field.previewKey &&
+    selectedItem[field.previewKey]
+  ) {
+    const raw = selectedItem[field.previewKey];
+
+    imageUrl = raw.startsWith("http")
+      ? raw
+      : `${api.defaults.baseURL}${raw}`;
+  }
+
+  return (
+    <div key={field.name} className="flex flex-col gap-2">
+
+      {/* IMAGE FIRST */}
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt="preview"
+          className="h-24 w-auto object-contain rounded border self-start"
+        />
+      )}
+
+      {/* FORM INPUT SAME AS BEFORE */}
+      <FormInput
+        label={field.label}
+        name={field.name}
+        type="file"
+        register={register}
+        rules={getRules(field)}
+        error={errors[field.name]}
+      />
+
+    </div>
+  );
+}
                 // ===== DEFAULT INPUT =====
                 return (
                   <FormInput
