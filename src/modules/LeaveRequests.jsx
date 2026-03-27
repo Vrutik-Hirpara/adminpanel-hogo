@@ -68,7 +68,9 @@ useEffect(() => {
           formData.append(key, value);
         }
       });
-
+for (let pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
       selectedItem
         ? await LeaveRequestsAPI.update(selectedItem.id, formData)
         : await LeaveRequestsAPI.create(formData);

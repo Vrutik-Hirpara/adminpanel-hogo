@@ -1,20 +1,64 @@
-import api from "./api";
+// import api from "./api";
 
-/* Detect FormData automatically */
+// /* Detect FormData automatically */
+// // const withFormCheck = (data) => {
+// //   const isForm = data instanceof FormData;
+// //   return {
+// //     body: data,
+// //     config: isForm ? { headers: { "Content-Type": "multipart/form-data" } } : {},
+// //   };
+// // };
 // const withFormCheck = (data) => {
 //   const isForm = data instanceof FormData;
 //   return {
 //     body: data,
-//     config: isForm ? { headers: { "Content-Type": "multipart/form-data" } } : {},
+//     config: isForm ? {} : { headers: { "Content-Type": "application/json" } },
 //   };
 // };
+// export const createCRUD = (endpoint) => ({
+//   getAll: () => api.get(`${endpoint}/`),
+
+//   getById: (id) => api.get(`${endpoint}/${id}/`),
+
+//   create: (data) => {
+//     const { body, config } = withFormCheck(data);
+//     return api.post(`${endpoint}/`, body, config);
+//   },
+
+//   update: (id, data) => {
+//     const { body, config } = withFormCheck(data);
+//     return api.patch(`${endpoint}/${id}/`, body, config);
+//   },
+
+//   delete: (id) => api.delete(`${endpoint}/${id}/`),
+// });
+import api from "./api";
+
+/* Detect FormData automatically */
 const withFormCheck = (data) => {
   const isForm = data instanceof FormData;
-  return {
-    body: data,
-    config: isForm ? {} : { headers: { "Content-Type": "application/json" } },
-  };
+
+  if (isForm) {
+    return {
+      body: data,
+      config: {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    };
+  } else {
+    return {
+      body: JSON.stringify(data),
+      config: {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    };
+  }
 };
+
 export const createCRUD = (endpoint) => ({
   getAll: () => api.get(`${endpoint}/`),
 
