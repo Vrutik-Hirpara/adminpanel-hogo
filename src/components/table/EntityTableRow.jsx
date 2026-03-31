@@ -1,3 +1,5 @@
+
+
 // import TableActions from "./TableActions";
 // import { themes } from "../../config/theme.config";
 
@@ -9,6 +11,9 @@
 //   onEdit,
 //   onDelete,
 // }) {
+//   // Check if any action is provided
+//   const hasActions = onView || onEdit || onDelete;
+
 //   return (
 //     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
 //       {/* SERIAL */}
@@ -23,17 +28,110 @@
 //         </td>
 //       ))}
 
-//       {/* ACTIONS */}
-//       <td className="px-3 py-3 text-center">
-//         <TableActions
-//           onView={() => onView?.(row)}
-//           onEdit={() => onEdit?.(row)}
-//           onDelete={() => onDelete?.(row.id)}
-//         />
-//       </td>
+//       {/* ACTIONS - Only render if any action is provided */}
+//       {hasActions && (
+//         <td className="px-3 py-3 text-center">
+//           <TableActions
+//             onView={() => onView?.(row)}
+//             onEdit={() => onEdit?.(row)}
+//             onDelete={() => onDelete?.(row.id)}
+//           />
+//         </td>
+//       )}
 //     </tr>
 //   );
 // }
+
+// import TableActions from "./TableActions";
+// import { themes } from "../../config/theme.config";
+
+// export default function EntityTableRow({
+//   row,
+//   index,
+//   columns,
+//   onView,
+//   onEdit,
+//   onDelete,
+// }) {
+//   const hasActions = onView || onEdit || onDelete;
+
+//   return (
+//     <tr className="border-t hover:bg-gray-50" style={{ borderColor: themes.backgroundGray }}>
+//       {/* SERIAL NUMBER */}
+//       <td className="px-4 py-3 text-center w-[5%] whitespace-nowrap">
+//         {index + 1}
+//       </td>
+
+//       {/* DYNAMIC COLUMNS */}
+//       {columns?.map((col, i) => (
+//         <td 
+//           key={i} 
+//           className={`px-4 py-3 ${col.wrapText ? 'break-words whitespace-normal' : 'whitespace-nowrap'}`}
+//           style={{ 
+//             minWidth: col.minWidth || '100px',
+//             maxWidth: col.maxWidth || '300px'
+//           }}
+//         >
+//           {col.render ? col.render(row) : (row[col.key] || "-")}
+//         </td>
+//       ))}
+
+//       {/* ACTIONS */}
+//       {hasActions && (
+//         <td className="px-4 py-3 text-center whitespace-nowrap">
+//           <TableActions
+//             onView={() => onView?.(row)}
+//             onEdit={() => onEdit?.(row)}
+//             onDelete={() => onDelete?.(row.id)}
+//           />
+//         </td>
+//       )}
+//     </tr>
+//   );
+// }
+
+// import TableActions from "./TableActions";
+// import { themes } from "../../config/theme.config";
+
+// export default function EntityTableRow({
+//   row,
+//   index,
+//   columns,
+//   onView,
+//   onEdit,
+//   onDelete,
+// }) {
+//   // Check if any action is provided
+//   const hasActions = onView || onEdit || onDelete;
+
+//   return (
+//     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
+//       {/* SERIAL */}
+//       <td className="px-4 py-3 text-center w-[5%] font-medium">
+//         {index + 1}
+//       </td>
+
+//       {/* DYNAMIC COLUMNS */}
+//       {columns?.map((col, i) => (
+//         <td key={i} className={`px-0 py-1 text-center text-md break-words max-w-[160px] ${col.className || ""}`}>
+//           {col.render ? col.render(row) : row[col.key]}
+//         </td>
+//       ))}
+
+//       {/* ACTIONS - Only render if any action is provided */}
+//       {hasActions && (
+//         <td className="px-3 py-3 text-center">
+//           <TableActions
+//             onView={() => onView?.(row)}
+//             onEdit={() => onEdit?.(row)}
+//             onDelete={() => onDelete?.(row.id)}
+//           />
+//         </td>
+//       )}
+//     </tr>
+//   );
+// }
+
 import TableActions from "./TableActions";
 import { themes } from "../../config/theme.config";
 
@@ -47,28 +145,58 @@ export default function EntityTableRow({
 }) {
   // Check if any action is provided
   const hasActions = onView || onEdit || onDelete;
-  
+
   return (
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
       {/* SERIAL */}
-      <td className="px-4 py-3 text-center w-[5%] font-medium">
+      <td className="px-2 py-3 text-center w-[5%] font-medium whitespace-nowrap">
         {index + 1}
       </td>
 
       {/* DYNAMIC COLUMNS */}
+      {/* {columns?.map((col, i) => (
+        <td 
+          key={i} 
+          className={`px-2 py-3  ${col.className || ""}`}
+          style={{
+            maxWidth: col.maxWidth || '200px',
+            minWidth: col.minWidth || '100px'
+          }}
+        >
+          <div className={`break-words ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}>
+            {col.render ? col.render(row) : row[col.key]}
+          </div>
+        </td>
+      ))} */}
       {columns?.map((col, i) => (
-        <td key={i} className={`px-0 py-1 text-center text-md break-words max-w-[160px] ${col.className || ""}`}>
-          {col.render ? col.render(row) : row[col.key]}
+        <td
+          key={i}
+          className={`px-2 py-3 ${col.className || ""}`}
+          style={{
+            maxWidth: col.maxWidth || '200px',
+            minWidth: col.minWidth || '100px'
+          }}
+        >
+          <div className="break-words text-center">
+            {col.render ? col.render(row) : row[col.key]}
+          </div>
         </td>
       ))}
 
       {/* ACTIONS - Only render if any action is provided */}
       {hasActions && (
-        <td className="px-3 py-3 text-center">
+        // <td className="px-2 py-3 text-center whitespace-nowrap ">
+        //   <TableActions
+        //     onView={() => onView?.(row)}
+        //     onEdit={() => onEdit?.(row)}
+        //     onDelete={() => onDelete?.(row.id)}
+        //   />
+        // </td>
+        <td className="px-2 py-3 text-center whitespace-nowrap">
           <TableActions
-            onView={() => onView?.(row)}
-            onEdit={() => onEdit?.(row)}
-            onDelete={() => onDelete?.(row.id)}
+            {...(onView && { onView: () => onView(row) })}
+            {...(onEdit && { onEdit: () => onEdit(row) })}
+            {...(onDelete && { onDelete: () => onDelete(row.id) })}
           />
         </td>
       )}

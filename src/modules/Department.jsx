@@ -4,8 +4,8 @@ import Table from "../components/table/Table";
 
 import TableHeader from "../components/table/TableHeader";
 import { themes } from "../config/theme.config";
-
 import { DepartmentAPI } from "../services";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -15,14 +15,28 @@ import EntityViewCard from "../components/view/EntityViewCard";
 
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
+import { useOutletContext } from "react-router-dom";
 
 export default function Department() {
+  const { setError, setSuccess } = useOutletContext();
   const [departments, setDepartments] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedDept, setSelectedDept] = useState(null);
 
   // ✅ FETCH + convert "Active/Inactive" → boolean
-  const fetchDepartments = async () => {
+  // const fetchDepartments = async () => {
+  //   const res = await DepartmentAPI.getAll();
+  //   const data = res.data?.data || [];
+
+  //   const formatted = data.map(d => ({
+  //     ...d,
+  //     status: d.status === "Active"
+  //   }));
+
+  //   setDepartments(formatted);
+  // };
+const fetchDepartments = async () => {
+  try {
     const res = await DepartmentAPI.getAll();
     const data = res.data?.data || [];
 
@@ -32,53 +46,104 @@ export default function Department() {
     }));
 
     setDepartments(formatted);
-  };
-
+  } catch (error) {
+    setError(parseBackendErrors(error));
+  }
+};
   useEffect(() => { fetchDepartments(); }, []);
 
   // 🔥 SAME TOGGLE SYSTEM AS ROLES
-  const handleStatusToggle = async (dept) => {
-    const newStatus = !dept.status;
+  // const handleStatusToggle = async (dept) => {
+  //   const newStatus = !dept.status;
 
-    // instant UI update
+  //   setDepartments(prev =>
+  //     prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
+  //   );
+
+  //   try {
+  //     await DepartmentAPI.update(dept.id, {
+  //       ...dept,
+  //       status: newStatus ? "Active" : "Inactive" // boolean → string for API
+  //     });
+  //   } catch (error) {
+  //     // revert if API fails
+  //     setDepartments(prev =>
+  //       prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
+  //     );
+  //   }
+  // };
+const handleStatusToggle = async (dept) => {
+  const newStatus = !dept.status;
+
+  // instant UI update
+  setDepartments(prev =>
+    prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
+  );
+
+  try {
+    const res = await DepartmentAPI.update(dept.id, {
+      ...dept,
+      status: newStatus ? "Active" : "Inactive"
+    });
+
+    setSuccess(res.data?.message || "Status updated");
+  } catch (error) {
+    setError(parseBackendErrors(error));
+
+    // revert if API fails
     setDepartments(prev =>
-      prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
+      prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
     );
+  }
+};
+  // const onSubmit = async (data) => {
+  //   const payload = {
+  //     ...data,
+  //     status:
+  //       typeof data.status === "boolean"
+  //         ? data.status
+  //           ? "Active"
+  //           : "Inactive"
+  //         : data.status,
+  //   };
 
-    try {
-      await DepartmentAPI.update(dept.id, {
-        ...dept,
-        status: newStatus ? "Active" : "Inactive" // boolean → string for API
-      });
-    } catch (error) {
-      // revert if API fails
-      setDepartments(prev =>
-        prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
-      );
-    }
+  //   if (selectedDept) {
+  //     await DepartmentAPI.update(selectedDept.id, payload);
+  //   } else {
+  //     await DepartmentAPI.create(payload);
+  //   }
+
+  //   setMode("list");
+  //   fetchDepartments();
+  // };
+const onSubmit = async (data) => {
+  const payload = {
+    ...data,
+    status:
+      typeof data.status === "boolean"
+        ? data.status
+          ? "Active"
+          : "Inactive"
+        : data.status,
   };
 
-  const onSubmit = async (data) => {
-    const payload = {
-      ...data,
-      status:
-        typeof data.status === "boolean"
-          ? data.status
-            ? "Active"
-            : "Inactive"
-          : data.status,
-    };
+  try {
+    let res;
 
     if (selectedDept) {
-      await DepartmentAPI.update(selectedDept.id, payload);
+      res = await DepartmentAPI.update(selectedDept.id, payload);
     } else {
-      await DepartmentAPI.create(payload);
+      res = await DepartmentAPI.create(payload);
     }
+
+    setSuccess(res.data?.message || "Saved successfully");
 
     setMode("list");
     fetchDepartments();
-  };
-
+  } catch (error) {
+    setError(parseBackendErrors(error));
+  }
+};
   const departmentColumns = [
     { key: "name" },
     { key: "description" },
@@ -143,7 +208,16 @@ export default function Department() {
                 
                 setMode("form");
               }}
-              onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
+              // onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
+              onDelete={async (id) => {
+  try {
+    const res = await DepartmentAPI.delete(id);
+    setSuccess(res.data?.message || "Deleted successfully");
+    fetchDepartments();
+  } catch (error) {
+    setError(parseBackendErrors(error));
+  }
+}}
             />
           ))}
 

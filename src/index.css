@@ -10,20 +10,32 @@
   --bg-black: #00001a;
   --text-white: #ffffff;
   --hover: #ED3434;
+
+  --border-light: #E5E7EB;
+  --bg-surface: #F9FAFB;
+  --text-secondary: #4B5563;
+    --border-black-200: rgba(0, 0, 0, 0.12);
+
 }
 
 body {
-  font-family:  sans-serif;
+  font-family: sans-serif;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
 @layer components {
   .file-btn::file-selector-button {
     background-color: var(--file-bg);

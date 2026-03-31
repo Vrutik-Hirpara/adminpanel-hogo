@@ -76,8 +76,9 @@ import Expenses from "../modules/Expenses";
 import LeadFollowups from "../modules/LeadFollowups";
 import EmployeeAttendance from "../modules/EmployeeAttendance";
 import TravelPlan from "../modules/TravelPlan";
+import SalaryPayout from "../modules/SalaryPayout";
 
-export default function AppRoutes() {
+export default function AppRoutes({ setError, setSuccess }) {
   const token = localStorage.getItem("token");
   const isLoggedIn =
     !!token && token !== "undefined" && token !== "null" && String(token).trim() !== "";
@@ -86,7 +87,7 @@ export default function AppRoutes() {
     <Routes>
 
       {/* 🔓 PUBLIC ROUTE */}
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Login setError={setError} />} />
 
       {/* Redirect root to login */}
       <Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/login"} replace />} />
@@ -95,7 +96,7 @@ export default function AppRoutes() {
       <Route
         element={
           <ProtectedRoute>
-            <Layout />
+            <Layout setError={setError} setSuccess={setSuccess} />
           </ProtectedRoute>
         }
       >
@@ -115,7 +116,7 @@ export default function AppRoutes() {
         <Route path="/employee" element={<Employee />} />
         <Route path="/employee-personal-details" element={<EmployeePersonalDetails />} />
         <Route path="/employee-salary" element={<EmployeeSalary />} />
-        
+
         <Route path="/employee-documents" element={<EmployeeDocuments />} />
         <Route path="/users" element={<Users />} />
         <Route path="/leads" element={<Leads />} />
@@ -127,6 +128,7 @@ export default function AppRoutes() {
         <Route path="/lead_followups" element={<LeadFollowups />} />
         <Route path="/employee_attendence" element={<EmployeeAttendance />} />
         <Route path="/travel-plan" element={<TravelPlan />} />
+        <Route path="/salary-payment" element={<SalaryPayout />} />
 
       </Route>
 

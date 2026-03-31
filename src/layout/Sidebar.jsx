@@ -583,6 +583,7 @@ const Sidebar = () => {
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
             <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
             <LinkItem to="/employee_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} />
+            <LinkItem to="/salary-payment" icon={PhoneCall} label="salary payment" color={themes.cardUsers} />
 
           </Dropdown>
         )}
@@ -615,7 +616,9 @@ const Sidebar = () => {
             <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
             <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
-              <LinkItem to="/employee_attendence" icon={PhoneCall} label="Employee Attendance" color={themes.cardUsers} />
+            <LinkItem to="/employee_attendence" icon={PhoneCall} label="Employee Attendance" color={themes.cardUsers} />
+            <LinkItem to="/salary-payment" icon={PhoneCall} label="salary payout" color={themes.cardUsers} />
+
           </Dropdown>
         </div>
       )}

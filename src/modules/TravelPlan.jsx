@@ -266,7 +266,7 @@
 //                 className={`min-h-[100px] border rounded-lg p-2 cursor-pointer transition-all ${
 //                   dailyPlan 
 //                     ? 'bg-blue-100 border-blue-400 hover:bg-blue-200' 
-//                     : 'bg-white border-gray-200 hover:bg-gray-50'
+//                     : 'bg-white border-[var(--border-black-200)] hover:bg-[var(--surfaceLight)]'
 //                 }`}
 //               >
 //                 {day && (
@@ -316,7 +316,7 @@
 // {/* Add Daily Plan Modal - With blur background */}
 // {showAddModal && (
 //   <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/20">
-//     <div className="bg-white rounded-lg shadow-2xl w-96 border border-gray-200 transform transition-all overflow-hidden">
+//     <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
 //       <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
 //         <h3 className="text-lg font-semibold text-white">Add Plan — {selectedDate}</h3>
 //       </div>
@@ -350,7 +350,7 @@
 //                 setFormData({ place: "", notes: "" });
 //                 setSelectedDate(null);
 //               }}
-//               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+//               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-[var(--surfaceLight)] transition-colors"
 //             >
 //               Cancel
 //             </button>
@@ -370,7 +370,7 @@
 // {/* Edit Daily Plan Modal - With blur background */}
 // {editDailyPlan && (
 //   <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-[2px] bg-black/20">
-//     <div className="bg-white rounded-lg shadow-2xl w-96 border border-gray-200 transform transition-all overflow-hidden">
+//     <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
 //       <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
 //         <h3 className="text-lg font-semibold text-white">Edit — {editDailyPlan.date}</h3>
 //       </div>
@@ -406,7 +406,7 @@
 //                 setEditDailyPlan(null);
 //                 setFormData({ place: "", notes: "" });
 //               }}
-//               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+//               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-[var(--surfaceLight)] transition-colors"
 //             >
 //               Cancel
 //             </button>
@@ -492,8 +492,8 @@
 
 //         {/* Calendar View with Navigation Arrows */}
 //        {calendarMonth && (
-//   <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-//     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-center items-center gap-4">
+//   <div className="bg-white rounded-xl shadow-lg border border-[var(--border-black-200)] overflow-hidden">
+//     <div className="bg-[var(--surfaceLight)] px-6 py-4 border-b border-[var(--border-black-200)] flex justify-center items-center gap-4">
 //       <button
 //         onClick={goToPreviousMonth}
 //         className="px-3 py-1 rounded hover:bg-gray-200 transition-colors text-gray-600"
@@ -532,7 +532,7 @@
 //         }}
 //       >
 //         <div className="bg-white rounded-xl shadow-lg">
-//           <div className="p-6 border-b border-gray-200">
+//           <div className="p-6 border-b border-[var(--border-black-200)]">
 //             <div className="grid grid-cols-2 gap-6">
 //               <div>
 //                 <label className="text-sm text-gray-500 uppercase tracking-wide">MONTH</label>
@@ -585,7 +585,7 @@
 //             {dailyPlans.length > 0 ? (
 //               <div className="space-y-3">
 //                 {dailyPlans.map((daily) => (
-//                   <div key={daily.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md">
+//                   <div key={daily.id} className="border border-[var(--border-black-200)] rounded-lg p-4 hover:shadow-md">
 //                     <div className="flex justify-between items-start">
 //                       <div className="flex-1">
 //                         <p className="font-semibold text-gray-900">{daily.date}</p>
@@ -599,7 +599,7 @@
 //                 ))}
 //               </div>
 //             ) : (
-//               <p className="text-gray-500 text-center py-8 bg-gray-50 rounded-lg">
+//               <p className="text-gray-500 text-center py-8 bg-[var(--surfaceLight)] rounded-lg">
 //                 No daily plans created yet
 //               </p>
 //             )}
@@ -982,7 +982,7 @@ export default function TravelPlan() {
       <div>
         <div className="grid grid-cols-7 gap-2 mb-3">
           {days.map(day => (
-            <div key={day} className="text-center font-semibold text-sm py-2 text-gray-600">
+            <div key={day} className="text-center font-semibold text-sm py-2 text-[var(--textSecondary)]">
               {day.slice(0, 3)}
             </div>
           ))}
@@ -996,7 +996,7 @@ export default function TravelPlan() {
                 onClick={() => day && handleDateClick(day)}
                 className={`min-h-[100px] border rounded-lg p-2 cursor-pointer transition-all ${dailyPlan
                   ? 'hover:bg-opacity-80'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                  : 'bg-white border-[var(--border-black-200)] hover:bg-[var(--surfaceLight)]'
                   }`}
                 style={dailyPlan ? { backgroundColor: `${themes.primary}20`, borderColor: themes.primary } : {}}
               >
@@ -1049,7 +1049,7 @@ export default function TravelPlan() {
         {/* Add Daily Plan Modal */}
         {showAddModal && (
           <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/20">
-            <div className="bg-white rounded-lg shadow-2xl w-96 border border-gray-200 transform transition-all overflow-hidden">
+            <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
               <div className={`bg-[${themes.primary}] px-6 py-4`}>
                 <h3 className="text-lg font-semibold text-white">Add Plan — {selectedDate}</h3>
               </div>
@@ -1085,7 +1085,7 @@ export default function TravelPlan() {
                         setFormData({ place: "", notes: "" });
                         setSelectedDate(null);
                       }}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-[var(--surfaceLight)] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1106,7 +1106,7 @@ export default function TravelPlan() {
         {/* Edit Daily Plan Modal */}
         {editDailyPlan && (
           <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-[2px] bg-black/20">
-            <div className="bg-white rounded-lg shadow-2xl w-96 border border-gray-200 transform transition-all overflow-hidden">
+            <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
               <div className={`bg-[${themes.primary}] px-6 py-4`}>
                 <h3 className="text-lg font-semibold text-white">Edit — {editDailyPlan.date}</h3>
               </div>
@@ -1143,7 +1143,7 @@ export default function TravelPlan() {
                         setEditDailyPlan(null);
                         setFormData({ place: "", notes: "" });
                       }}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-[var(--surfaceLight)] transition-colors"
                     >
                       Cancel
                     </button>
@@ -1190,8 +1190,8 @@ export default function TravelPlan() {
                 setSelectedPlan(null);
                 setDailyPlans([]);
               }}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': themes.primary }}            >
+              className="border border-[var(--bg-black)] rounded-lg px-4 py-2 focus:outline-none "
+              >
               {employees.map(emp => (
                 <option key={emp.id} value={emp.id}>
                   {emp.name || emp.first_name || emp.username || `Employee ${emp.id}`}
@@ -1232,81 +1232,81 @@ export default function TravelPlan() {
 
         {/* Show message if no travel plans */}
         {!loading && travelPlans.length === 0 && (
-          <div className="text-center py-8 bg-gray-50 rounded-lg mb-8">
+          <div className="text-center py-8 bg-[var(--surfaceLight)] rounded-lg mb-8">
             <p className="text-gray-500">No travel plans found for this employee</p>
           </div>
         )}
 
-       {/* Travel Plans Table - Vertical/Report Format */}
-{!loading && filteredPlans.length > 0 && (
-  <div className="mb-8 space-y-6">
-    {filteredPlans.map((plan, index) => (
-      <div key={plan.id} className="rounded-lg border border-gray-200 overflow-hidden" style={{ backgroundColor: themes.textWhite }}>
-        <table className="w-full">
-          <tbody>
-            <tr className="border-b border-gray-200">
-              <td className="px-6 py-4 font-medium w-32" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REPORT</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">Travel Plan</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>MONTH</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.month}</td>
-            </tr>
-            {/* <tr className="border-b border-gray-200">
+        {/* Travel Plans Table - Vertical/Report Format */}
+        {!loading && filteredPlans.length > 0 && (
+          <div className="mb-8 space-y-6">
+            {filteredPlans.map((plan, index) => (
+              <div key={plan.id} className="rounded-lg border border-[var(--border-black-200)] overflow-hidden" style={{ backgroundColor: themes.textWhite }}>
+                <table className="w-full">
+                  <tbody>
+                    <tr className="border-b border-[var(--border-black-200)]">
+                      <td className="px-6 py-4 font-medium w-32" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REPORT</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">Travel Plan</td>
+                    </tr>
+                    <tr className="border-b border-[var(--border-black-200)]">
+                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>MONTH</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.month}</td>
+                    </tr>
+                    {/* <tr className="border-b border-[var(--border-black-200)]">
               <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>DATE</td>
               <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.textWhite }} colSpan="2">{plan.start_date} to {plan.end_date}</td>
             </tr> */}
-            <tr className="border-b border-gray-200">
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REGION</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.region}</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>STATE</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.states}</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>RM</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.rm}</td>
-            </tr>
-            <tr>
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>TSM</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.tsm}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        {/* Buttons below the table */}
-        <div className="px-6 py-4 flex gap-3 justify-start border-t border-gray-200" style={{ backgroundColor: themes.surfaceLight }}>
-          <button
-            onClick={() => {
-              setSelectedPlan(plan);
-              setMode("form");
-            }}
-            className="px-4 py-2 rounded text-sm font-medium transition-colors hover:opacity-90"
-            style={{ backgroundColor: themes.primary, color: themes.textWhite }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => handleDelete(plan.id)}
-            className="px-4 py-2 rounded text-sm font-medium transition-colors hover:opacity-90"
-            style={{ backgroundColor: themes.danger, color: themes.textWhite }}
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+                    <tr className="border-b border-[var(--border-black-200)]">
+                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REGION</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.region}</td>
+                    </tr>
+                    <tr className="border-b border-[var(--border-black-200)]">
+                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>STATE</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.states}</td>
+                    </tr>
+                    <tr className="border-b border-[var(--border-black-200)]">
+                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>RM</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.rm}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>TSM</td>
+                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.tsm}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Buttons below the table */}
+                <div className="px-6 py-4 flex gap-3 justify-start border-t border-[var(--border-black-200)]" style={{ backgroundColor: themes.surfaceLight }}>
+                  <button
+                    onClick={() => {
+                      setSelectedPlan(plan);
+                      setMode("form");
+                    }}
+                    className="px-4 py-2 rounded text-sm font-medium transition-colors hover:opacity-90"
+                    style={{ backgroundColor: themes.primary, color: themes.textWhite }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(plan.id)}
+                    className="px-4 py-2 rounded text-sm font-medium transition-colors hover:opacity-90"
+                    style={{ backgroundColor: themes.danger, color: themes.textWhite }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Calendar View with Navigation Arrows */}
         {!loading && calendarMonth && filteredPlans.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-center items-center gap-4">
+          <div className="bg-white rounded-xl shadow-lg border border-[var(--border-black-200)] overflow-hidden">
+            <div className="bg-[var(--surfaceLight)] px-6 py-4 border-b border-[var(--border-black-200)] flex justify-center items-center gap-4">
               <button
                 onClick={goToPreviousMonth}
-                className="px-3 py-1 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                className="px-3 py-1 rounded hover:bg-gray-200 transition-colors text-[var(--text-secondary)]"
               >
                 ←
               </button>
@@ -1315,7 +1315,7 @@ export default function TravelPlan() {
               </h3>
               <button
                 onClick={goToNextMonth}
-                className="px-3 py-1 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                className="px-3 py-1 rounded hover:bg-gray-200 transition-colors text-[var(--textSecondary)]"
               >
                 →
               </button>
@@ -1342,7 +1342,7 @@ export default function TravelPlan() {
         }}
       >
         <div className="bg-white rounded-xl shadow-lg">
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-[var(--border-black-200)]">
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="text-sm text-gray-500 uppercase tracking-wide">MONTH</label>
@@ -1397,7 +1397,7 @@ export default function TravelPlan() {
             {dailyPlans.length > 0 ? (
               <div className="space-y-3">
                 {dailyPlans.map((daily) => (
-                  <div key={daily.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md">
+                  <div key={daily.id} className="border border-[var(--border-black-200)] rounded-lg p-4 hover:shadow-md">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900">{daily.date}</p>
@@ -1411,7 +1411,7 @@ export default function TravelPlan() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500 text-center py-8 bg-[var(--surfaceLight)] rounded-lg">
                 No daily plans created yet
               </p>
             )}

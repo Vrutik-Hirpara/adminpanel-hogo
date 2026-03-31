@@ -181,7 +181,7 @@
 //                 { label: "Satisfaction", value: "4.8/5", change: "+0.2", icon: "⭐" },
 //                 { label: "Retention", value: "96.7%", change: "+0.5%", icon: "🎯" },
 //               ].map((metric, idx) => (
-//                 <div key={idx} className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+//                 <div key={idx} className="p-5 bg-[var(--surfaceLight)] rounded-xl border border-[var(--border-black-200)]">
 //                   <div className="text-2xl mb-3">{metric.icon}</div>
 //                   <p className="text-sm text-gray-500 mb-2">{metric.label}</p>
 //                   <div className="flex items-end justify-between">
@@ -205,7 +205,7 @@
 
 //             <div className="space-y-6">
 //               {recentActivity.map((activity) => (
-//                 <div key={activity.id} className="flex items-center p-5 rounded-xl border border-gray-200">
+//                 <div key={activity.id} className="flex items-center p-5 rounded-xl border border-[var(--border-black-200)]">
 //                   <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center mr-5 text-xl">
 //                     {activity.icon}
 //                   </div>
@@ -229,7 +229,7 @@
 
 //           <div className="space-y-4">
 //             {["Database", "API Gateway", "Authentication", "File Storage"].map((service, idx) => (
-//               <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+//               <div key={idx} className="flex items-center justify-between p-4 bg-[var(--surfaceLight)] rounded-xl">
 //                 <p className="font-medium text-gray-800">{service}</p>
 //                 <span className="text-green-600 font-semibold text-sm">Operational</span>
 //               </div>
@@ -464,7 +464,7 @@
 //                 { label: "Satisfaction", value: "4.8/5", change: "+0.2", icon: "⭐" },
 //                 { label: "Retention", value: "96.7%", change: "+0.5%", icon: "🎯" },
 //               ].map((metric, idx) => (
-//                 <div key={idx} className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+//                 <div key={idx} className="p-5 bg-[var(--surfaceLight)] rounded-xl border border-[var(--border-black-200)]">
 //                   <div className="text-2xl mb-3">{metric.icon}</div>
 //                   <p className="text-sm text-gray-500 mb-2">{metric.label}</p>
 //                   <div className="flex items-end justify-between">
@@ -488,7 +488,7 @@
 
 //             <div className="space-y-6">
 //               {recentActivity.map((activity) => (
-//                 <div key={activity.id} className="flex items-center p-5 rounded-xl border border-gray-200">
+//                 <div key={activity.id} className="flex items-center p-5 rounded-xl border border-[var(--border-black-200)]">
 //                   <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center mr-5 text-xl">
 //                     {activity.icon}
 //                   </div>
@@ -512,7 +512,7 @@
 
 //           <div className="space-y-4">
 //             {["Database", "API Gateway", "Authentication", "File Storage"].map((service, idx) => (
-//               <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+//               <div key={idx} className="flex items-center justify-between p-4 bg-[var(--surfaceLight)] rounded-xl">
 //                 <p className="font-medium text-gray-800">{service}</p>
 //                 <span className="text-green-600 font-semibold text-sm">Operational</span>
 //               </div>
@@ -568,75 +568,75 @@ export default function Dashboard() {
           }
         });
         // ✅ SAFE MULTI API CALL
-       // ✅ SAFE MULTI API CALL
-const results = await Promise.allSettled(
-  modulesToShow.map((mod) => {
-    if (!isHR) {
-      return mod.api(employeeId, leadId); // 👈 aa line add kar
-    } else {
-      return mod.api();
-    }
-  })
-);
+        // ✅ SAFE MULTI API CALL
+        const results = await Promise.allSettled(
+          modulesToShow.map((mod) => {
+            if (!isHR) {
+              return mod.api(employeeId, leadId); // 👈 aa line add kar
+            } else {
+              return mod.api();
+            }
+          })
+        );
 
         // ✅ BUILD FINAL STATS
-      const finalStats = results.map((res, index) => {
-  const module = modulesToShow[index];
+        const finalStats = results.map((res, index) => {
+          const module = modulesToShow[index];
 
-  if (res.status === "rejected") {
-    console.error("❌ API Failed:", module.title, res.reason);
-    return {
-      title: module.title,
-      value: 0,
-      color: module.color,
-      icon: module.icon,
-      path: module.path,
-      gradient: module.gradient,
-      accentColor: module.accentColor,
-    };
-  }
+          if (res.status === "rejected") {
+            console.error("❌ API Failed:", module.title, res.reason);
+            return {
+              title: module.title,
+              value: 0,
+              color: module.color,
+              icon: module.icon,
+              path: module.path,
+              gradient: module.gradient,
+              accentColor: module.accentColor,
+            };
+          }
 
-  const response = res.value?.data;
+          const response = res.value?.data;
 
-  let count = 0;
+          let count = 0;
 
-  // ✅ SPECIAL CASE: TODAY FOLLOWUPS
-  if (module.title === "Today's Followups") {
-    count = response?.count || 0;
-  }
+          // ✅ SPECIAL CASE: TODAY FOLLOWUPS
+          if (module.title === "Today's Followups") {
+            count = response?.count || 0;
+          }
 
-  // ✅ NORMAL APIs (array)
-else if (Array.isArray(response?.data)) {
+          // ✅ NORMAL APIs (array)
+          else if (Array.isArray(response?.data)) {
 
-  // 🔥 SPECIAL FILTER FOR LEADS ONLY
-  if (module.title === "Leads") {
-    const filtered = response.data.filter(
-      (item) =>
-        item.lead_status === "Lead" ||
-        item.lead_status === "Prospect"
-    );
+            // 🔥 SPECIAL FILTER FOR LEADS ONLY
+            if (module.title === "Leads") {
+              const filtered = response.data.filter(
+                (item) =>
+                  item.lead_status === "Lead" ||
+                  item.lead_status === "Prospect"
+              );
 
-    count = filtered.length;
-  } else {
-    count = response.data.length;
-  }
-}
+              count = filtered.length;
+            } else {
+              count = response.data.length;
+            }
+          }
 
-  // ✅ object type response
-  else if (typeof response?.data === "object" && response.data !== null) {
-    count = Object.keys(response.data).length;
-  }
+          // ✅ object type response
+          else if (typeof response?.data === "object" && response.data !== null) {
+            count = Object.keys(response.data).length;
+          }
 
-  return {
-    title: module.title,
-    value: count,
-    color: module.color,
-    icon: module.icon,
-    path: module.path,
-    gradient: module.gradient,
-    accentColor: module.accentColor,
-  };
-});
+          return {
+            title: module.title,
+            value: count,
+            color: module.color,
+            icon: module.icon,
+            path: module.path,
+            gradient: module.gradient,
+            accentColor: module.accentColor,
+          };
+        });
 
         setStats(finalStats);
 
