@@ -668,8 +668,14 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
-
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 export default function TravelPlan() {
+    const [selectedMonthYear, setSelectedMonthYear] = useState(null);
+
+  const { setError, setSuccess } = useOutletContext();
   const [travelPlans, setTravelPlans] = useState([]);
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [mode, setMode] = useState("list");
@@ -743,6 +749,7 @@ export default function TravelPlan() {
         setSelectedEmployeeId(data[0].id);
       }
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error fetching employees:", error);
     }
   };
@@ -779,6 +786,7 @@ export default function TravelPlan() {
         filterPlansByMonth(selectedMonth, data);
       }
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error fetching travel plans:", error);
     } finally {
       setLoading(false);
@@ -812,6 +820,7 @@ export default function TravelPlan() {
       const filtered = allDailyPlans.filter(plan => plan.travel_plan === travelPlanId);
       setDailyPlans(filtered);
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error fetching daily plans:", error);
     }
   };
@@ -821,32 +830,90 @@ export default function TravelPlan() {
       filterPlansByMonth(selectedMonth);
     }
   }, [selectedMonth, travelPlans]);
-
   const onSubmit = async (data) => {
     try {
+      // Check if employee_id is available
+      if (!selectedEmployeeId) {
+        setError("Please select an employee first");
+        return;
+      }
+
       // Add employee_id to the payload
       const payload = {
         ...data,
         employee_id: selectedEmployeeId
       };
 
+      console.log("Submitting payload:", payload);
+
+      let response;
       if (selectedPlan) {
-        await TravelPlanAPI.update(selectedPlan.id, payload);
+        response = await TravelPlanAPI.update(selectedPlan.id, payload);
+        setSuccess(response.data?.message || "Saved successfully");
       } else {
-        await TravelPlanAPI.create(payload);
+        response = await TravelPlanAPI.create(payload);
+        setSuccess(response.data?.message || "Saved successfully");
       }
+
       setMode("list");
-      fetchTravelPlans();
+      await fetchTravelPlans();
+
     } catch (error) {
-      console.error("Error saving travel plan:", error);
+      console.error("Full error object:", error);
+      console.error("Error response:", error.response);
+
+      // 🔥 Display backend error message
+      let errorMessage = "";
+
+      if (error.response?.data) {
+        const errorData = error.response.data;
+
+        // Check different error formats
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.non_field_errors) {
+          errorMessage = errorData.non_field_errors.join(", ");
+        } else if (typeof errorData === 'object') {
+          // Handle field-specific errors
+          const fieldErrors = [];
+          Object.keys(errorData).forEach(field => {
+            if (Array.isArray(errorData[field])) {
+              fieldErrors.push(`${field}: ${errorData[field].join(", ")}`);
+            } else if (typeof errorData[field] === 'string') {
+              fieldErrors.push(`${field}: ${errorData[field]}`);
+            }
+          });
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join("\n");
+          } else {
+            errorMessage = JSON.stringify(errorData);
+          }
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = "Failed to save travel plan. Please try again.";
+      }
+
+      // Display error
+      setError(errorMessage);
+      console.error("Final error message:", errorMessage);
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await TravelPlanAPI.delete(id);
+      const res = await TravelPlanAPI.delete(id);
+      setSuccess(res.data?.message || "Deleted successfully");
       fetchTravelPlans();
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error deleting travel plan:", error);
     }
   };
@@ -909,10 +976,11 @@ export default function TravelPlan() {
         setShowAddModal(false);
         setFormData({ place: "", notes: "" });
         setSelectedDate(null);
+        setSuccess("Daily plan added successfully");
       }
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error adding daily plan:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to add daily plan");
     }
   };
 
@@ -927,10 +995,11 @@ export default function TravelPlan() {
         await fetchDailyPlans(selectedPlan?.id);
         setEditDailyPlan(null);
         setFormData({ place: "", notes: "" });
+        setSuccess("Daily plan updated successfully");
       }
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error updating daily plan:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to update daily plan");
     }
   };
 
@@ -940,9 +1009,10 @@ export default function TravelPlan() {
       await fetchDailyPlans(selectedPlan?.id);
       setEditDailyPlan(null);
       setFormData({ place: "", notes: "" });
+      setSuccess("Daily plan deleted successfully");
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Error deleting daily plan:", error.response?.data || error);
-      alert(error.response?.data?.message || "Failed to delete daily plan");
     }
   };
 
@@ -1033,9 +1103,9 @@ export default function TravelPlan() {
   };
 
   const travelPlanColumns = [
-    { key: "month" },
+    // { key: "month" },
     // { key: "start_date" },
-    // { key: "end_date" },
+    { key: "end_date" },
     { key: "region" },
     { key: "states" },
     { key: "rm" },
@@ -1161,7 +1231,7 @@ export default function TravelPlan() {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 w-full">
           <SectionTitle title="Travel Plan Manager" />
           <ActionButtons
             showAdd
@@ -1191,7 +1261,7 @@ export default function TravelPlan() {
                 setDailyPlans([]);
               }}
               className="border border-[var(--bg-black)] rounded-lg px-4 py-2 focus:outline-none "
-              >
+            >
               {employees.map(emp => (
                 <option key={emp.id} value={emp.id}>
                   {emp.name || emp.first_name || emp.username || `Employee ${emp.id}`}
@@ -1244,34 +1314,24 @@ export default function TravelPlan() {
               <div key={plan.id} className="rounded-lg border border-[var(--border-black-200)] overflow-hidden" style={{ backgroundColor: themes.textWhite }}>
                 <table className="w-full">
                   <tbody>
-                    <tr className="border-b border-[var(--border-black-200)]">
-                      <td className="px-6 py-4 font-medium w-32" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REPORT</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">Travel Plan</td>
-                    </tr>
-                    <tr className="border-b border-[var(--border-black-200)]">
-                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>MONTH</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.month}</td>
-                    </tr>
-                    {/* <tr className="border-b border-[var(--border-black-200)]">
-              <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>DATE</td>
-              <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.textWhite }} colSpan="2">{plan.start_date} to {plan.end_date}</td>
-            </tr> */}
-                    <tr className="border-b border-[var(--border-black-200)]">
-                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>REGION</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.region}</td>
-                    </tr>
-                    <tr className="border-b border-[var(--border-black-200)]">
-                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>STATE</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.states}</td>
-                    </tr>
-                    <tr className="border-b border-[var(--border-black-200)]">
-                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>RM</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.rm}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 font-medium" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>TSM</td>
-                      <td className="px-6 py-4" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">{plan.tsm}</td>
-                    </tr>
+                    {[
+                      { label: "REGION", value: plan.region },
+                      { label: "STATE", value: plan.states },
+                      { label: "MONTH", value: plan.month },
+                      { label: "START DATE", value: plan.start_date || "-" },
+                      { label: "END DATE", value: plan.end_date || "-" },
+                      { label: "RM", value: plan.rm },
+                      { label: "TSM", value: plan.tsm }
+                    ].map((field, idx) => (
+                      <tr key={idx} className="border-b border-[var(--border-black-200)]">
+                        <td className="px-3 py-2 font-small w-32" style={{ color: themes.textWhite, backgroundColor: themes.primary }}>
+                          {field.label}
+                        </td>
+                        <td className="px-3 py-2" style={{ color: themes.textPrimary, backgroundColor: themes.surfaceLight }} colSpan="2">
+                          {field.value}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
 
@@ -1437,22 +1497,8 @@ export default function TravelPlan() {
           {
             label: "Month",
             name: "month",
-            type: "select",
+            type: "month",
             required: true,
-            options: [
-              { label: "January", value: "January" },
-              { label: "February", value: "February" },
-              { label: "March", value: "March" },
-              { label: "April", value: "April" },
-              { label: "May", value: "May" },
-              { label: "June", value: "June" },
-              { label: "July", value: "July" },
-              { label: "August", value: "August" },
-              { label: "September", value: "September" },
-              { label: "October", value: "October" },
-              { label: "November", value: "November" },
-              { label: "December", value: "December" }
-            ]
           },
           // { label: "Start Date", name: "start_date", type: "date", required: true },
           // { label: "End Date", name: "end_date", type: "date", required: true },

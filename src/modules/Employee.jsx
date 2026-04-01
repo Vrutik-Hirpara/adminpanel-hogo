@@ -246,7 +246,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Employees" />
 
 //           <div className="flex items-center gap-3">
@@ -276,7 +276,7 @@
 //           <SectionTitle title="Employees" />
 //           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
 //         </div>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 
 //           <input
 //             type="text"
@@ -676,7 +676,7 @@
 //     return (
 //       <PageContainer>
 
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Employees" />
 
 //           <div className="flex items-center gap-3">
@@ -1019,7 +1019,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Employees" />
 
 //           <div className="flex items-center gap-3">
@@ -1249,11 +1249,12 @@ import EntityViewCard from "../components/view/EntityViewCard";
 
 import axios from "axios";
 import { useUser } from "../hooks/useUser";
-
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 
 export default function Employee() {
-
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
 
   const [employees, setEmployees] = useState([]);
@@ -1324,6 +1325,7 @@ export default function Employee() {
         setEmployees(formatted);
       }
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.log("EMPLOYEE FETCH ERROR:", err);
     }
   };
@@ -1363,8 +1365,10 @@ export default function Employee() {
     );
 
     try {
-      await EmployeeAPI.update(emp.id, { status: newStatus ? "Active" : "Inactive" });
-    } catch {
+      const res = await EmployeeAPI.update(emp.id, { status: newStatus ? "Active" : "Inactive" });
+      setSuccess(res.data?.message || "Status updated successfully");
+    } catch (error) {
+      setError(parseBackendErrors(error));
       fetchEmployees();
     }
   };
@@ -1389,29 +1393,11 @@ export default function Employee() {
         await EmployeeAPI.create(payload);
       }
 
+      setSuccess("Saved successfully");
       setMode("list");
       fetchEmployees();
     } catch (error) {
-      console.log("SERVER ERROR:", error.response?.data);
-
-      const serverData = error.response?.data;
-
-      if (serverData?.email) {
-        methods.setError("email", {
-          type: "manual",
-          message: serverData.email[0] || "This email id already exists",
-        });
-      } else if (serverData?.detail) {
-        methods.setError("email", {
-          type: "manual",
-          message: serverData.detail,
-        });
-      } else {
-        methods.setError("email", {
-          type: "manual",
-          message: "This email id already exists",
-        });
-      }
+      setError(parseBackendErrors(error));
     }
 
 
@@ -1473,7 +1459,7 @@ export default function Employee() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Employees" />
 
           <div className="flex items-center gap-3">
@@ -1534,7 +1520,15 @@ export default function Employee() {
 
                 setMode("form");
               }}
-              onDelete={(id) => EmployeeAPI.delete(id).then(fetchEmployees)}
+              onDelete={async (id) => {
+                try {
+                  const res = await EmployeeAPI.delete(id);
+                  setSuccess(res.data?.message || "Deleted successfully");
+                  fetchEmployees();
+                } catch (error) {
+                  setError(parseBackendErrors(error));
+                }
+              }}
             />
           ))}
 

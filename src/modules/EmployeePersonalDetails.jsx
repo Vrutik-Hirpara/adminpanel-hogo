@@ -132,7 +132,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//        <div className="flex justify-between items-center mb-4">
+//        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //   <SectionTitle title="Employee Personal Details" />
 
 //   <div className="flex gap-3">
@@ -266,6 +266,8 @@
 //     </EntityPageLayout>
 //   );
 // }
+
+
 import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
@@ -282,9 +284,11 @@ import SearchBar from "../components/table/SearchBar";
 
 // ✅ NEW
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function EmployeePersonalDetails() {
-
+  const { setError, setSuccess } = useOutletContext();
   // 🔥 role data
   const { employeeId, isHR } = useUser();
 
@@ -296,39 +300,47 @@ export default function EmployeePersonalDetails() {
 
   // ================= FETCH EMPLOYEES =================
   const fetchEmployees = async () => {
-    const res = await EmployeeAPI.getAll();
-    let list = res.data?.data || [];
+    try {
+      const res = await EmployeeAPI.getAll();
+      let list = res.data?.data || [];
 
-    // 🔒 non HR → only own employee
-    if (!isHR) {
-      list = list.filter(e => e.id === employeeId);
+      // 🔒 non HR → only own employee
+      if (!isHR) {
+        list = list.filter(e => e.id === employeeId);
+      }
+
+      setEmployees(list);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    setEmployees(list);
   };
 
   // ================= FETCH DETAILS =================
   const fetchDetails = async () => {
-    const res = await EmployeePersonalAPI.getAll();
-    let data = res.data?.data || [];
+    try {
+      const res = await EmployeePersonalAPI.getAll();
+      let data = res.data?.data || [];
 
-    // 🔒 non HR → only own details
-    if (!isHR) {
-      data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      // 🔒 non HR → only own details
+      if (!isHR) {
+        data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      }
+
+      const formatted = data.map(d => {
+        const emp = employees.find(e => e.id === d.employee_id);
+
+        return {
+          ...d,
+          employeeName: emp
+            ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+            : "—",
+        };
+      });
+
+      setDetails(formatted);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    const formatted = data.map(d => {
-      const emp = employees.find(e => e.id === d.employee_id);
-
-      return {
-        ...d,
-        employeeName: emp
-          ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-          : "—",
-      };
-    });
-
-    setDetails(formatted);
   };
 
   useEffect(() => {
@@ -349,46 +361,83 @@ export default function EmployeePersonalDetails() {
   );
 
   // ================= SAVE =================
-  const onSubmit = async (data) => {
-    try {
-      const payload = {
-        ...data,
-        employee_id: Number(data.employee_id),
-        marital_status: data.marital_status?.toLowerCase(),
-      };
+const onSubmit = async (data) => {
+  try {
+    const payload = {
+      ...data,
+      employee_id: Number(data.employee_id),
+      marital_status: data.marital_status?.toLowerCase(),
+    };
 
-      // 🔥 UNIQUE CHECK
-      const exists = details.find(
-        d =>
-          d.employee_id === payload.employee_id &&
-          (!selectedItem || d.id !== selectedItem.id)
+    // 🔥 FIXED UNIQUE CHECK
+    // When updating, only check if the employee_id is different from the current one
+    let exists = false;
+    
+    if (selectedItem) {
+      // For update: check if any OTHER record has this employee_id
+      exists = details.find(
+        d => d.employee_id === payload.employee_id && d.id !== selectedItem.id
       );
+    } else {
+      // For create: check if ANY record has this employee_id
+      exists = details.find(d => d.employee_id === payload.employee_id);
+    }
 
-      if (exists) {
-        alert("This employee already has personal details!");
+    if (exists) {
+      setError(["This employee already has personal details!"]);
+      return;
+    }
+
+    if (selectedItem) {
+      // For update, only send fields that changed or all fields
+      // Option 1: Send only changed fields (better approach)
+      const changedFields = {};
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== selectedItem[key]) {
+          changedFields[key] = payload[key];
+        }
+      });
+      
+      // If no fields changed, just return
+      if (Object.keys(changedFields).length === 0) {
+        setSuccess("No changes to save");
+        setMode("list");
         return;
       }
-
-      if (selectedItem) {
-        await EmployeePersonalAPI.update(selectedItem.id, payload);
-      } else {
-        await EmployeePersonalAPI.create(payload);
-      }
-
-      alert("Saved successfully");
-      setMode("list");
-      fetchDetails();
-
-    } catch (err) {
-      console.error("SAVE ERROR:", err.response?.data || err.message);
-      alert("Save failed — check console");
+      
+      const res = await EmployeePersonalAPI.update(selectedItem.id, changedFields);
+      setSuccess(res.data?.message || "Saved successfully");
+    } else {
+      const res = await EmployeePersonalAPI.create(payload);
+      setSuccess(res.data?.message || "Saved successfully");
     }
-  };
+
+    setMode("list");
+    await fetchDetails(); // Wait for fetch to complete
+
+  } catch (err) {
+    // More detailed error handling
+    if (err.response?.data?.errors) {
+      const errorMessages = Object.values(err.response.data.errors).flat();
+      setError(errorMessages);
+    } else if (err.response?.data?.error) {
+      setError([err.response.data.error]);
+    } else {
+      setError(parseBackendErrors(err));
+    }
+    console.error("SAVE ERROR:", err.response?.data || err.message);
+  }
+};
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    await EmployeePersonalAPI.delete(id);
-    fetchDetails();
+    try {
+      const res = await EmployeePersonalAPI.delete(id);
+      setSuccess(res.data?.message || "Deleted successfully");
+      fetchDetails();
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   // ================= TABLE =================
@@ -418,10 +467,10 @@ export default function EmployeePersonalDetails() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 w-full">
           <SectionTitle title="Employee Personal Details" />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 self-end">
             <SearchBar value={search} onChange={setSearch} placeholder="Search details..." />
             {isHR && (
               <ActionButtons showAdd addText="+ Add" onAdd={() => {
@@ -447,23 +496,22 @@ export default function EmployeePersonalDetails() {
           }
         >
           {filteredDetails.map((d, index) => (
-            <EntityTableRow
-              key={d.id}
-              row={d}
-              index={index}
-              columns={personalColumns}
-              onView={(r) => {
-                setSelectedItem(r);
-                setMode("view");
-              }}
-              onEdit={(r) => {
-                setSelectedItem(r);
-                setMode("form");
-              }}
-              onDelete={(id) =>
-                EmployeePersonalAPI.delete(id).then(fetchDetails)
-              }
-            />
+        // In the table section, replace the onDelete prop:
+<EntityTableRow
+  key={d.id}
+  row={d}
+  index={index}
+  columns={personalColumns}
+  onView={(r) => {
+    setSelectedItem(r);
+    setMode("view");
+  }}
+  onEdit={(r) => {
+    setSelectedItem(r);
+    setMode("form");
+  }}
+  onDelete={() => handleDelete(d.id)}  // ✅ Use the defined handleDelete function
+/>
           ))}
         </Table>
       </PageContainer>

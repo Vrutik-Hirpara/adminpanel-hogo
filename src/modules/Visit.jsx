@@ -211,7 +211,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Visits" />
 //           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
 //         </div>
@@ -548,7 +548,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Visits" />
 //           {isHR && (
 //             <ActionButtons showAdd addText="+ Add" onAdd={() => {
@@ -700,9 +700,11 @@ import EntityViewCard from "../components/view/EntityViewCard";
 
 // 🔥 IMPORT ROLE HOOK
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function Visits() {
-
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
   const [leads, setLeads] = useState([]);
   const [visits, setVisits] = useState([]);
@@ -712,31 +714,35 @@ export default function Visits() {
 
   // ================= FETCH =================
   const fetchData = async () => {
-    const [v, e, l] = await Promise.all([
-      VisitsAPI.getAll(),
-      EmployeeAPI.getAll(),
-      LeadsAPI.getAll(),
-    ]);
+    try {
+      const [v, e, l] = await Promise.all([
+        VisitsAPI.getAll(),
+        EmployeeAPI.getAll(),
+        LeadsAPI.getAll(),
+      ]);
 
-    let visitsData = v.data.data || [];
+      let visitsData = v.data.data || [];
 
-    // 🔒 FILTER FOR NON-HR
-    if (!isHR) {
-      visitsData = visitsData.filter(
-        visit => Number(visit.employee_id) === Number(employeeId)
-      );
+      // 🔒 FILTER FOR NON-HR
+      if (!isHR) {
+        visitsData = visitsData.filter(
+          visit => Number(visit.employee_id) === Number(employeeId)
+        );
+      }
+
+      setVisits(visitsData);
+
+      let empList = e.data.data || [];
+      // 🔒 NON HR → dropdown ma only self
+      if (!isHR) {
+        empList = empList.filter(emp => emp.id === employeeId);
+      }
+
+      setEmployees(empList);
+      setLeads(l.data.data || []);
+    } catch(err) {
+      setError(parseBackendErrors(err));
     }
-
-    setVisits(visitsData);
-
-    let empList = e.data.data || [];
-    // 🔒 NON HR → dropdown ma only self
-    if (!isHR) {
-      empList = empList.filter(emp => emp.id === employeeId);
-    }
-
-    setEmployees(empList);
-    setLeads(l.data.data || []);
   };
 
   useEffect(() => {
@@ -775,38 +781,18 @@ export default function Visits() {
       });
 
       if (selectedVisit) {
-        await VisitsAPI.update(selectedVisit.id, formData);
+        const res = await VisitsAPI.update(selectedVisit.id, formData);
+        setSuccess(res.data?.message || "Saved successfully");
       } else {
-        await VisitsAPI.create(formData);
+        const res = await VisitsAPI.create(formData);
+        setSuccess(res.data?.message || "Saved successfully");
       }
 
       setMode("list");
       fetchData();
 
     } catch (err) {
-      const res = err.response?.data;
-      console.log("ERROR RESPONSE 👉", res);
-      if (!res) {
-        alert(" error. Please try again.");
-        return;
-      }
-
-      let message = "";
-
-      if (res.errors && typeof res.errors === "object") {
-        message = Object.entries(res.errors)
-          .map(([field, errors]) => {
-            const text = Array.isArray(errors) ? errors.join(", ") : errors;
-            return `${field.replaceAll("_", " ")}: ${text}`;
-          })
-          .join("\n");
-      } else if (res.message) {
-        message = res.message;
-      } else {
-        message = JSON.stringify(res);
-      }
-
-      alert(message);
+      setError(parseBackendErrors(err));
     }
   };
 
@@ -926,7 +912,7 @@ const handleEdit = (r) => {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Visits" />
           {isHR && (
             <ActionButtons 
@@ -968,7 +954,15 @@ const handleEdit = (r) => {
                 setMode("view"); 
               }}
               onEdit={handleEdit}
-              onDelete={(id) => VisitsAPI.delete(id).then(fetchData)}
+              onDelete={async (id) => {
+                try {
+                  const res = await VisitsAPI.delete(id);
+                  setSuccess(res.data?.message || "Deleted successfully");
+                  fetchData();
+                } catch(error) {
+                  setError(parseBackendErrors(error));
+                }
+              }}
             />
           ))}
         </Table>

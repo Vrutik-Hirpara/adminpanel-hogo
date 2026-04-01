@@ -8,7 +8,7 @@ export default function ActionButtons({
   onBack,
 }) {
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 ml-auto">
       {showAdd && (
         <button
           onClick={onAdd}

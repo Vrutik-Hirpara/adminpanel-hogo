@@ -171,7 +171,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Leave Requests" />
 
 //           <div className="flex gap-3">
@@ -286,8 +286,11 @@ import { themes } from "../config/theme.config";
 
 import { LeaveRequestsAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function LeaveRequests() {
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
 
   const [leaves, setLeaves] = useState([]);
@@ -307,29 +310,37 @@ export default function LeaveRequests() {
 
   // ================= FETCH =================
   const fetchLeaves = async () => {
-    const res = await LeaveRequestsAPI.getAll();
-    let data = res.data?.data || [];
+    try {
+      const res = await LeaveRequestsAPI.getAll();
+      let data = res.data?.data || [];
 
-    // 🔒 NON-HR → only own leave requests
-    if (!isHR) {
-      data = data.filter(
-        (leave) => Number(leave.employee_id) === Number(employeeId)
-      );
+      // 🔒 NON-HR → only own leave requests
+      if (!isHR) {
+        data = data.filter(
+          (leave) => Number(leave.employee_id) === Number(employeeId)
+        );
+      }
+
+      setLeaves(data);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    setLeaves(data);
   };
 
   const fetchEmployees = async () => {
-    const res = await EmployeeAPI.getAll();
-    let empData = res.data?.data || [];
-    
-    // 🔒 NON-HR → only show self in dropdown
-    if (!isHR) {
-      empData = empData.filter(e => e.id === employeeId);
+    try {
+      const res = await EmployeeAPI.getAll();
+      let empData = res.data?.data || [];
+      
+      // 🔒 NON-HR → only show self in dropdown
+      if (!isHR) {
+        empData = empData.filter(e => e.id === employeeId);
+      }
+      
+      setEmployees(empData);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-    
-    setEmployees(empData);
   };
   
   useEffect(() => {
@@ -361,22 +372,30 @@ export default function LeaveRequests() {
         console.log(pair[0], pair[1]);
       }
       
-      selectedItem
-        ? await LeaveRequestsAPI.update(selectedItem.id, formData)
-        : await LeaveRequestsAPI.create(formData);
+      if (selectedItem) {
+        const res = await LeaveRequestsAPI.update(selectedItem.id, formData);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await LeaveRequestsAPI.create(formData);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
 
       setMode("list");
       fetchLeaves();
     } catch (err) {
-      console.log("API ERROR:", err.response?.data);
-      alert("Failed to save leave request");
+      setError(parseBackendErrors(err));
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this leave request?")) {
-      await LeaveRequestsAPI.delete(id);
-      fetchLeaves();
+      try {
+        const res = await LeaveRequestsAPI.delete(id);
+        setSuccess(res.data?.message || "Deleted successfully");
+        fetchLeaves();
+      } catch (error) {
+        setError(parseBackendErrors(error));
+      }
     }
   };
 
@@ -527,10 +546,10 @@ export default function LeaveRequests() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Leave Requests" />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 self-end">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
             {/* 🔥 Add button visible to both HR and non-HR */}
             <ActionButtons

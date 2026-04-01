@@ -14,10 +14,13 @@ import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
 import { ExpenseAPI } from "../services";
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function Expenses() {
-      const { employeeId, isHR } = useUser();
-    
+    const { setError, setSuccess } = useOutletContext();
+    const { employeeId, isHR } = useUser();
+
     const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
@@ -25,15 +28,19 @@ export default function Expenses() {
 
     // ================= FETCH =================
     const fetchExpenses = async () => {
-        const res = await ExpenseAPI.getAll();
-        const data = res.data?.data || [];
+        try {
+            const res = await ExpenseAPI.getAll();
+            const data = res.data?.data || [];
 
-        const formatted = data.map(e => ({
-            ...e,
-            status: Boolean(e.status),
-        }));
+            const formatted = data.map(e => ({
+                ...e,
+                status: Boolean(e.status),
+            }));
 
-        setExpenses(formatted);
+            setExpenses(formatted);
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
     };
 
     useEffect(() => { fetchExpenses(); }, []);
@@ -53,17 +60,30 @@ export default function Expenses() {
             }
         });
 
-        selectedItem
-            ? await ExpenseAPI.update(selectedItem.id, formData)
-            : await ExpenseAPI.create(formData);
+        try {
+            if (selectedItem) {
+                const res = await ExpenseAPI.update(selectedItem.id, formData);
+                setSuccess(res.data?.message || "Saved successfully");
+            } else {
+                const res = await ExpenseAPI.create(formData);
+                setSuccess(res.data?.message || "Saved successfully");
+            }
 
-        setMode("list");
-        fetchExpenses();
+            setMode("list");
+            fetchExpenses();
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
     };
 
     const handleDelete = async (id) => {
-        await ExpenseAPI.delete(id);
-        fetchExpenses();
+        try {
+            const res = await ExpenseAPI.delete(id);
+            setSuccess(res.data?.message || "Deleted successfully");
+            fetchExpenses();
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
     };
     const handleStatusToggle = async (exp) => {
         const newStatus = !exp.status;
@@ -73,8 +93,10 @@ export default function Expenses() {
         );
 
         try {
-            await ExpenseAPI.update(exp.id, { status: newStatus });
-        } catch {
+            const res = await ExpenseAPI.update(exp.id, { status: newStatus });
+            setSuccess(res.data?.message || "Status updated successfully");
+        } catch (err) {
+            setError(parseBackendErrors(err));
             fetchExpenses();
         }
     };
@@ -151,16 +173,16 @@ export default function Expenses() {
     if (mode === "list") {
         return (
             <PageContainer>
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
                     <SectionTitle title="Expenses" />
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3 self-end">
                         <SearchBar
                             value={search}
                             onChange={setSearch}
                             placeholder="Search expenses..."
                         />
-                        {isHR && (
+                        {/* {(isHR) && (
                             <ActionButtons
                                 showAdd
                                 addText="+ Add"
@@ -169,7 +191,15 @@ export default function Expenses() {
                                     setMode("form");
                                 }}
                             />
-                        )}
+                        )} */}
+                        <ActionButtons
+                            showAdd
+                            addText="+ Add"
+                            onAdd={() => {
+                                setSelectedItem(null);
+                                setMode("form");
+                            }}
+                        />
                     </div>
                 </div>
 

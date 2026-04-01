@@ -11,16 +11,23 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { HolidayAPI } from "../services";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function Holiday() {
+  const { setError, setSuccess } = useOutletContext();
   const [holidays, setHolidays] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedHoliday, setSelectedHoliday] = useState(null);
 
   // FETCH HOLIDAYS
   const fetchHolidays = async () => {
-    const res = await HolidayAPI.getAll();
-    setHolidays(res.data?.data || []);
+    try {
+      const res = await HolidayAPI.getAll();
+      setHolidays(res.data?.data || []);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   useEffect(() => {
@@ -36,14 +43,17 @@ export default function Holiday() {
       };
 
       if (selectedHoliday) {
-        await HolidayAPI.update(selectedHoliday.id, payload);
+        const res = await HolidayAPI.update(selectedHoliday.id, payload);
+        setSuccess(res.data?.message || "Saved successfully");
       } else {
-        await HolidayAPI.create(payload);
+        const res = await HolidayAPI.create(payload);
+        setSuccess(res.data?.message || "Saved successfully");
       }
 
       setMode("list");
       fetchHolidays();
     } catch (error) {
+      setError(parseBackendErrors(error));
       console.error("Holiday Save Error:", error.response?.data);
     }
   };
@@ -97,7 +107,7 @@ const holidayFields = [
     return (
       <PageContainer>
         {/* 🔥 HEADER SECTION (YOU ASKED THIS) */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="HOLIDAYS" />
           <ActionButtons showAdd addText="+ Add" onAdd={() => {
   setSelectedHoliday(null);   // ⭐ RESET
@@ -125,7 +135,15 @@ const holidayFields = [
       setSelectedHoliday(r);
       setMode("form");
     }}
-    onDelete={(id) => HolidayAPI.delete(id).then(fetchHolidays)}
+    onDelete={async (id) => {
+      try {
+        const res = await HolidayAPI.delete(id);
+        setSuccess(res.data?.message || "Deleted successfully");
+        fetchHolidays();
+      } catch (err) {
+        setError(parseBackendErrors(err));
+      }
+    }}
   />
 ))}
 

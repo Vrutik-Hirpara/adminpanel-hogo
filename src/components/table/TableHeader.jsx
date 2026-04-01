@@ -12,14 +12,14 @@ export default function TableHeader({ columns }) {
     >
       <tr>
   {/* SERIAL NUMBER HEADER */}
-  <th className="px-2 py-3 text-center font-semibold whitespace-nowrap w-[4%]">
+  <th className="px-2 py-3 text-center font-semibold whitespace-nowrap">
     No
   </th>
 
   {columns.map((col) => (
     <th
       key={col}
-      className=" text-center align-middle font-semibold whitespace-nowrap "
+      className="px-2 py-3 text-center align-middle font-semibold whitespace-nowrap "
     >
       {col}
     </th>

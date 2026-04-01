@@ -10,7 +10,7 @@ export default function Table({ header, children, showIndex = true }) {
       style={{ borderColor: themes.backgroundGray }}
     >
       <table
-        className="w-full table-fixed text-md border-collapse"
+        className="w-full min-w-max table-auto text-md border-collapse"
         style={{ fontFamily: themes.fontPrimary }}
       >
         {/* 🔹 HEADER */}

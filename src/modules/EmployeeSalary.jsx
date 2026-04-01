@@ -240,8 +240,11 @@ import SearchBar from "../components/table/SearchBar";
 
 // 🔥 role hook
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function EmployeeSalary() {
+  const { setError, setSuccess } = useOutletContext();
 
   const { employeeId, isHR } = useUser();
 
@@ -253,42 +256,50 @@ export default function EmployeeSalary() {
 
   // ================= FETCH SALARY =================
   const fetchSalary = async (empList) => {
-    const res = await SalaryAPI.getAll();
-    let data = res.data?.data || [];
+    try {
+      const res = await SalaryAPI.getAll();
+      let data = res.data?.data || [];
 
-    // 🔒 non HR → only own salary
-    if (!isHR) {
-      data = data.filter(s => Number(s.employee_id) === Number(employeeId));
+      // 🔒 non HR → only own salary
+      if (!isHR) {
+        data = data.filter(s => Number(s.employee_id) === Number(employeeId));
+      }
+
+      const formatted = data.map((d) => {
+        const emp = empList.find((e) => e.id === d.employee_id);
+
+        return {
+          ...d,
+          employeeName: emp
+            ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+            : d.employee_id,
+        };
+      });
+
+      setSalaryData(formatted);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    const formatted = data.map((d) => {
-      const emp = empList.find((e) => e.id === d.employee_id);
-
-      return {
-        ...d,
-        employeeName: emp
-          ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-          : d.employee_id,
-      };
-    });
-
-    setSalaryData(formatted);
   };
 
   // ================= LOAD DATA =================
   useEffect(() => {
     const load = async () => {
-      const resEmp = await EmployeeAPI.getAll();
-      let empData = resEmp.data?.data || [];
+      try {
+        const resEmp = await EmployeeAPI.getAll();
+        let empData = resEmp.data?.data || [];
 
-      // 🔒 non HR → only own employee in dropdown
-      if (!isHR) {
-        empData = empData.filter(e => e.id === employeeId);
+        // 🔒 non HR → only own employee in dropdown
+        if (!isHR) {
+          empData = empData.filter(e => e.id === employeeId);
+        }
+
+        setEmployees(empData);
+
+        await fetchSalary(empData);
+      } catch (err) {
+        setError(parseBackendErrors(err));
       }
-
-      setEmployees(empData);
-
-      await fetchSalary(empData);
     };
 
     load();
@@ -303,20 +314,33 @@ export default function EmployeeSalary() {
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
-    data.employee_id = Number(data.employee_id);
+    try {
+      data.employee_id = Number(data.employee_id);
 
-    selectedItem
-      ? await SalaryAPI.update(selectedItem.id, data)
-      : await SalaryAPI.create(data);
+      if (selectedItem) {
+        const res = await SalaryAPI.update(selectedItem.id, data);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await SalaryAPI.create(data);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
 
-    setMode("list");
-    fetchSalary(employees);
+      setMode("list");
+      fetchSalary(employees);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   // ================= DELETE =================
   const handleDelete = async (id) => {
-    await SalaryAPI.delete(id);
-    fetchSalary(employees);
+    try {
+      const res = await SalaryAPI.delete(id);
+      setSuccess(res.data?.message || "Deleted successfully");
+      fetchSalary(employees);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   // ================= TABLE =================
@@ -355,10 +379,10 @@ export default function EmployeeSalary() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Employee Salary" />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 self-end">
             <SearchBar value={search} onChange={setSearch} placeholder="Search salary..." />
 
             {isHR &&(

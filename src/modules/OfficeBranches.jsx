@@ -17,24 +17,39 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function OfficeBranch() {
+  const { setError, setSuccess } = useOutletContext();
   const [branches, setBranches] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedBranch, setSelectedBranch] = useState(null);
 
 const fetchBranches = async () => {
-  const res = await BranchAPI.getAll();
-  setBranches(res.data.data);   // ✅ actual array
+  try {
+    const res = await BranchAPI.getAll();
+    setBranches(res.data.data);   // ✅ actual array
+  } catch (err) {
+    setError(parseBackendErrors(err));
+  }
 };
   useEffect(() => { fetchBranches(); }, []);
 
   const onSubmit = async (data) => {
-    selectedBranch
-      ? await BranchAPI.update(selectedBranch.id, data)
-      : await BranchAPI.create(data);
-    setMode("list");
-    fetchBranches();
+    try {
+      if (selectedBranch) {
+        const res = await BranchAPI.update(selectedBranch.id, data);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await BranchAPI.create(data);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
+      setMode("list");
+      fetchBranches();
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 const branchColumns = [
   { key: "name" },
@@ -54,7 +69,7 @@ const branchFields = [
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Office Branches" />
           <ActionButtons showAdd addText="+ Add" onAdd={() => {
   setSelectedBranch(null);   // ⭐ IMPORTANT RESET
@@ -77,7 +92,15 @@ const branchFields = [
       setSelectedBranch(r);
       setMode("form");
     }}
-    onDelete={(id) => BranchAPI.delete(id).then(fetchBranches)}
+    onDelete={async (id) => {
+      try {
+        const res = await BranchAPI.delete(id);
+        setSuccess(res.data?.message || "Deleted successfully");
+        fetchBranches();
+      } catch (err) {
+        setError(parseBackendErrors(err));
+      }
+    }}
   />
 ))}
 

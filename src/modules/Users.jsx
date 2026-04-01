@@ -261,10 +261,13 @@ import SearchBar from "../components/table/SearchBar";
 
 // ✅ IMPORT ROLE HOOK
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function Users() {
 
   // 🔥 role based values
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
 
   const [users, setUsers] = useState([]);
@@ -308,6 +311,7 @@ export default function Users() {
       }
 
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.log("USER FETCH ERROR:", err);
     }
   };
@@ -325,6 +329,7 @@ export default function Users() {
 
       setEmployees(list);
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.log("EMPLOYEE FETCH ERROR:", err);
     }
   };
@@ -350,8 +355,10 @@ export default function Users() {
     );
 
     try {
-      await api.patch(`users/${user.id}/`, { is_active: newStatus });
-    } catch {
+      const res = await api.patch(`users/${user.id}/`, { is_active: newStatus });
+      setSuccess(res.data?.message || "Status updated successfully");
+    } catch (error) {
+      setError(parseBackendErrors(error));
       fetchUsers();
     }
   };
@@ -372,18 +379,23 @@ export default function Users() {
         await api.post("users/", payload);
       }
 
+      setSuccess("Saved successfully");
       setMode("list");
       fetchUsers();
 
     } catch (err) {
-      console.error("SAVE ERROR:", err.response?.data || err.message);
-      alert("Save failed");
+      setError(parseBackendErrors(err));
     }
   };
 
   const handleDelete = async (id) => {
-    await UserAPI.delete(id);
-    fetchUsers();
+    try {
+      const res = await UserAPI.delete(id);
+      setSuccess(res.data?.message || "Deleted successfully");
+      fetchUsers();
+    } catch (error) {
+      setError(parseBackendErrors(error));
+    }
   };
 
   // ================= VIEW FIELDS =================
@@ -425,10 +437,10 @@ export default function Users() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Users" />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 self-end">
             <SearchBar
               value={search}
               onChange={setSearch}

@@ -182,7 +182,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//        <div className="flex justify-between items-center mb-4">
+//        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //   <SectionTitle title="Employee Documents" />
 
 //   <div className="flex gap-3">
@@ -285,8 +285,11 @@ import SearchBar from "../components/table/SearchBar";
 
 // 🔥 ROLE HOOK
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function EmployeeDocuments() {
+  const { setError, setSuccess } = useOutletContext();
 
   const { employeeId, isHR } = useUser();
 
@@ -298,40 +301,48 @@ export default function EmployeeDocuments() {
 
   // ================= FETCH =================
   const fetchDocuments = async (empList) => {
-    const res = await EmployeeDocsAPI.getAll();
-    let data = res.data?.data || [];
+    try {
+      const res = await EmployeeDocsAPI.getAll();
+      let data = res.data?.data || [];
 
-    // 🔒 non-HR → only own documents
-    if (!isHR) {
-      data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      // 🔒 non-HR → only own documents
+      if (!isHR) {
+        data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      }
+
+      const formatted = data.map(d => {
+        const emp = empList.find(e => e.id === d.employee_id);
+        return {
+          ...d,
+          employeeName: emp
+            ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
+            : d.employee_id,
+        };
+      });
+
+      setDocuments(formatted);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    const formatted = data.map(d => {
-      const emp = empList.find(e => e.id === d.employee_id);
-      return {
-        ...d,
-        employeeName: emp
-          ? `${emp.employee_code} - ${emp.first_name} ${emp.last_name}`
-          : d.employee_id,
-      };
-    });
-
-    setDocuments(formatted);
   };
 
   // ================= LOAD =================
   useEffect(() => {
     const load = async () => {
-      const resEmp = await EmployeeAPI.getAll();
-      let empData = resEmp.data?.data || [];
+      try {
+        const resEmp = await EmployeeAPI.getAll();
+        let empData = resEmp.data?.data || [];
 
-      // 🔒 non-HR → only own employee in dropdown
-      if (!isHR) {
-        empData = empData.filter(e => e.id === employeeId);
+        // 🔒 non-HR → only own employee in dropdown
+        if (!isHR) {
+          empData = empData.filter(e => e.id === employeeId);
+        }
+
+        setEmployees(empData);
+        await fetchDocuments(empData);
+      } catch (err) {
+        setError(parseBackendErrors(err));
       }
-
-      setEmployees(empData);
-      await fetchDocuments(empData);
     };
 
     load();
@@ -359,7 +370,7 @@ export default function EmployeeDocuments() {
       });
 
       if (alreadyExists) {
-        alert("Documents already exist for this employee!");
+        setError(["Documents already exist for this employee!"]);
         return;
       }
 
@@ -400,23 +411,31 @@ export default function EmployeeDocuments() {
         }
       });
 
-      selectedItem
-        ? await EmployeeDocsAPI.update(selectedItem.id, formData)
-        : await EmployeeDocsAPI.create(formData);
+      if (selectedItem) {
+        const res = await EmployeeDocsAPI.update(selectedItem.id, formData);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await EmployeeDocsAPI.create(formData);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
 
-      alert("Saved successfully");
       setMode("list");
       fetchDocuments(employees);
 
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.error(err);
-      alert("Save failed");
     }
   };
 
   const handleDelete = async (id) => {
-    await EmployeeDocsAPI.delete(id);
-    fetchDocuments(employees);
+    try {
+      const res = await EmployeeDocsAPI.delete(id);
+      setSuccess(res.data?.message || "Deleted successfully");
+      fetchDocuments(employees);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   const documentFields = [
@@ -436,10 +455,10 @@ export default function EmployeeDocuments() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Employee Documents" />
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 self-end">
             <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
             {isHR &&(
             <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />

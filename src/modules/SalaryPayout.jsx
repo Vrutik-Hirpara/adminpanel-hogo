@@ -250,9 +250,9 @@
 //     return (
 //       <>
 //         <PageContainer>
-//           <div className="flex justify-between items-center mb-4">
+//           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //             <SectionTitle title="Salary Payout" />
-//             <div className="flex gap-2">
+//             <div className="flex flex-wrap gap-2">
 //               <button
 //                 onClick={() => setShowFilterModal(true)}
 //                 className="px-4 py-2 rounded text-sm font-semibold flex items-center gap-2"
@@ -410,7 +410,7 @@
 //   return (
 //     <>
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Salary Payout" />
 //           <div className="flex gap-2">
 //             <button
@@ -835,9 +835,9 @@
 //         return (
 //             <>
 //                 <PageContainer>
-//                     <div className="flex justify-between items-center mb-4">
+//                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //                         <SectionTitle title="Salary Payout" />
-//                         <div className="flex gap-2">
+//                         <div className="flex flex-wrap gap-2">
 //                             <button
 //                                 onClick={() => setShowFilterModal(true)}
 //                                 className="px-4 py-2 rounded text-sm font-semibold flex items-center gap-2"
@@ -971,8 +971,11 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { themes } from "../config/theme.config";
 import { SalaryPaymentAPI } from "../services";
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function SalaryPayout() {
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
   const [salaryData, setSalaryData] = useState([]);
   const [selectedSalary, setSelectedSalary] = useState(null);
@@ -1027,6 +1030,7 @@ export default function SalaryPayout() {
         setSalaryData(response.data || []);
       }
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.error("Failed to fetch salary data:", err);
       setSalaryData([]);
     }
@@ -1202,7 +1206,7 @@ export default function SalaryPayout() {
     return (
       <>
         <PageContainer>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
             <SectionTitle title="Salary Payout" />
             <button
               onClick={() => setShowFilterModal(true)}

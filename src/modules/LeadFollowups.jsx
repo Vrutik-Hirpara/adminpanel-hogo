@@ -138,7 +138,7 @@
 //   if (mode === "list") {
 //     return (
 //       <PageContainer>
-//         <div className="flex justify-between items-center mb-4">
+//         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
 //           <SectionTitle title="Lead Followups" />
 //           <ActionButtons showAdd addText="+ Add" onAdd={() => setMode("form")} />
 //         </div>
@@ -275,9 +275,12 @@ import { LeadFollowupsAPI, EmployeeAPI, LeadsAPI } from "../services";
 
 // 🔥 IMPORT ROLE HOOK
 import { useUser } from "../hooks/useUser";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
 
 export default function LeadFollowups() {
 
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
 
   const [followups, setFollowups] = useState([]);
@@ -287,33 +290,37 @@ export default function LeadFollowups() {
   const [selectedItem, setSelectedItem] = useState(null);
 
   const fetchData = async () => {
-    const [f, e, l] = await Promise.all([
-      LeadFollowupsAPI.getAll(),
-      EmployeeAPI.getAll(),
-      LeadsAPI.getAll(),
-    ]);
+    try {
+      const [f, e, l] = await Promise.all([
+        LeadFollowupsAPI.getAll(),
+        EmployeeAPI.getAll(),
+        LeadsAPI.getAll(),
+      ]);
 
-    let followupData = f.data.data || [];
+      let followupData = f.data.data || [];
 
-    // 🔒 FILTER FOR NON-HR
-    if (!isHR) {
-      followupData = followupData.filter(
-        item => Number(item.employee_id) === Number(employeeId)
-      );
+      // 🔒 FILTER FOR NON-HR
+      if (!isHR) {
+        followupData = followupData.filter(
+          item => Number(item.employee_id) === Number(employeeId)
+        );
+      }
+
+      setFollowups(followupData);
+
+      let empList = e.data.data || [];
+
+      // 🔒 NON HR → dropdown ma only self
+      if (!isHR) {
+        empList = empList.filter(emp => emp.id === employeeId);
+      }
+
+      setEmployees(empList);
+
+      setLeads(l.data.data || []);
+    } catch (err) {
+      setError(parseBackendErrors(err));
     }
-
-    setFollowups(followupData);
-
-    let empList = e.data.data || [];
-
-    // 🔒 NON HR → dropdown ma only self
-    if (!isHR) {
-      empList = empList.filter(emp => emp.id === employeeId);
-    }
-
-    setEmployees(empList);
-
-    setLeads(l.data.data || []);
   };
 
   useEffect(() => {
@@ -329,12 +336,20 @@ export default function LeadFollowups() {
       status: data.status === "Active",
     };
 
-    selectedItem
-      ? await LeadFollowupsAPI.update(selectedItem.id, payload)
-      : await LeadFollowupsAPI.create(payload);
+    try {
+      if (selectedItem) {
+        const res = await LeadFollowupsAPI.update(selectedItem.id, payload);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await LeadFollowupsAPI.create(payload);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
 
-    setMode("list");
-    fetchData();
+      setMode("list");
+      fetchData();
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
   // ================= STATUS TOGGLE =================
@@ -348,8 +363,10 @@ export default function LeadFollowups() {
     );
 
     try {
-      await LeadFollowupsAPI.update(item.id, { status: newStatus });
+      const res = await LeadFollowupsAPI.update(item.id, { status: newStatus });
+      setSuccess(res.data?.message || "Status updated successfully");
     } catch (error) {
+      setError(parseBackendErrors(error));
       setFollowups(prev =>
         prev.map(f =>
           f.id === item.id ? { ...f, status: !newStatus } : f
@@ -419,7 +436,7 @@ export default function LeadFollowups() {
   if (mode === "list") {
     return (
       <PageContainer>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Lead Followups" />
           {isHR &&(
           <ActionButtons showAdd addText="+ Add" onAdd={() => {
@@ -437,7 +454,15 @@ export default function LeadFollowups() {
               columns={columns}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
               onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
-              onDelete={(id) => LeadFollowupsAPI.delete(id).then(fetchData)}
+              onDelete={async (id) => {
+                try {
+                  const res = await LeadFollowupsAPI.delete(id);
+                  setSuccess(res.data?.message || "Deleted successfully");
+                  fetchData();
+                } catch (err) {
+                  setError(parseBackendErrors(err));
+                }
+              }}
             />
           ))}
         </Table>

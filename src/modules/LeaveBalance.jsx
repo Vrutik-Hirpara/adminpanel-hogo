@@ -13,7 +13,11 @@ import { LeaveBalanceAPI } from "../services";
 import api from "../services/api";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
+import { useOutletContext } from "react-router-dom";
+import { parseBackendErrors } from "../utils/parseBackendErrors";
+
 export default function LeaveBalance() {
+  const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
   const [data, setData] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -21,22 +25,30 @@ export default function LeaveBalance() {
   const [selected, setSelected] = useState(null);
 const [search, setSearch] = useState("");
 const fetchData = async () => {
-  const res = await LeaveBalanceAPI.getAll();
-  let list = res.data?.data || [];
+  try {
+    const res = await LeaveBalanceAPI.getAll();
+    let list = res.data?.data || [];
 
-  // 🔒 NON-HR → only own leave balance
-  if (!isHR) {
-    list = list.filter(
-      item => Number(item.employee_id) === Number(employeeId)
-    );
+    // 🔒 NON-HR → only own leave balance
+    if (!isHR) {
+      list = list.filter(
+        item => Number(item.employee_id) === Number(employeeId)
+      );
+    }
+
+    setData(list);
+  } catch (err) {
+    setError(parseBackendErrors(err));
   }
-
-  setData(list);
 };
 
   const fetchEmployees = async () => {
-    const res = await api.get("employee/");
-    setEmployees(res.data?.data || []);
+    try {
+      const res = await api.get("employee/");
+      setEmployees(res.data?.data || []);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    }
   };
 
 useEffect(() => {
@@ -57,24 +69,20 @@ useEffect(() => {
     };
 
     try {
-      selected
-        ? await LeaveBalanceAPI.update(selected.id, payload)
-        : await LeaveBalanceAPI.create(payload);
+      if (selected) {
+        const res = await LeaveBalanceAPI.update(selected.id, payload);
+        setSuccess(res.data?.message || "Saved successfully");
+      } else {
+        const res = await LeaveBalanceAPI.create(payload);
+        setSuccess(res.data?.message || "Saved successfully");
+      }
 
       setMode("list");
       fetchData();
 
     } catch (err) {
+      setError(parseBackendErrors(err));
       console.log("API ERROR:", err.response?.data);
-
-      const res = err.response?.data;
-      if (!res) return alert("Network error");
-
-      const message = Object.entries(res)
-        .map(([f, e]) => `${f.replaceAll("_", " ")}: ${Array.isArray(e) ? e.join(", ") : e}`)
-        .join("\n");
-
-      alert(message);
     }
   };
 
@@ -132,10 +140,10 @@ const filteredData = data.filter(item => {
   if (mode === "list") {
     return (
       <PageContainer>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
   <SectionTitle title="LEAVE BALANCE" />
 
-  <div className="flex gap-3">
+  <div className="flex flex-wrap gap-3 self-end">
     <SearchBar
       value={search}
       onChange={setSearch}
@@ -170,7 +178,15 @@ const filteredData = data.filter(item => {
                 setSelected(r);
                 setMode("form");
               }}
-              onDelete={(id) => LeaveBalanceAPI.delete(id).then(fetchData)}
+              onDelete={async (id) => {
+                try {
+                  const res = await LeaveBalanceAPI.delete(id);
+                  setSuccess(res.data?.message || "Deleted successfully");
+                  fetchData();
+                } catch (err) {
+                  setError(parseBackendErrors(err));
+                }
+              }}
             />
           ))}
 
