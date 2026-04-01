@@ -27,54 +27,71 @@ export default function Expenses() {
     const [selectedItem, setSelectedItem] = useState(null);
 
     // ================= FETCH =================
-    const fetchExpenses = async () => {
-        try {
-            const res = await ExpenseAPI.getAll();
-            const data = res.data?.data || [];
-
-            const formatted = data.map(e => ({
-                ...e,
-                status: Boolean(e.status),
-            }));
-
-            setExpenses(formatted);
-        } catch (err) {
-            setError(parseBackendErrors(err));
+   // ================= FETCH =================
+const fetchExpenses = async () => {
+    try {
+        let res;
+        
+        if (isHR) {
+            // HR can see all expenses
+            res = await ExpenseAPI.getAll();
+        } else {
+            // Regular employee sees only their own expenses
+            res = await ExpenseAPI.getByEmployee(employeeId);
         }
-    };
+        
+        const data = res.data?.data || [];
 
-    useEffect(() => { fetchExpenses(); }, []);
+        const formatted = data.map(e => ({
+            ...e,
+            status: Boolean(e.status),
+        }));
 
+        setExpenses(formatted);
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    }
+};
+
+useEffect(() => { 
+    fetchExpenses(); 
+}, [isHR, employeeId]); // ← Add dependencies
     // ================= SAVE =================
-    const onSubmit = async (data) => {
-        data.status = data.status === "true"; // ⭐ ADD THIS
+    // ================= SAVE =================
+const onSubmit = async (data) => {
+    data.status = data.status === "true";
 
-        const formData = new FormData();
+    const formData = new FormData();
 
-        Object.keys(data).forEach(key => {
-            const val = data[key];
-            if (val instanceof FileList) {
-                if (val.length > 0) formData.append(key, val[0]);
-            } else if (val !== "" && val !== null && val !== undefined) {
-                formData.append(key, val);
-            }
-        });
-
-        try {
-            if (selectedItem) {
-                const res = await ExpenseAPI.update(selectedItem.id, formData);
-                setSuccess(res.data?.message || "Saved successfully");
-            } else {
-                const res = await ExpenseAPI.create(formData);
-                setSuccess(res.data?.message || "Saved successfully");
-            }
-
-            setMode("list");
-            fetchExpenses();
-        } catch (err) {
-            setError(parseBackendErrors(err));
+    Object.keys(data).forEach(key => {
+        const val = data[key];
+        if (val instanceof FileList) {
+            if (val.length > 0) formData.append(key, val[0]);
+        } else if (val !== "" && val !== null && val !== undefined) {
+            formData.append(key, val);
         }
-    };
+    });
+
+    // Add employee_id for new expenses (only if not HR and creating new)
+    if (!selectedItem && !isHR) {
+        formData.append('employee_id', employeeId);
+    }
+
+    try {
+        if (selectedItem) {
+            const res = await ExpenseAPI.update(selectedItem.id, formData);
+            setSuccess(res.data?.message || "Saved successfully");
+        } else {
+            const res = await ExpenseAPI.create(formData);
+            setSuccess(res.data?.message || "Saved successfully");
+        }
+
+        setMode("list");
+        fetchExpenses();
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    }
+};
 
     const handleDelete = async (id) => {
         try {
@@ -108,7 +125,9 @@ export default function Expenses() {
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
         { key: "vendor_name" },
+        {key: "lead_name"},
         { key: "expense_type" },
+
         { key: "amount" },
         {
             key: "date",
@@ -139,6 +158,8 @@ export default function Expenses() {
 
     const expenseFields = [
         { key: "vendor_name", label: "Vendor Name" },
+        { key: "lead_name", label: "Lead Name" },
+
         { key: "expense_type", label: "Expense Type" },
         { key: "amount", label: "Amount" },
 
@@ -203,7 +224,7 @@ export default function Expenses() {
                     </div>
                 </div>
 
-                <Table header={<TableHeader columns={["Vendor", "Type", "Amount", "Date", "Status", "Action"]} />}>
+                <Table header={<TableHeader columns={["Vendor","Lead name","Type", "Amount", "Date", "Status", "Action"]} />}>
                     {expenses.map((exp, index) => (
                         <EntityTableRow
                             key={exp.id}
