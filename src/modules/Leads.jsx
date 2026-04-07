@@ -529,10 +529,24 @@ export default function Leads() {
   // ================= SAVE =================
   const onSubmit = async (data) => {
     try {
+      // const payload = {
+      //   ...data,
+      //   created_by: Number(data.created_by),
+      //   assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
+
+      // };
       const payload = {
         ...data,
-        created_by: Number(data.created_by),
+
+        created_by: isHR ? Number(data.created_by) : employeeId,
         assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
+
+        // 🔥 THIS IS MAIN FIX
+        date: data.followup_date,
+
+        // optional
+        month: new Date(data.date).getMonth() + 1,
+        year: new Date(data.date).getFullYear(),
       };
 
       if (selectedItem) {
@@ -1408,15 +1422,63 @@ export default function Leads() {
           onSubmit={onSubmit}
           setMode={setMode}
           fields={[
+            // {
+            //   label: "Created By",
+            //   name: "created_by",
+            //   type: "select",
+            //   required: true,
+            //   options: employees.map((e) => ({
+            //     label: `${e.first_name} ${e.last_name}`,
+            //     value: e.id,
+            //   })),
+            // },
+{
+  label: "Created By",
+  name: isHR ? "created_by" : "created_by_name",
+  type: isHR ? "select" : "text",
+  ...(isHR && {
+    options: employees.map((e) => ({
+      label: `${e.first_name} ${e.last_name}`,
+      value: e.id,
+    })),
+  }),
+  ...(!isHR && {
+    value: (() => {
+      const emp = employees.find(e => e.id === employeeId);
+      return emp ? `${emp.first_name} ${emp.last_name}` : "";
+    })(),
+  }),
+  readOnly: !isHR,  // Non-HR users can't edit
+  disabled: !isHR,  // Non-HR users can't edit
+  required: isHR,   // Only required for HR
+},
+            // 📅 Follow-up Date
             {
-              label: "Created By",
-              name: "created_by",
-              type: "select",
+              label: "Follow-up Date",
+              name: "date",
+              type: "date",
               required: true,
-              options: employees.map((e) => ({
-                label: `${e.first_name} ${e.last_name}`,
-                value: e.id,
-              })),
+            },
+
+            // 📆 Month (optional if backend need kare)
+            {
+              label: "Month",
+              name: "month",
+              type: "select",
+              options: [
+                { label: "January", value: 1 },
+                { label: "February", value: 2 },
+                { label: "March", value: 3 },
+                { label: "April", value: 4 },
+                { label: "May", value: 5 },
+                { label: "June", value: 6 },
+                { label: "July", value: 7 },
+                { label: "August", value: 8 },
+                { label: "September", value: 9 },
+                { label: "October", value: 10 },
+                { label: "November", value: 11 },
+                { label: "December", value: 12 },
+              ],
             },
             {
               label: "Lead Type",

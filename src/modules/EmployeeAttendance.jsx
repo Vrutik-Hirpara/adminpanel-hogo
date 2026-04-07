@@ -1385,7 +1385,7 @@ export default function EmployeeAttendance() {
   }, []);
 
   // ================= FETCH DATA WITH FILTERS =================
-  const fetchAttendance = async (date = null, month = null) => {
+  const fetchAttendance = async (date = null, month = null, year = null) => {
     if (isRoleLoading || !roleName) return;
 
     setLoading(true);
@@ -1395,11 +1395,14 @@ export default function EmployeeAttendance() {
       if (roleName === "hr") {
         if (date) {
           response = await EmployeeAttendanceAPI.getByDate(date);
-        } else if (month) {
-          response = await EmployeeAttendanceAPI.getByMonth(month);
+        } else if (month && year) {
+          response = await EmployeeAttendanceAPI.getByMonth(month, year);
         } else {
           const weekRange = getLastWeekRange();
-          response = await EmployeeAttendanceAPI.getByDateRange(weekRange.start, weekRange.end);
+          response = await EmployeeAttendanceAPI.getByDateRange(
+            weekRange.start,
+            weekRange.end
+          );
         }
       } else {
         const currentMonth = getCurrentMonth();
@@ -1488,20 +1491,21 @@ export default function EmployeeAttendance() {
     console.log("Raw month value:", monthValue);
 
     if (monthValue) {
-      const monthNumber = parseInt(monthValue.split('-')[1], 10);
-      console.log("Extracted month number:", monthNumber);
+      const parts = monthValue.split("-");
+      const year = parts[0];
+      const monthNumber = parseInt(parts[1], 10);
+
+      console.log("Year:", year);
+      console.log("Month:", monthNumber);
 
       setSelectedMonth(monthValue);
       setSelectedDate("");
       setSelectedDateObj(null);
       setAttendance([]);
-      fetchAttendance(null, monthNumber);
+
+      fetchAttendance(null, monthNumber, year);
     } else {
-      setSelectedMonth("");
-      setSelectedDate("");
-      setSelectedDateObj(null);
-      setAttendance([]);
-      fetchAttendance();
+      resetFilters();
     }
   };
 
@@ -1910,8 +1914,8 @@ export default function EmployeeAttendance() {
       render: (row) => (
         <span
           className={`px-2 py-1 rounded text-xs font-semibold ${row.status === true || row.status === "true" || row.status === 1
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
             }`}
         >
           {row.status === true || row.status === "true" || row.status === 1 ? "Present" : "Absent"}

@@ -105,8 +105,8 @@ export const EmployeeAttendanceAPI = {
   getByDate: (date) =>
     api.get(`employee_attendence/?date=${date}`),
 
-  getByMonth: (month) =>
-    api.get(`employee_attendence/?month=${month}`),
+  getByMonth: (month,year) =>
+    api.get(`employee_attendence/?month=${month}&year=${year}`),
 
   getByDateRange: (startDate, endDate) =>
     api.get(

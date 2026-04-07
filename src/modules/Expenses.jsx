@@ -12,7 +12,7 @@ import api from "../services/api";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
-import { ExpenseAPI } from "../services";
+import { ExpenseAPI, LeadsAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
@@ -20,78 +20,91 @@ import { parseBackendErrors } from "../utils/parseBackendErrors";
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
     const { employeeId, isHR } = useUser();
-
+    const [leads, setLeads] = useState([]);
     const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
 
     // ================= FETCH =================
-   // ================= FETCH =================
-const fetchExpenses = async () => {
-    try {
-        let res;
-        
-        if (isHR) {
-            // HR can see all expenses
-            res = await ExpenseAPI.getAll();
-        } else {
-            // Regular employee sees only their own expenses
-            res = await ExpenseAPI.getByEmployee(employeeId);
+    // ================= FETCH =================
+    const fetchExpenses = async () => {
+        try {
+            let res;
+
+            if (isHR) {
+                // HR can see all expenses
+                res = await ExpenseAPI.getAll();
+            } else {
+                // Regular employee sees only their own expenses
+                res = await ExpenseAPI.getByEmployee(employeeId);
+            }
+
+            const data = res.data?.data || [];
+
+            const formatted = data.map(e => ({
+                ...e,
+                status: Boolean(e.status),
+            }));
+
+            setExpenses(formatted);
+        } catch (err) {
+            setError(parseBackendErrors(err));
         }
-        
-        const data = res.data?.data || [];
+    };
 
-        const formatted = data.map(e => ({
-            ...e,
-            status: Boolean(e.status),
-        }));
 
-        setExpenses(formatted);
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    }
-};
 
-useEffect(() => { 
-    fetchExpenses(); 
-}, [isHR, employeeId]); // ← Add dependencies
-    // ================= SAVE =================
-    // ================= SAVE =================
-const onSubmit = async (data) => {
-    data.status = data.status === "true";
-
-    const formData = new FormData();
-
-    Object.keys(data).forEach(key => {
-        const val = data[key];
-        if (val instanceof FileList) {
-            if (val.length > 0) formData.append(key, val[0]);
-        } else if (val !== "" && val !== null && val !== undefined) {
-            formData.append(key, val);
+    const fetchLeads = async () => {
+        try {
+            const res = await LeadsAPI.getAll();
+            const data = res.data?.data || res.data || [];
+            setLeads(data);
+        } catch (err) {
+            setError(parseBackendErrors(err));
         }
-    });
+    };
 
-    // Add employee_id for new expenses (only if not HR and creating new)
-    if (!selectedItem && !isHR) {
-        formData.append('employee_id', employeeId);
-    }
-
-    try {
-        if (selectedItem) {
-            const res = await ExpenseAPI.update(selectedItem.id, formData);
-            setSuccess(res.data?.message || "Saved successfully");
-        } else {
-            const res = await ExpenseAPI.create(formData);
-            setSuccess(res.data?.message || "Saved successfully");
-        }
-
-        setMode("list");
+    useEffect(() => {
         fetchExpenses();
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    }
-};
+        fetchLeads();
+    }, [isHR, employeeId]); // ← Add dependencies
+    // ================= SAVE =================
+    // ================= SAVE =================
+    const onSubmit = async (data) => {
+        data.status = data.status === "true";
+
+        const formData = new FormData();
+
+        Object.keys(data).forEach(key => {
+            const val = data[key];
+            if (val instanceof FileList) {
+                if (val.length > 0) formData.append(key, val[0]);
+            } else if (val !== "" && val !== null && val !== undefined) {
+                formData.append(key, val);
+            }
+        });
+
+        // Add employee_id for new expenses (only if not HR and creating new)
+        if (!selectedItem && !isHR) {
+            formData.append('employee_id', employeeId);
+        }
+
+        try {
+            if (selectedItem) {
+                const res = await ExpenseAPI.update(selectedItem.id, formData);
+                setSuccess(res.data?.message || "Saved successfully");
+            } else {
+                const res = await ExpenseAPI.create(formData);
+                setSuccess(res.data?.message || "Saved successfully");
+            }
+
+            setMode("list");
+            fetchExpenses();
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
+    };
 
     const handleDelete = async (id) => {
         try {
@@ -125,7 +138,7 @@ const onSubmit = async (data) => {
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
         { key: "vendor_name" },
-        {key: "lead_name"},
+        { key: "lead_name" },
         { key: "expense_type" },
 
         { key: "amount" },
@@ -224,7 +237,7 @@ const onSubmit = async (data) => {
                     </div>
                 </div>
 
-                <Table header={<TableHeader columns={["Vendor","Lead name","Type", "Amount", "Date", "Status", "Action"]} />}>
+                <Table header={<TableHeader columns={["Vendor", "Lead name", "Type", "Amount", "Date", "Status", "Action"]} />}>
                     {expenses.map((exp, index) => (
                         <EntityTableRow
                             key={exp.id}
