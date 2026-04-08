@@ -1462,19 +1462,14 @@ export default function Employee() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Employees" />
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-auto">
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2"
-              style={{
-                border: `1px solid ${themes.borderLight}`,
-                color: themes.textPrimary,
-                backgroundColor: themes.surfaceLight,
-                boxShadow: `0 0 0 2px ${themes.cardEmployee}`, // blue focus ring
-              }}
+              className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              
             />
 
             {/* <ActionButtons

@@ -173,7 +173,7 @@ export default function EntityTableRow({
           key={i}
           className={`px-2 py-3 ${col.className || ""}`}
           style={{
-            maxWidth: col.maxWidth || '200px',
+            maxWidth: col.maxWidth || '160px',
             minWidth: col.minWidth || '100px'
           }}
         >

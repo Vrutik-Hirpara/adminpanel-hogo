@@ -673,7 +673,7 @@ import { parseBackendErrors } from "../utils/parseBackendErrors";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 export default function TravelPlan() {
-    const [selectedMonthYear, setSelectedMonthYear] = useState(null);
+  const [selectedMonthYear, setSelectedMonthYear] = useState(null);
 
   const { setError, setSuccess } = useOutletContext();
   const [travelPlans, setTravelPlans] = useState([]);
@@ -739,6 +739,34 @@ export default function TravelPlan() {
     }
   }, []);
 
+  const convertToInputMonthFormat = (monthStr) => {
+    if (!monthStr) return "";
+
+    const [monthName, year] = monthStr.split(" - ");
+
+    const monthIndex = monthIndexMap[monthName] + 1;
+
+    return `${year}-${String(monthIndex).padStart(2, "0")}`;
+  };
+  // Add this helper function
+  const extractMonthName = (monthStr) => {
+    if (!monthStr) return "";
+    // If it's "May - 2026" format
+    if (monthStr.includes(" - ")) {
+      return monthStr.split(" - ")[0];
+    }
+    // If it's already "May"
+    return monthStr;
+  };
+  const extractYear = (monthStr) => {
+    if (!monthStr) return "";
+    // If it's "May - 2026" format
+    if (monthStr.includes(" - ")) {
+      return monthStr.split(" - ")[1];
+    }
+    // If it's already "May"
+    return monthStr;
+  };
   // Fetch all employees for HR dropdown
   const fetchEmployees = async () => {
     try {
@@ -771,12 +799,21 @@ export default function TravelPlan() {
       setTravelPlans(data);
 
       const months = [...new Set(data.map(plan => plan.month))];
+      console.log("Available months for selected employee:", months);
       setAvailableMonths(months);
 
-      if (months.length > 0 && !selectedMonth) {
-        setSelectedMonth(months[0]);
-        setCalendarMonth(months[0]);
-        filterPlansByMonth(months[0], data);
+      // In fetchTravelPlans function, where you set selectedMonth and calendarMonth
+      if (months.length > 0) {
+        // If selectedMonth exist kare ane list ma hoy → same rakho
+        if (selectedMonth && months.includes(selectedMonth)) {
+          filterPlansByMonth(selectedMonth, data);
+        } else {
+          // fallback
+          setSelectedMonth(months[0]);
+          const monthName = extractMonthName(months[0]);
+          setCalendarMonth(monthName);
+          filterPlansByMonth(months[0], data);
+        }
       } else if (months.length === 0) {
         setFilteredPlans([]);
         setSelectedPlan(null);
@@ -807,6 +844,8 @@ export default function TravelPlan() {
     if (filtered.length > 0) {
       setSelectedPlan(filtered[0]);
       fetchDailyPlans(filtered[0].id);
+      const monthName = extractMonthName(month);
+      setCalendarMonth(monthName);  // "May" store karo
     } else {
       setSelectedPlan(null);
       setDailyPlans([]);
@@ -830,6 +869,82 @@ export default function TravelPlan() {
       filterPlansByMonth(selectedMonth);
     }
   }, [selectedMonth, travelPlans]);
+  // const onSubmit = async (data) => {
+  //   try {
+  //     // Check if employee_id is available
+  //     if (!selectedEmployeeId) {
+  //       setError("Please select an employee first");
+  //       return;
+  //     }
+
+  //     // Add employee_id to the payload
+  //     const payload = {
+  //       ...data,
+  //       employee_id: selectedEmployeeId
+  //     };
+
+  //     console.log("Submitting payload:", payload);
+
+  //     let response;
+  //     if (selectedPlan) {
+  //       response = await TravelPlanAPI.update(selectedPlan.id, payload);
+  //       setSuccess(response.data?.message || "Saved successfully");
+  //     } else {
+  //       response = await TravelPlanAPI.create(payload);
+  //       setSuccess(response.data?.message || "Saved successfully");
+  //     }
+
+  //     setMode("list");
+  //     await fetchTravelPlans();
+
+  //   } catch (error) {
+  //     console.error("Full error object:", error);
+  //     console.error("Error response:", error.response);
+
+  //     // 🔥 Display backend error message
+  //     let errorMessage = "";
+
+  //     if (error.response?.data) {
+  //       const errorData = error.response.data;
+
+  //       // Check different error formats
+  //       if (typeof errorData === 'string') {
+  //         errorMessage = errorData;
+  //       } else if (errorData.message) {
+  //         errorMessage = errorData.message;
+  //       } else if (errorData.error) {
+  //         errorMessage = errorData.error;
+  //       } else if (errorData.detail) {
+  //         errorMessage = errorData.detail;
+  //       } else if (errorData.non_field_errors) {
+  //         errorMessage = errorData.non_field_errors.join(", ");
+  //       } else if (typeof errorData === 'object') {
+  //         // Handle field-specific errors
+  //         const fieldErrors = [];
+  //         Object.keys(errorData).forEach(field => {
+  //           if (Array.isArray(errorData[field])) {
+  //             fieldErrors.push(`${field}: ${errorData[field].join(", ")}`);
+  //           } else if (typeof errorData[field] === 'string') {
+  //             fieldErrors.push(`${field}: ${errorData[field]}`);
+  //           }
+  //         });
+  //         if (fieldErrors.length > 0) {
+  //           errorMessage = fieldErrors.join("\n");
+  //         } else {
+  //           errorMessage = JSON.stringify(errorData);
+  //         }
+  //       }
+  //     } else if (error.message) {
+  //       errorMessage = error.message;
+  //     } else {
+  //       errorMessage = "Failed to save travel plan. Please try again.";
+  //     }
+
+  //     // Display error
+  //     setError(errorMessage);
+  //     console.error("Final error message:", errorMessage);
+  //   }
+  // };
   const onSubmit = async (data) => {
     try {
       // Check if employee_id is available
@@ -838,13 +953,30 @@ export default function TravelPlan() {
         return;
       }
 
+      // 🔥 Convert "2026-01" to "January - 2026"
+      let formattedMonth = data.month;
+
+      if (data.month && data.month.includes("-")) {
+        const [year, monthNum] = data.month.split('-');
+        const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+        ];
+        const monthName = monthNames[parseInt(monthNum) - 1];
+        formattedMonth = `${monthName} - ${year}`;
+      }
+
       // Add employee_id to the payload
       const payload = {
-        ...data,
+        month: formattedMonth,  // ✅ "January - 2026" (not "2026-01")
+        region: data.region,
+        states: data.states,
+        rm: data.rm,
+        tsm: data.tsm,
         employee_id: selectedEmployeeId
       };
 
-      console.log("Submitting payload:", payload);
+      console.log("Submitting payload:", payload); // Check: { month: "January - 2026", ... }
 
       let response;
       if (selectedPlan) {
@@ -856,19 +988,27 @@ export default function TravelPlan() {
       }
 
       setMode("list");
+      // 👇 NEW CODE ADD
+      if (payload.month) {
+        setSelectedMonth(payload.month);
+
+        const monthName = extractMonthName(payload.month);
+        const year = extractYear(payload.month);
+
+        setCalendarMonth(monthName);
+        setCalendarYear(Number(year));
+      }
       await fetchTravelPlans();
 
     } catch (error) {
+      // Your existing error handling (same rakhjo)
       console.error("Full error object:", error);
       console.error("Error response:", error.response);
 
-      // 🔥 Display backend error message
       let errorMessage = "";
 
       if (error.response?.data) {
         const errorData = error.response.data;
-
-        // Check different error formats
         if (typeof errorData === 'string') {
           errorMessage = errorData;
         } else if (errorData.message) {
@@ -880,7 +1020,6 @@ export default function TravelPlan() {
         } else if (errorData.non_field_errors) {
           errorMessage = errorData.non_field_errors.join(", ");
         } else if (typeof errorData === 'object') {
-          // Handle field-specific errors
           const fieldErrors = [];
           Object.keys(errorData).forEach(field => {
             if (Array.isArray(errorData[field])) {
@@ -901,12 +1040,10 @@ export default function TravelPlan() {
         errorMessage = "Failed to save travel plan. Please try again.";
       }
 
-      // Display error
       setError(errorMessage);
       console.error("Final error message:", errorMessage);
     }
   };
-
   const handleDelete = async (id) => {
     try {
       const res = await TravelPlanAPI.delete(id);
@@ -1281,22 +1418,27 @@ export default function TravelPlan() {
         {/* Month Navigation - Changes both table AND calendar */}
         {!loading && availableMonths.length > 0 && (
           <div className="flex gap-2 mb-6">
-            {availableMonths.map((month) => (
-              <button
-                key={month}
-                onClick={() => {
-                  setSelectedMonth(month);
-                  setCalendarMonth(month);
-                  setCalendarYear(2026);
-                }}
-                className={`px-5 py-2 rounded-lg transition-all font-medium ${selectedMonth === month
-                  ? `bg-[${themes.primary}] text-white shadow-md`
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-              >
-                {month} — {2026}
-              </button>
-            ))}
+            {availableMonths.map((month) => {
+              const displayMonth = extractMonthName(month);  // "May" for display
+              return (
+                <button
+                  key={month}
+                  onClick={() => {
+                    setSelectedMonth(month);  // Store full "May - 2026"
+                    const monthName = extractMonthName(month);
+                    const year = extractYear(month);
+                    setCalendarMonth(monthName);  // Set "May" for calendar
+                    setCalendarYear(year);
+                  }}
+                  className={`px-5 py-2 rounded-lg transition-all font-medium ${selectedMonth === month
+                    ? `bg-[${themes.primary}] text-white shadow-md`
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                >
+                  {month}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -1317,9 +1459,9 @@ export default function TravelPlan() {
                     {[
                       { label: "REGION", value: plan.region },
                       { label: "STATE", value: plan.states },
-                      { label: "MONTH", value: plan.month },
-                      { label: "START DATE", value: plan.start_date || "-" },
-                      { label: "END DATE", value: plan.end_date || "-" },
+                      // { label: "MONTH", value: plan.month },
+                      // { label: "START DATE", value: plan.start_date || "-" },
+                      // { label: "END DATE", value: plan.end_date || "-" },
                       { label: "RM", value: plan.rm },
                       { label: "TSM", value: plan.tsm }
                     ].map((field, idx) => (
@@ -1371,7 +1513,7 @@ export default function TravelPlan() {
                 ←
               </button>
               <h3 className="text-xl font-semibold text-gray-800">
-                {calendarMonth} - {calendarYear}
+                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth} {calendarYear}
               </h3>
               <button
                 onClick={goToNextMonth}
@@ -1489,8 +1631,16 @@ export default function TravelPlan() {
       onBack={() => setMode("list")}
     >
       <EntityForm
+
         title={selectedPlan ? "Edit Travel Plan" : "Create Travel Plan"}
-        selectedItem={selectedPlan}
+        selectedItem={
+          selectedPlan
+            ? {
+              ...selectedPlan,
+              month: convertToInputMonthFormat(selectedPlan.month),
+            }
+            : null
+        } 
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[

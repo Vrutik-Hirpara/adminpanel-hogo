@@ -543,6 +543,7 @@ import {
   TrendingUp,
   Bell,
 } from "lucide-react";
+import EmployeeAttendanceStatus from "./EmployeeAttendanceStatus";
 
 export default function Dashboard() {
   const [stats, setStats] = useState([]);
@@ -660,7 +661,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br rounded-xl from-gray-50 to-gray-100 p-6 md:p-8">
-
+<div className="mb-8">
+        <EmployeeAttendanceStatus />
+      </div>
       {/* ================= HEADER ================= */}
       <div className="mb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">

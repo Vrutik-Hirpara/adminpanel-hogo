@@ -478,7 +478,7 @@ export default function EmployeeSalary() {
           { label: "Basic Salary", name: "basic_salary", type: "number", required: true },
           { label: "Allowances", name: "alloances", type: "number", required: true },
           { label: "Deductions", name: "deductions", type: "number", required: true },
-          { label: "Gross Salary", name: "gross_salary", type: "number", required: true },
+          // { label: "Gross Salary", name: "gross_salary", type: "number", required: true },
           { label: "Effective From", name: "effective_from", type: "date", required: true },
         ]}
       />

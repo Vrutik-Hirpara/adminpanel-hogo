@@ -59,8 +59,8 @@ export default function EntityViewCard({
 
     return (
       <div key={field.key}>
-        <p className="text-sm" style={{ color: themes.backgroundBlack }}>{field.label}</p>
-        <div className="font-semibold " style={{ color: themes.backgroundBlack }}>
+        <p className=" font-semibold" style={{ color: themes.backgroundBlack }}>{field.label}</p>
+        <div className=" text-sm" style={{ color: themes.backgroundBlack }}>
           {(() => {
             if (!value) return emptyText;
 
