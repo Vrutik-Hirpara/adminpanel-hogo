@@ -119,9 +119,9 @@ export const EmployeeAttendanceAPI = {
   getByDate: (date) =>
     api.get(`employee_attendence/?date=${date}`),
 
-  getByMonth: (month,year) =>
+  getByMonth: (month, year) =>
     api.get(`employee_attendence/?month=${month}&year=${year}`),
- 
+
   getByDateRange: (startDate, endDate) =>
     api.get(
       `employee_attendence/?start_date=${startDate}&end_date=${endDate}`
@@ -136,6 +136,10 @@ export const EmployeeAttendanceAPI = {
     api.get(
       `employee_attendence/?employee_id=${employeeId}&start_date=${startDate}&end_date=${endDate}`
     ),
+  getPreviousMonthByEmployee: (employeeId) =>
+    api.get(
+      `employee_attendence/?employee_id=${employeeId}&prev_month=true`
+    ),
 };
 
 
@@ -149,13 +153,13 @@ export const SalaryPaymentAPI = {
 };
 
 export const ExpenseAPI = {
-    getAll: () => api.get("/expenses/"),
-    
-    // Add this new method for employee-specific expenses
-    getByEmployee: (employeeId) => api.get(`/expenses/?employee_id=${employeeId}`),
-    
-    getById: (id) => api.get(`/expenses/${id}/`),
-    create: (data) => api.post("/expenses/", data),
-    update: (id, data) => api.patch(`/expenses/${id}/`, data),
-    delete: (id) => api.delete(`/expenses/${id}/`),
+  getAll: () => api.get("/expenses/"),
+
+  // Add this new method for employee-specific expenses
+  getByEmployee: (employeeId) => api.get(`/expenses/?employee_id=${employeeId}`),
+
+  getById: (id) => api.get(`/expenses/${id}/`),
+  create: (data) => api.post("/expenses/", data),
+  update: (id, data) => api.patch(`/expenses/${id}/`, data),
+  delete: (id) => api.delete(`/expenses/${id}/`),
 };

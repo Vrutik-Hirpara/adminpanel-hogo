@@ -1332,7 +1332,7 @@ const getCurrentMonth = () => {
 };
 
 export default function EmployeeAttendance({ employeeFilterId, asSubcomponent }) {
-
+  const [monthTab, setMonthTab] = useState("previous");
   const { setError, setSuccess } = useOutletContext();
   const [attendance, setAttendance] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -1405,10 +1405,13 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
             weekRange.end
           );
         }
-      } else {
-        const currentMonth = getCurrentMonth();
-        console.log("Fetching for employee ID:", loggedInEmployeeId, "Month:", currentMonth);
-        response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
+      } else if (roleName === "employee") {
+        if (monthTab === "previous") {
+          response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
+        } else {
+          const currentMonth = getCurrentMonth();
+          response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
+        }
       }
 
       console.log("API Response:", response);
@@ -1463,7 +1466,7 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
       fetchAttendance();
       fetchEmployees();
     }
-  }, [roleName, isRoleLoading]);
+  }, [roleName, isRoleLoading, monthTab]);
 
   // ================= HANDLE DATE FILTER CHANGE =================
   const handleDateChange = (date) => {
@@ -1942,50 +1945,117 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
   ];
 
   // ================= FILTER COMPONENT =================
-  const FilterBar = () => {
-    if (roleName !== "hr") return null;
+  // const FilterBar = () => {
+  //   if (roleName !== "hr") return null;
 
+  //   return (
+  //     <div className="flex gap-4 items-end mb-6 flex-wrap">
+  //       <div>
+  //         <label className="block text-sm font-medium mb-1">Filter by Date</label>
+  //         <DatePicker
+  //           selected={selectedDateObj}
+  //           onChange={handleDateChange}
+  //           dateFormat="yyyy-MM-dd"
+  //           className="border rounded px-3 py-2 w-48"
+  //           placeholderText="Select date"
+  //           isClearable
+  //           showYearDropdown
+  //           scrollableYearDropdown
+  //           yearDropdownItemNumber={15}
+  //           showMonthDropdown
+  //           dropdownMode="select"
+  //         />
+  //       </div>
+
+  //       <div>
+  //         <label className="block text-sm font-medium mb-1">Filter by Month</label>
+  //         <input
+  //           type="month"
+  //           value={selectedMonth}
+  //           onChange={handleMonthChange}
+  //           className="border rounded px-3 py-2 w-48"
+  //         />
+  //       </div>
+
+  //       {(selectedDate || selectedMonth) && (
+  //         <button
+  //           onClick={resetFilters}
+  //           className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition h-[42px]"
+  //         >
+  //           Reset Filters
+  //         </button>
+  //       )}
+  //     </div>
+  //   );
+  // };
+  const FilterBar = () => {
     return (
       <div className="flex gap-4 items-end mb-6 flex-wrap">
-        <div>
-          <label className="block text-sm font-medium mb-1">Filter by Date</label>
-          <DatePicker
-            selected={selectedDateObj}
-            onChange={handleDateChange}
-            dateFormat="yyyy-MM-dd"
-            className="border rounded px-3 py-2 w-48"
-            placeholderText="Select date"
-            isClearable
-            showYearDropdown
-            scrollableYearDropdown
-            yearDropdownItemNumber={15}
-            showMonthDropdown
-            dropdownMode="select"
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Filter by Month</label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            className="border rounded px-3 py-2 w-48"
-          />
-        </div>
+        {/* ✅ HR FILTERS (UNCHANGED) */}
+        {roleName === "hr" && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Filter by Date</label>
+              <DatePicker
+                selected={selectedDateObj}
+                onChange={handleDateChange}
+                dateFormat="yyyy-MM-dd"
+                className="border rounded px-3 py-2 w-48"
+                placeholderText="Select date"
+                isClearable
+                showYearDropdown
+                scrollableYearDropdown
+                yearDropdownItemNumber={15}
+                showMonthDropdown
+                dropdownMode="select"
+              />
+            </div>
 
-        {(selectedDate || selectedMonth) && (
-          <button
-            onClick={resetFilters}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition h-[42px]"
-          >
-            Reset Filters
-          </button>
+            <div>
+              <label className="block text-sm font-medium mb-1">Filter by Month</label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={handleMonthChange}
+                className="border rounded px-3 py-2 w-48"
+              />
+            </div>
+
+            {(selectedDate || selectedMonth) && (
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition h-[42px]"
+              >
+                Reset Filters
+              </button>
+            )}
+          </>
         )}
+
+        {/* ✅ EMPLOYEE TABS */}
+        {roleName !== "hr" && (
+          <div className="flex gap-3">
+            {["current", "previous"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setMonthTab(tab);
+                }}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 capitalize ${monthTab === tab
+                  ? "bg-[var(--primary)] text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+              >
+                {tab === "previous" ? "previous month " : "current Month"}
+              </button>
+            ))}
+          </div>
+        )}
+
       </div>
     );
   };
-
   // ================= EMPLOYEE ATTENDANCE FORM COMPONENT =================
   // ================= EMPLOYEE ATTENDANCE FORM COMPONENT =================
   const EmployeeAttendanceForm = () => {
@@ -2144,9 +2214,9 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
     const listContent = (
       <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 w-full">
-            <SectionTitle
-              title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
-            />
+          <SectionTitle
+            title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
+          />
 
           {/* Add button for both HR and Employee */}
           <div className="flex flex-wrap gap-3 self-end ml-auto">
@@ -2167,48 +2237,48 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
           <div className="text-center py-8"><LoadingSpinner text="Loading Employee Attandence Details..." /></div>
         ) : attendance && attendance.length > 0 ? (
           <>
-          <Table
-            key={`${selectedDate}-${selectedMonth}`}
-            header={
-              <TableHeader
-                columns={
-                  roleName === "hr"
-                    ? ["Employee", "Date", "Start Time", "End Time", "Total Hours", "Status", "Action"]
-                    : ["Employee", "Date", "Start Time", "End Time", "Total Hours", "Status", "Action"]
-                }
-              />
-            }
-          >
-            {attendance.map((row, index) => (
-              <EntityTableRow
-                key={row.id || index}
-                row={row}
-                index={index}
-                columns={attendanceColumns}
-                onView={(item) => {
-                  setSelectedItem(item);
-                  setMode("view");
-                }}
-                onEdit={(item) => {
-                  setSelectedItem(item);
-                  setMode("form");
-                }}
-                onDelete={roleName === "hr" ? async (id) => {
-                  try {
-                    const res = await EmployeeAttendanceAPI.delete(id);
-                    setSuccess(res.data?.message || "Deleted successfully");
-                    fetchAttendance();
-                  } catch (err) {
-                    setError(parseBackendErrors(err));
+            <Table
+              key={`${selectedDate}-${selectedMonth}`}
+              header={
+                <TableHeader
+                  columns={
+                    roleName === "hr"
+                      ? ["Employee", "Date", "Start Time", "End Time", "Total Hours", "Status", "Action"]
+                      : ["Employee", "Date", "Start Time", "End Time", "Total Hours", "Status", "Action"]
                   }
-                } : undefined}
-                hideActions={false}
-                showActions={true}
-              />
-            ))}
-          </Table>
+                />
+              }
+            >
+              {attendance.map((row, index) => (
+                <EntityTableRow
+                  key={row.id || index}
+                  row={row}
+                  index={index}
+                  columns={attendanceColumns}
+                  onView={(item) => {
+                    setSelectedItem(item);
+                    setMode("view");
+                  }}
+                  onEdit={(item) => {
+                    setSelectedItem(item);
+                    setMode("form");
+                  }}
+                  onDelete={roleName === "hr" ? async (id) => {
+                    try {
+                      const res = await EmployeeAttendanceAPI.delete(id);
+                      setSuccess(res.data?.message || "Deleted successfully");
+                      fetchAttendance();
+                    } catch (err) {
+                      setError(parseBackendErrors(err));
+                    }
+                  } : undefined}
+                  hideActions={false}
+                  showActions={true}
+                />
+              ))}
+            </Table>
           </>
-          
+
         ) : (
           <div className="text-center py-8 text-gray-500">
             No attendance records found
