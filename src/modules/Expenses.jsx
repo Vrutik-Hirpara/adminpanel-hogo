@@ -16,6 +16,7 @@ import { ExpenseAPI, LeadsAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
@@ -25,6 +26,7 @@ export default function Expenses() {
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     // ================= FETCH =================
     // ================= FETCH =================
@@ -56,13 +58,15 @@ export default function Expenses() {
 
 
     const fetchLeads = async () => {
+        setLoading(true); // 🔥 START 
         try {
             const res = await LeadsAPI.getAll();
             const data = res.data?.data || res.data || [];
             setLeads(data);
         } catch (err) {
             setError(parseBackendErrors(err));
-        }
+        }finally { setLoading(false); // 🔥 END 
+} 
     };
 
     useEffect(() => {
@@ -258,6 +262,7 @@ export default function Expenses() {
                         />
                     ))}
                 </Table>
+                {loading && <LoadingSpinner text="Loading Expense Details..." />}
             </PageContainer>
         );
     }

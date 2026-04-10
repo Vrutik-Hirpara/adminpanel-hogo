@@ -358,6 +358,7 @@ import EntityTableRow from "../components/table/EntityTableRow";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Leads() {
   const { setError, setSuccess } = useOutletContext();
@@ -372,6 +373,9 @@ export default function Leads() {
   const [showReportModal, setShowReportModal] = useState(false); // 👈 ADD THIS
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 👈 ADD THIS
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // 👈 ADD THIS
+  const [statusFilter, setStatusFilter] = useState("all");
+const [loading, setLoading] = useState(false); 
+
   // ================= FETCH =================
   useEffect(() => {
     // First fetch employees, then fetch leads
@@ -383,6 +387,7 @@ export default function Leads() {
   }, [isHR, employeeId]);
 
   const fetchLeads = async () => {
+    setLoading(true); // 🔥 START 
     try {
       const res = await LeadsAPI.getAll();
       let data = res.data.data || [];
@@ -404,26 +409,31 @@ export default function Leads() {
       console.log("Employees list:", employees);
 
       // 🔥 Add assigned_to_name to each lead using employees list
-      const enhancedData = data.map(lead => {
-        const assignedEmployee = employees.find(emp => emp.id === lead.assigned_to);
-        const createdEmployee = employees.find(emp => emp.id === lead.created_by);
+      // const enhancedData = data.map(lead => {
+      //   const assignedEmployee = employees.find(emp => emp.id === lead.assigned_to);
+      //   const createdEmployee = employees.find(emp => emp.id === lead.created_by);
 
-        return {
-          ...lead,
-          assigned_to_name: assignedEmployee
-            ? `${assignedEmployee.first_name} ${assignedEmployee.last_name}`
-            : "Unassigned",
-          created_by_name: createdEmployee
-            ? `${createdEmployee.first_name} ${createdEmployee.last_name}`
-            : "Unknown"
-        };
-      });
-
+      //   return {
+      //     ...lead,
+      //     assigned_to_name: assignedEmployee
+      //       ? `${assignedEmployee.first_name} ${assignedEmployee.last_name}`
+      //       : "Unassigned",
+      //     created_by_name: createdEmployee
+      //       ? `${createdEmployee.first_name} ${createdEmployee.last_name}`
+      //       : "Unknown"
+      //   };
+      // });
+      const enhancedData = data.map(lead => ({
+        ...lead,
+        assigned_to_name: lead.assigned_to_name || "Unassigned",
+        created_by_name: lead.created_by_name || "Unknown",  // ✅ USE BACKEND VALUE
+      }));
       setLeads(enhancedData);
     } catch (err) {
       setError(parseBackendErrors(err));
       console.error("Error fetching leads:", err);
-    }
+    }finally { setLoading(false); // 🔥 END 
+} 
   };
 
   const fetchEmployees = async () => {
@@ -542,7 +552,7 @@ export default function Leads() {
         assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
 
         // 🔥 THIS IS MAIN FIX
-        date: data.followup_date,
+        date: data.date,
 
         // optional
         month: new Date(data.date).getMonth() + 1,
@@ -1068,7 +1078,7 @@ export default function Leads() {
               >
                 📊 Monthly Report
               </button>
-              {isHR && (
+              {/* {isHR && ( */}
                 <ActionButtons
                   showAdd
                   addText="+ Add"
@@ -1077,7 +1087,7 @@ export default function Leads() {
                     setMode("form");
                   }}
                 />
-              )}
+              {/* )} */}
             </div>
           </div>
 
@@ -1100,6 +1110,8 @@ export default function Leads() {
               />
             ))}
           </Table>
+                          {loading && <LoadingSpinner text="Loading Leads Details..." />}
+
         </PageContainer>
         <ReportModal /> {/* 👈 ADD THIS */}
       </>
@@ -1354,6 +1366,7 @@ export default function Leads() {
                         : ["Total Leads", "Converted", "Conversion Ratio"]
                     }
                   />
+                  
                 }
               >
                 {reportData.employees.map((emp, index) => (
@@ -1432,34 +1445,60 @@ export default function Leads() {
             //     value: e.id,
             //   })),
             // },
-{
-  label: "Created By",
-  name: isHR ? "created_by" : "created_by_name",
-  type: isHR ? "select" : "text",
-  ...(isHR && {
-    options: employees.map((e) => ({
-      label: `${e.first_name} ${e.last_name}`,
-      value: e.id,
-    })),
-  }),
-  ...(!isHR && {
-    value: (() => {
-      const emp = employees.find(e => e.id === employeeId);
-      return emp ? `${emp.first_name} ${emp.last_name}` : "";
-    })(),
-  }),
-  readOnly: !isHR,  // Non-HR users can't edit
-  disabled: !isHR,  // Non-HR users can't edit
-  required: isHR,   // Only required for HR
-},
+            // {
+            //   label: "Created By",
+            //   name: isHR ? "created_by" : "created_by_name",
+            //   type: isHR ? "select" : "text",
+            //   ...(isHR && {
+            //     options: employees.map((e) => ({
+            //       label: `${e.first_name} ${e.last_name}`,
+            //       value: e.id,
+            //     })),
+            //   }),
+            //   ...(!isHR && {
+            //     value: (() => {
+            //       const emp = employees.find(e => e.id === employeeId);
+            //       return emp ? `${emp.first_name} ${emp.last_name}` : "";
+            //     })(),
+            //   }),
+            //   readOnly: !isHR,  // Non-HR users can't edit
+            //   disabled: !isHR,  // Non-HR users can't edit
+            //   required: isHR,   // Only required for HR
+            // }
+            {
+              label: "Created By",
+
+              name: isHR ? "created_by" : "created_by_name",  // 👈 KEY CHANGE
+
+              type: isHR ? "select" : "text",
+
+              ...(isHR && {
+                options: employees.map((e) => ({
+                  label: `${e.first_name} ${e.last_name}`,
+                  value: e.id,
+                })),
+              }),
+
+              readOnly: !isHR,
+              disabled: !isHR,
+            },
             // 📅 Follow-up Date
+            // {
+            //   label: "Follow-up Date",
+            //   name: "date",
+            //   type: "date",
+            //   required: true,
+            // },
             {
               label: "Follow-up Date",
               name: "date",
               type: "date",
               required: true,
-            },
 
+              value: selectedItem?.date
+                ? selectedItem.date.split("T")[0]
+                : "",
+            },
             // 📆 Month (optional if backend need kare)
             {
               label: "Month",

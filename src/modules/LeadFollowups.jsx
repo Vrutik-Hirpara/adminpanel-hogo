@@ -277,6 +277,7 @@ import { LeadFollowupsAPI, EmployeeAPI, LeadsAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function LeadFollowups() {
 
@@ -288,8 +289,9 @@ export default function LeadFollowups() {
   const [leads, setLeads] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-
+const [loading, setLoading] = useState(false); 
   const fetchData = async () => {
+    setLoading(true); // 🔥 START 
     try {
       const [f, e, l] = await Promise.all([
         LeadFollowupsAPI.getAll(),
@@ -320,7 +322,8 @@ export default function LeadFollowups() {
       setLeads(l.data.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }
+    }finally { setLoading(false); // 🔥 END 
+} 
   };
 
   useEffect(() => {
@@ -466,6 +469,7 @@ export default function LeadFollowups() {
             />
           ))}
         </Table>
+        {loading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
       </PageContainer>
     );
   }

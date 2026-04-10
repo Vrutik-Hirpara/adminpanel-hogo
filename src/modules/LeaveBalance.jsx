@@ -15,8 +15,9 @@ import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function LeaveBalance() {
+export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
   const [data, setData] = useState([]);
@@ -24,7 +25,9 @@ export default function LeaveBalance() {
   const [mode, setMode] = useState("list");
   const [selected, setSelected] = useState(null);
 const [search, setSearch] = useState("");
+const [loading, setLoading] = useState(false); 
 const fetchData = async () => {
+  setLoading(true); // 🔥 START 
   try {
     const res = await LeaveBalanceAPI.getAll();
     let list = res.data?.data || [];
@@ -35,11 +38,17 @@ const fetchData = async () => {
         item => Number(item.employee_id) === Number(employeeId)
       );
     }
+    if (employeeFilterId) {
+      list = list.filter(
+        item => Number(item.employee_id) === Number(employeeFilterId)
+      );
+    }
 
     setData(list);
   } catch (err) {
     setError(parseBackendErrors(err));
-  }
+  }finally { setLoading(false); // 🔥 END 
+} 
 };
 
   const fetchEmployees = async () => {
@@ -137,31 +146,32 @@ const filteredData = data.filter(item => {
     },
   ];
 
+  // ================= LIST =================
   if (mode === "list") {
-    return (
-      <PageContainer>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-  <SectionTitle title="LEAVE BALANCE" />
+    const listContent = (
+      <>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+          <SectionTitle title="LEAVE BALANCE" />
 
-  <div className="flex flex-wrap gap-3 self-end">
-    <SearchBar
-      value={search}
-      onChange={setSearch}
-      placeholder="Search leave balance..."
-    />
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search leave balance..."
+            />
 
-    {isHR && (
-      <ActionButtons
-        showAdd
-        addText="+ Add"
-        onAdd={() => {
-          setSelected(null);
-          setMode("form");
-        }}
-      />
-    )}
-  </div>
-</div>
+            {isHR && (
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelected(null);
+                  setMode("form");
+                }}
+              />
+            )}
+          </div>
+        </div>
 
         <Table header={<TableHeader columns={["Employee","Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (
@@ -191,8 +201,15 @@ const filteredData = data.filter(item => {
           ))}
 
         </Table>
-      </PageContainer>
+        {loading && <LoadingSpinner text="Loading Leave Balance Details..." />}
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   if (mode === "view") {
@@ -243,6 +260,8 @@ const filteredData = data.filter(item => {
               label: `${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
+            disabled: !!employeeFilterId,
+            defaultValue: employeeFilterId || "",
           },
         ]}
       />

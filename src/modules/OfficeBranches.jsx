@@ -19,20 +19,26 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function OfficeBranch() {
   const { setError, setSuccess } = useOutletContext();
   const [branches, setBranches] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [loading, setLoading] = useState(false);
 
 const fetchBranches = async () => {
+      setLoading(true); // 🔥 START
+
   try {
     const res = await BranchAPI.getAll();
     setBranches(res.data.data);   // ✅ actual array
   } catch (err) {
     setError(parseBackendErrors(err));
-  }
+  }finally {
+      setLoading(false); // 🔥 END
+    }
 };
   useEffect(() => { fetchBranches(); }, []);
 
@@ -105,6 +111,7 @@ const branchFields = [
 ))}
 
         </Table>
+        {loading && <LoadingSpinner text="Loading Office Branch Details..." />}
       </PageContainer>
     );
   }

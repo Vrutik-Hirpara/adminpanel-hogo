@@ -16,13 +16,13 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
-
+import LoadingSpinner from "../components/common/LoadingSpinner";
 export default function Department() {
   const { setError, setSuccess } = useOutletContext();
   const [departments, setDepartments] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedDept, setSelectedDept] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   // ✅ FETCH + convert "Active/Inactive" → boolean
   // const fetchDepartments = async () => {
   //   const res = await DepartmentAPI.getAll();
@@ -35,21 +35,25 @@ export default function Department() {
 
   //   setDepartments(formatted);
   // };
-const fetchDepartments = async () => {
-  try {
-    const res = await DepartmentAPI.getAll();
-    const data = res.data?.data || [];
+  const fetchDepartments = async () => {
+    setLoading(true); // 🔥 START
 
-    const formatted = data.map(d => ({
-      ...d,
-      status: d.status === "Active"
-    }));
+    try {
+      const res = await DepartmentAPI.getAll();
+      const data = res.data?.data || [];
 
-    setDepartments(formatted);
-  } catch (error) {
-    setError(parseBackendErrors(error));
-  }
-};
+      const formatted = data.map(d => ({
+        ...d,
+        status: d.status === "Active"
+      }));
+
+      setDepartments(formatted);
+    } catch (error) {
+      setError(parseBackendErrors(error));
+    } finally {
+      setLoading(false); // 🔥 END
+    }
+  };
   useEffect(() => { fetchDepartments(); }, []);
 
   // 🔥 SAME TOGGLE SYSTEM AS ROLES
@@ -72,30 +76,30 @@ const fetchDepartments = async () => {
   //     );
   //   }
   // };
-const handleStatusToggle = async (dept) => {
-  const newStatus = !dept.status;
+  const handleStatusToggle = async (dept) => {
+    const newStatus = !dept.status;
 
-  // instant UI update
-  setDepartments(prev =>
-    prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
-  );
-
-  try {
-    const res = await DepartmentAPI.update(dept.id, {
-      ...dept,
-      status: newStatus ? "Active" : "Inactive"
-    });
-
-    setSuccess(res.data?.message || "Status updated");
-  } catch (error) {
-    setError(parseBackendErrors(error));
-
-    // revert if API fails
+    // instant UI update
     setDepartments(prev =>
-      prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
+      prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
     );
-  }
-};
+
+    try {
+      const res = await DepartmentAPI.update(dept.id, {
+        ...dept,
+        status: newStatus ? "Active" : "Inactive"
+      });
+
+      setSuccess(res.data?.message || "Status updated");
+    } catch (error) {
+      setError(parseBackendErrors(error));
+
+      // revert if API fails
+      setDepartments(prev =>
+        prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
+      );
+    }
+  };
   // const onSubmit = async (data) => {
   //   const payload = {
   //     ...data,
@@ -116,56 +120,56 @@ const handleStatusToggle = async (dept) => {
   //   setMode("list");
   //   fetchDepartments();
   // };
-const onSubmit = async (data) => {
-  const payload = {
-    ...data,
-    status:
-      typeof data.status === "boolean"
-        ? data.status
-          ? "Active"
-          : "Inactive"
-        : data.status,
-  };
+  const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      status:
+        typeof data.status === "boolean"
+          ? data.status
+            ? "Active"
+            : "Inactive"
+          : data.status,
+    };
 
-  try {
-    let res;
+    try {
+      let res;
 
-    if (selectedDept) {
-      res = await DepartmentAPI.update(selectedDept.id, payload);
-    } else {
-      res = await DepartmentAPI.create(payload);
+      if (selectedDept) {
+        res = await DepartmentAPI.update(selectedDept.id, payload);
+      } else {
+        res = await DepartmentAPI.create(payload);
+      }
+
+      setSuccess(res.data?.message || "Saved successfully");
+
+      setMode("list");
+      fetchDepartments();
+    } catch (error) {
+      setError(parseBackendErrors(error));
     }
-
-    setSuccess(res.data?.message || "Saved successfully");
-
-    setMode("list");
-    fetchDepartments();
-  } catch (error) {
-    setError(parseBackendErrors(error));
-  }
-};
+  };
   const departmentColumns = [
     { key: "name" },
     { key: "description" },
     {
       key: "status",
-  render: (row) => (
-  <button
-    onClick={() => handleStatusToggle(row)}
-    className="relative w-12 h-6 rounded-full transition-colors duration-300"
-    style={{
-      backgroundColor: row.status
-        ? themes.cardRole       // green-500
-        : themes.toggleOff || themes.borderLight,
-    }}
-  >
-    <span
-      className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
-        }`}
-      style={{ backgroundColor: themes.textWhite }}
-    />
-  </button>
-),
+      render: (row) => (
+        <button
+          onClick={() => handleStatusToggle(row)}
+          className="relative w-12 h-6 rounded-full transition-colors duration-300"
+          style={{
+            backgroundColor: row.status
+              ? themes.cardRole       // green-500
+              : themes.toggleOff || themes.borderLight,
+          }}
+        >
+          <span
+            className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
+              }`}
+            style={{ backgroundColor: themes.textWhite }}
+          />
+        </button>
+      ),
     },
   ];
   const departmentFields = [
@@ -174,7 +178,7 @@ const onSubmit = async (data) => {
     {
       key: "status",
       label: "Status",
-        required: true,  
+      required: true,
 
       format: (val) => (val ? "Active" : "Inactive"),
     }
@@ -184,12 +188,13 @@ const onSubmit = async (data) => {
   if (mode === "list") {
     return (
       <PageContainer>
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Department" />
           <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelectedDept(null);   // ⭐ RESET
-  setMode("form");
-}} />
+            setSelectedDept(null);   // ⭐ RESET
+            setMode("form");
+          }} />
         </div>
 
         <Table header={<TableHeader columns={["Name", "Description", "Status", "Action"]} />}>
@@ -205,24 +210,25 @@ const onSubmit = async (data) => {
               }}
               onEdit={(r) => {
                 setSelectedDept(r);
-                
+
                 setMode("form");
               }}
               // onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
               onDelete={async (id) => {
-  try {
-    const res = await DepartmentAPI.delete(id);
-    setSuccess(res.data?.message || "Deleted successfully");
-    fetchDepartments();
-  } catch (error) {
-    setError(parseBackendErrors(error));
-  }
-}}
+                try {
+                  const res = await DepartmentAPI.delete(id);
+                  setSuccess(res.data?.message || "Deleted successfully");
+                  fetchDepartments();
+                } catch (error) {
+                  setError(parseBackendErrors(error));
+                }
+              }}
             />
           ))}
 
 
         </Table>
+          {loading && <LoadingSpinner text="Loading Department Details..." />}
 
       </PageContainer>
     );
@@ -235,9 +241,9 @@ const onSubmit = async (data) => {
         title="Department Details"
         showBack
         onBack={() => {
-  setSelectedDept(null);
-  setMode("list");
-}}
+          setSelectedDept(null);
+          setMode("list");
+        }}
       >
         <EntityViewCard
           title="Department"
@@ -272,7 +278,7 @@ const onSubmit = async (data) => {
             label: "Status",
             name: "status",
             type: "select",
-              required: true,   // ⭐ ADD THIS LINE
+            required: true,   // ⭐ ADD THIS LINE
 
             options: [
               { label: "Active", value: "Active" },

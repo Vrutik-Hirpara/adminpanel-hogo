@@ -286,8 +286,9 @@ import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function EmployeePersonalDetails() {
+export default function EmployeePersonalDetails({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   // 🔥 role data
   const { employeeId, isHR } = useUser();
@@ -297,9 +298,10 @@ export default function EmployeePersonalDetails() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-
+const [loading, setLoading] = useState(false); 
   // ================= FETCH EMPLOYEES =================
   const fetchEmployees = async () => {
+     setLoading(true); // 🔥 START
     try {
       const res = await EmployeeAPI.getAll();
       let list = res.data?.data || [];
@@ -312,7 +314,9 @@ export default function EmployeePersonalDetails() {
       setEmployees(list);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }
+    }finally {
+    setLoading(false); // 🔥 END
+  }
   };
 
   // ================= FETCH DETAILS =================
@@ -324,6 +328,9 @@ export default function EmployeePersonalDetails() {
       // 🔒 non HR → only own details
       if (!isHR) {
         data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      }
+      if (employeeFilterId) {
+        data = data.filter(d => Number(d.employee_id) === Number(employeeFilterId));
       }
 
       const formatted = data.map(d => {
@@ -465,12 +472,12 @@ const onSubmit = async (data) => {
 
   // ================= LIST =================
   if (mode === "list") {
-    return (
-      <PageContainer>
+    const listContent = (
+      <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 w-full">
-          <SectionTitle title="Employee Personal Details" />
+          <SectionTitle title="EMPLOYEE PERSONAL DETAILS" />
 
-          <div className="flex flex-wrap gap-3 self-end">
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar value={search} onChange={setSearch} placeholder="Search details..." />
             {isHR && (
               <ActionButtons showAdd addText="+ Add" onAdd={() => {
@@ -514,8 +521,15 @@ const onSubmit = async (data) => {
 />
           ))}
         </Table>
-      </PageContainer>
+        {loading && <LoadingSpinner text="Loading Employee Personal Details..." />} 
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   // ================= VIEW =================
@@ -569,6 +583,8 @@ const onSubmit = async (data) => {
               value: e.id,
             })),
             required: true,
+            disabled: !!employeeFilterId,
+            defaultValue: employeeFilterId || "",
           },
           { label: "Father Name", name: "father_name" },
           { label: "Mother Name", name: "mother_name" },

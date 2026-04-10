@@ -526,7 +526,6 @@
 // import { useUser } from "../hooks/useUser";
 // import { EmployeeAPI } from "../services";
 
-// export default function SalaryPayout() {
 //     const { employeeId, isHR } = useUser();
 //     const [salaryData, setSalaryData] = useState([]);
 //     const [mode, setMode] = useState("list");
@@ -578,10 +577,13 @@
 //             if (!isHR && employeeId) {
 //                 params.employee = employeeId;
 //             }
+//             if (employeeFilterId) {
+//                 params.employee = employeeFilterId;
+//             }
 
 //             if (month) params.month = month;
 //             if (year) params.year = year;
-
+// 
 //             const response = await SalaryPaymentAPI.filter(params);
 
 //             if (response.data?.success) {
@@ -973,8 +975,9 @@ import { SalaryPaymentAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function SalaryPayout() {
+export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
   const [salaryData, setSalaryData] = useState([]);
@@ -985,7 +988,7 @@ export default function SalaryPayout() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [tempMonth, setTempMonth] = useState(selectedMonth);
   const [tempYear, setTempYear] = useState(selectedYear);
-
+  const [loading, setLoading] = useState(false);
   // Month options
   const months = [
     { value: 1, label: "January" },
@@ -1011,6 +1014,7 @@ export default function SalaryPayout() {
 
   // Fetch salary data
   const fetchSalaryData = async (monthParam, yearParam) => {
+    setLoading(true); // 🔥 START 
     try {
       const month = monthParam ?? selectedMonth;
       const year = yearParam ?? selectedYear;
@@ -1018,6 +1022,9 @@ export default function SalaryPayout() {
 
       if (!isHR && employeeId) {
         params.employee = employeeId;
+      }
+      if (employeeFilterId) {
+        params.employee = employeeFilterId;
       }
       if (month) params.month = month;
       if (year) params.year = year;
@@ -1033,6 +1040,8 @@ export default function SalaryPayout() {
       setError(parseBackendErrors(err));
       console.error("Failed to fetch salary data:", err);
       setSalaryData([]);
+    } finally {
+      setLoading(false); // 🔥 END 
     }
   };
 
@@ -1203,68 +1212,87 @@ export default function SalaryPayout() {
 
   // ================= LIST PAGE (VIEW ONLY) =================
   if (mode === "list") {
+    const listContent = (
+      <>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+          <SectionTitle title="SALARY PAYOUT" />
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="px-4 py-2 rounded text-sm font-semibold flex items-center gap-2 ml-auto"
+            style={{
+              backgroundColor: themes.primary,
+              color: themes.textWhite,
+            }}
+          >
+            <span>📅</span> Filter
+          </button>
+        </div>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <TableHeader
+                columns={[
+                  "Employee",
+                  "Month/Year",
+                  "Present",
+                  "Paid Leave",
+                  "Unpaid Leave",
+                  "Holidays",
+                  "Half Day",
+                  "Weekly Off",
+                  "Absent",
+                  "Gross Salary",
+                  "Deductions",
+                  "Net Salary",
+                  "Action"
+                ]}
+              />
+
+              <tbody className="divide-y divide-gray-200">
+                {salaryData.map((salary, idx) => (
+                  <EntityTableRow
+                    key={salary.id}
+                    row={salary}
+                    index={idx}
+                    columns={salaryColumns}
+                    onView={() => {
+                      setSelectedSalary(salary);
+                      setMode("view");
+                    }}
+                  // NO onEdit, NO onDelete - VIEW ONLY
+                  />
+                ))}
+              </tbody>
+
+            </table>
+
+
+          </div>
+        </div>
+        {loading ? (
+          <div className="py-12">
+            <LoadingSpinner text="Loading salary data..." />
+          </div>
+        ) : salaryData.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No salary data found for selected filters</p>
+          </div>
+        ) : null}
+      </>
+    );
+
+    if (asSubcomponent) {
+      return (
+        <>
+          <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>
+          <FilterModal />
+        </>
+      );
+    }
+
     return (
       <>
-        <PageContainer>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-            <SectionTitle title="Salary Payout" />
-            <button
-              onClick={() => setShowFilterModal(true)}
-              className="px-4 py-2 rounded text-sm font-semibold flex items-center gap-2"
-              style={{
-                backgroundColor: themes.primary,
-                color: themes.textWhite,
-              }}
-            >
-              <span>📅</span> Filter
-            </button>
-          </div>
-
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <TableHeader
-                  columns={[
-                    "Employee",
-                    "Month/Year",
-                    "Present",
-                    "Paid Leave",
-                    "Unpaid Leave",
-                    "Holidays",
-                    "Half Day",
-                    "Weekly Off",
-                    "Absent",
-                    "Gross Salary",
-                    "Deductions",
-                    "Net Salary",
-                    "Action"
-                  ]}
-                />
-                <tbody className="divide-y divide-gray-200">
-                  {salaryData.map((salary, idx) => (
-                    <EntityTableRow
-                      key={salary.id}
-                      row={salary}
-                      index={idx}
-                      columns={salaryColumns}
-                      onView={() => {
-                        setSelectedSalary(salary);
-                        setMode("view");
-                      }}
-                      // NO onEdit, NO onDelete - VIEW ONLY
-                    />
-                  ))}
-                </tbody>
-               </table>
-
-              {salaryData.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No salary data found for selected filters</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </PageContainer>
+        <PageContainer>{listContent}</PageContainer>
         <FilterModal />
       </>
     );

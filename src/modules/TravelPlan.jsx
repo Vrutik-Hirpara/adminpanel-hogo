@@ -672,6 +672,7 @@ import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 export default function TravelPlan() {
   const [selectedMonthYear, setSelectedMonthYear] = useState(null);
 
@@ -1409,11 +1410,14 @@ export default function TravelPlan() {
         )}
 
         {/* Loading State */}
-        {loading && (
+        {/* {loading && (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: themes.primary }}></div>            <p className="mt-2 text-gray-500">Loading travel plans...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: themes.primary }}></div>
+            <p className="mt-2 text-gray-500">Loading travel plans...</p>
           </div>
-        )}
+        )} */}
+        {loading && <LoadingSpinner text="Loading travel plans..." />}
+
 
         {/* Month Navigation - Changes both table AND calendar */}
         {!loading && availableMonths.length > 0 && (
@@ -1513,7 +1517,7 @@ export default function TravelPlan() {
                 ←
               </button>
               <h3 className="text-xl font-semibold text-gray-800">
-                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth} {calendarYear}
+                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth} 
               </h3>
               <button
                 onClick={goToNextMonth}
@@ -1640,7 +1644,7 @@ export default function TravelPlan() {
               month: convertToInputMonthFormat(selectedPlan.month),
             }
             : null
-        } 
+        }
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[

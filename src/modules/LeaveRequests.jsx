@@ -288,8 +288,9 @@ import { LeaveRequestsAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function LeaveRequests() {
+export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
 
@@ -298,7 +299,7 @@ export default function LeaveRequests() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  
+  const [loading, setLoading] = useState(false); 
   // ================= FILTERED LEAVES =================
   const filteredLeaves = leaves.filter(l => {
     const emp = employees.find(e => e.id === l.employee_id);
@@ -310,6 +311,7 @@ export default function LeaveRequests() {
 
   // ================= FETCH =================
   const fetchLeaves = async () => {
+    setLoading(true); // 🔥 START 
     try {
       const res = await LeaveRequestsAPI.getAll();
       let data = res.data?.data || [];
@@ -320,11 +322,17 @@ export default function LeaveRequests() {
           (leave) => Number(leave.employee_id) === Number(employeeId)
         );
       }
+      if (employeeFilterId) {
+        data = data.filter(
+          (leave) => Number(leave.employee_id) === Number(employeeFilterId)
+        );
+      }
 
       setLeaves(data);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }
+    }finally { setLoading(false); // 🔥 END 
+} 
   };
 
   const fetchEmployees = async () => {
@@ -509,7 +517,7 @@ export default function LeaveRequests() {
     }
 
     // 🔥 Employee field - only show for HR, for non-HR it will be auto-set
-    if (isHR) {
+    if (isHR || employeeFilterId) {
       baseFields.unshift({
         label: "Employee",
         name: "employee_id",
@@ -519,6 +527,8 @@ export default function LeaveRequests() {
           label: `${e.first_name} ${e.last_name}`,
           value: e.id,
         })),
+        disabled: !!employeeFilterId,
+        defaultValue: employeeFilterId || "",
       });
     }
 
@@ -544,12 +554,12 @@ export default function LeaveRequests() {
 
   // ================= LIST MODE =================
   if (mode === "list") {
-    return (
-      <PageContainer>
+    const listContent = (
+      <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="Leave Requests" />
+          <SectionTitle title="LEAVE REQUESTS" />
 
-          <div className="flex flex-wrap gap-3 self-end">
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
             {/* 🔥 Add button visible to both HR and non-HR */}
             <ActionButtons
@@ -592,8 +602,15 @@ export default function LeaveRequests() {
             />
           ))}
         </Table>
-      </PageContainer>
+        {loading && <LoadingSpinner text="Loading Leave Request..." />}
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   // ================= FORM MODE =================

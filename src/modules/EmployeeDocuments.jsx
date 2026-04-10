@@ -287,8 +287,9 @@ import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function EmployeeDocuments() {
+export default function EmployeeDocuments({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
 
   const { employeeId, isHR } = useUser();
@@ -298,9 +299,10 @@ export default function EmployeeDocuments() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-
+const [loading, setLoading] = useState(false); 
   // ================= FETCH =================
   const fetchDocuments = async (empList) => {
+    setLoading(true); // 🔥 START 
     try {
       const res = await EmployeeDocsAPI.getAll();
       let data = res.data?.data || [];
@@ -308,6 +310,9 @@ export default function EmployeeDocuments() {
       // 🔒 non-HR → only own documents
       if (!isHR) {
         data = data.filter(d => Number(d.employee_id) === Number(employeeId));
+      }
+      if (employeeFilterId) {
+        data = data.filter(d => Number(d.employee_id) === Number(employeeFilterId));
       }
 
       const formatted = data.map(d => {
@@ -323,7 +328,8 @@ export default function EmployeeDocuments() {
       setDocuments(formatted);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }
+    }finally { setLoading(false); // 🔥 END 
+      } 
   };
 
   // ================= LOAD =================
@@ -453,12 +459,12 @@ export default function EmployeeDocuments() {
 
   // ================= LIST =================
   if (mode === "list") {
-    return (
-      <PageContainer>
+    const listContent = (
+      <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="Employee Documents" />
+          <SectionTitle title="EMPLOYEE DOCUMENTS" />
 
-          <div className="flex flex-wrap gap-3 self-end">
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
             {isHR &&(
             <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
@@ -485,8 +491,15 @@ export default function EmployeeDocuments() {
             />
           ))}
         </Table>
-      </PageContainer>
+        {loading && <LoadingSpinner text="Loading Employee Document..." />}
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   // ================= VIEW =================
@@ -524,6 +537,8 @@ export default function EmployeeDocuments() {
               label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
+            disabled: !!employeeFilterId,
+            defaultValue: employeeFilterId || "",
           },
           { label: "PAN Number", name: "pancard_number" },
           { label: "Aadhar Number", name: "aadhar_number" },

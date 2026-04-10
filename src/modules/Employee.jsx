@@ -1252,6 +1252,16 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 
+import EmployeeDocuments from "./EmployeeDocuments";
+import EmployeePersonalDetails from "./EmployeePersonalDetails";
+import EmployeeSalary from "./EmployeeSalary";
+import Users from "./Users";
+import LeaveBalance from "./LeaveBalance";
+import LeaveRequests from "./LeaveRequests";
+import EmployeeAttendance from "./EmployeeAttendance";
+import SalaryPayout from "./SalaryPayout";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+
 
 export default function Employee() {
   const { setError, setSuccess } = useOutletContext();
@@ -1264,10 +1274,12 @@ export default function Employee() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [search, setSearch] = useState("");
   const [branches, setBranches] = useState([]);
-
+  const [activeTab, setActiveTab] = useState("profile");
+const [loading, setLoading] = useState(false);
 
   // FETCH EMPLOYEES
   const fetchEmployees = async () => {
+    setLoading(true); // 🔥 START
     try {
       let res;
 
@@ -1327,6 +1339,9 @@ export default function Employee() {
     } catch (err) {
       setError(parseBackendErrors(err));
       console.log("EMPLOYEE FETCH ERROR:", err);
+    }
+    finally {
+      setLoading(false); // 🔥 END
     }
   };
 
@@ -1469,7 +1484,7 @@ export default function Employee() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              
+
             />
 
             {/* <ActionButtons
@@ -1528,6 +1543,8 @@ export default function Employee() {
           ))}
 
         </Table>
+            {loading && <LoadingSpinner text="Loading Employee details..." />}
+
       </PageContainer>
     );
   }
@@ -1538,17 +1555,96 @@ export default function Employee() {
       <EntityPageLayout
         title="Employee Details"
         showBack
-        onBack={() => setMode("list")}
+        onBack={() => { setMode("list"); setActiveTab("profile"); }}
       >
-        <EntityViewCard
-          title="Employee"
-          data={selectedEmployee}        // ✅ correct prop
-          fields={employeeFields}       // ✅ required
-          api={EmployeeAPI}             // ✅ for edit/delete
-          onUpdated={fetchEmployees}
-          onDeleted={fetchEmployees}
-          headerKeys={["employee_code", "first_name", "last_name"]}   // ⭐ ADD THIS
-        />
+        <div className="w-full bg-white rounded-lg shadow overflow-hidden">
+          {/* Custom Red Header */}
+          <div className="bg-red-600 p-6 flex flex-col md:flex-row justify-between md:items-start text-white">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`px-3 py-1 rounded text-xs font-bold ${selectedEmployee.status === 'Active' || selectedEmployee.status === true ? 'bg-green-100 text-green-700' : 'bg-white text-red-600'}`}>
+                  {selectedEmployee.status === 'Active' || selectedEmployee.status === true ? 'Active' : 'Inactive'}
+                </span>
+                <span className="bg-white text-gray-800 px-3 py-1 rounded text-xs font-bold">{selectedEmployee.employee_code}</span>
+              </div>
+              <div className="flex flex-col gap-1 opacity-90 text-sm font-medium tracking-wide">
+                <span>{selectedEmployee.email}</span>
+                <span>{selectedEmployee.phone}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6 md:mt-0 self-end">
+              <button onClick={() => setMode("form")} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
+                Edit
+              </button>
+              <button onClick={async () => {
+                if (window.confirm("Delete this employee?")) {
+                  try {
+                    const res = await EmployeeAPI.delete(selectedEmployee.id);
+                    setSuccess(res.data?.message || "Deleted successfully");
+                    fetchEmployees();
+                    setMode("list");
+                  } catch (error) {
+                    setError(parseBackendErrors(error));
+                  }
+                }
+              }} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
+                Delete
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="bg-white border-b flex overflow-x-auto [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-red-400">
+            {[
+              { id: "profile", label: "EMPLOYEE PROFILE" },
+              { id: "documents", label: "DOCUMENTS" },
+              { id: "personal", label: "PERSONAL DETAILS" },
+              { id: "salary", label: "SALARY" },
+              { id: "users", label: "USERS" },
+              { id: "leave_balance", label: "LEAVE BALANCE" },
+              { id: "leave_requests", label: "LEAVE REQUESTS" },
+              { id: "attendance", label: "ATTENDANCE" },
+              { id: "salary_payout", label: "SALARY PAYOUT" }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 text-sm font-bold whitespace-nowrap border-b-2 ${activeTab === tab.id ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div className="p-0 bg-[#f9fafb]">
+            {activeTab === "profile" && (
+              <div className="p-6">
+                <SectionTitle title="EMPLOYEE PROFILE" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-5 rounded-lg border">
+                  {employeeFields.map(f => (
+                    <div key={f.key}>
+                      <p className="text-xs text-gray-500 mb-1">{f.label}</p>
+                      <div className="p-2 border rounded text-gray-800 font-medium bg-gray-50">
+                        {selectedEmployee[f.key] || "—"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {activeTab === "documents" && <EmployeeDocuments employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "personal" && <EmployeePersonalDetails employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "salary" && <EmployeeSalary employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "users" && <Users employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "leave_balance" && <LeaveBalance employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "leave_requests" && <LeaveRequests employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "attendance" && <EmployeeAttendance employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "salary_payout" && <SalaryPayout employeeFilterId={selectedEmployee.id} asSubcomponent />}
+          </div>
+        </div>
       </EntityPageLayout>
     );
   }
@@ -1658,20 +1754,20 @@ export default function Employee() {
             ]
           },
 
-         ...(isHR
-  ? (
-      selectedEmployee
-        ? []
-        : [{ label: "Password", name: "password", type: "password", required: true }]
-    )
-  : [
-      {
-        label: "Change Password",
-        name: "change_password",
-        type: "password",
-        required: false,
-      }
-    ]),
+          ...(isHR
+            ? (
+              selectedEmployee
+                ? []
+                : [{ label: "Password", name: "password", type: "password", required: true }]
+            )
+            : [
+              {
+                label: "Change Password",
+                name: "change_password",
+                type: "password",
+                required: false,
+              }
+            ]),
         ]}
       />
     </EntityPageLayout>

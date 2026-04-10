@@ -7,7 +7,7 @@ import { appendQueryParams } from "../utils/apiFilter";
 export const DepartmentAPI = createCRUD("departments");
 export const EmployeeAPI = createCRUD("employee");
 export const EmployeePersonalAPI = createCRUD("Employeepersonaldetails");
-export const SalaryAPI = createCRUD("employee-salary");
+// export const SalaryAPI = createCRUD("employee-salary");
 export const EmployeeDocsAPI = createCRUD("employee-documents");
 export const RolesAPI = createCRUD("roles");
 export const BranchAPI = createCRUD("office_branches");
@@ -25,7 +25,21 @@ export const DailyPlanAPI = createCRUD("daily-plan");
 //   ...createCRUD("leads"),
 //   getByEmployee: (employeeId) => api.get(`leads/${employeeId}/`),
 // };
+export const SalaryAPI = {
+  ...createCRUD("employee-salary"),
 
+  filter: (params) => {
+    const cleanParams = {};
+
+    // ❗ only allow true/false
+    if (params.status === "true" || params.status === "false") {
+      cleanParams.status = params.status;
+    }
+
+    const url = appendQueryParams("employee-salary/", cleanParams);
+    return api.get(url);
+  },
+};
 export const LeadsAPI = {
   ...createCRUD("leads"),
 
@@ -107,7 +121,7 @@ export const EmployeeAttendanceAPI = {
 
   getByMonth: (month,year) =>
     api.get(`employee_attendence/?month=${month}&year=${year}`),
-
+ 
   getByDateRange: (startDate, endDate) =>
     api.get(
       `employee_attendence/?start_date=${startDate}&end_date=${endDate}`

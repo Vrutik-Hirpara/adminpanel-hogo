@@ -702,6 +702,7 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Visits() {
   const { setError, setSuccess } = useOutletContext();
@@ -711,9 +712,11 @@ export default function Visits() {
   const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedVisit, setSelectedVisit] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   // ================= FETCH =================
   const fetchData = async () => {
+    setLoading(true); // 🔥 START LOADING
+
     try {
       const [v, e, l] = await Promise.all([
         VisitsAPI.getAll(),
@@ -740,8 +743,10 @@ export default function Visits() {
 
       setEmployees(empList);
       setLeads(l.data.data || []);
-    } catch(err) {
+    } catch (err) {
       setError(parseBackendErrors(err));
+    } finally {
+      setLoading(false); // 🔥 STOP LOADING
     }
   };
 
@@ -797,38 +802,38 @@ export default function Visits() {
   };
 
   // ================= EDIT HANDLER =================
-const handleEdit = (r) => {
-  console.log("Editing visit data:", r);
-  
-  const emp = employees.find(e =>
-    `${e.first_name} ${e.last_name}`.trim() === r.employee_name?.trim()
-  );
+  const handleEdit = (r) => {
+    console.log("Editing visit data:", r);
 
-  setSelectedVisit({
-    id: r.id,
-    employee_id: emp?.id || r.employee_id,
-    lead_id: r.lead_id,
-    lead_type: r.lead_type,
-    address: r.address,
-    location: r.location,
-    visit_purpose: r.visit_purpose,
-    visit_date: formatDateForInput(r.visit_date),
-    check_in_time: formatDateForInput(r.check_in_time),
-    checkout_time: formatDateForInput(r.checkout_time),
-    followup_date: formatDateForInput(r.followup_date),
-    followup_type: r.followup_type,
-    contact_person: r.contact_person,
-    notes: r.notes,
-    order_information: r.order_information,
-    payment_details: r.payment_details,
-    order_name: r.order_name,
-    // 🔥 IMPORTANT: Keep original image URLs for preview
-    payment_image: r.payment_image,  // This will be used by previewKey
-    images: r.images,  // This will be used by previewKey
-  });
+    const emp = employees.find(e =>
+      `${e.first_name} ${e.last_name}`.trim() === r.employee_name?.trim()
+    );
 
-  setMode("form");
-};
+    setSelectedVisit({
+      id: r.id,
+      employee_id: emp?.id || r.employee_id,
+      lead_id: r.lead_id,
+      lead_type: r.lead_type,
+      address: r.address,
+      location: r.location,
+      visit_purpose: r.visit_purpose,
+      visit_date: formatDateForInput(r.visit_date),
+      check_in_time: formatDateForInput(r.check_in_time),
+      checkout_time: formatDateForInput(r.checkout_time),
+      followup_date: formatDateForInput(r.followup_date),
+      followup_type: r.followup_type,
+      contact_person: r.contact_person,
+      notes: r.notes,
+      order_information: r.order_information,
+      payment_details: r.payment_details,
+      order_name: r.order_name,
+      // 🔥 IMPORTANT: Keep original image URLs for preview
+      payment_image: r.payment_image,  // This will be used by previewKey
+      images: r.images,  // This will be used by previewKey
+    });
+
+    setMode("form");
+  };
 
   // ================= VIEW FIELDS =================
   const visitFields = [
@@ -915,57 +920,61 @@ const handleEdit = (r) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Visits" />
           {isHR && (
-            <ActionButtons 
-              showAdd 
-              addText="+ Add" 
+            <ActionButtons
+              showAdd
+              addText="+ Add"
               onAdd={() => {
                 setSelectedVisit(null);
                 setMode("form");
-              }} 
+              }}
             />
           )}
         </div>
-
-        <Table
-          header={
-            <TableHeader
-              columns={[
-                "Employee Name",
-                "Bussiness Name",
-                <div className="flex flex-col leading-tight text-center">
-                  <span>Check-In /</span>
-                  <span>Check-Out</span>
-                </div>,
-                "Followup Type",
-                "Notes",
-                "Action",
-              ]}
-            />
-          }
-        >
-          {visits.map((v, index) => (
-            <EntityTableRow
-              key={v.id}
-              row={v}
-              index={index}
-              columns={visitColumns}
-              onView={(r) => { 
-                setSelectedVisit(r); 
-                setMode("view"); 
-              }}
-              onEdit={handleEdit}
-              onDelete={async (id) => {
-                try {
-                  const res = await VisitsAPI.delete(id);
-                  setSuccess(res.data?.message || "Deleted successfully");
-                  fetchData();
-                } catch(error) {
-                  setError(parseBackendErrors(error));
-                }
-              }}
-            />
-          ))}
-        </Table>
+        {loading ? (
+          <div className="py-12">
+            <LoadingSpinner text="Loading visits data..." />
+          </div>
+        ) : (
+          <Table
+            header={
+              <TableHeader
+                columns={[
+                  "Employee Name",
+                  "Bussiness Name",
+                  <div className="flex flex-col leading-tight text-center">
+                    <span>Check-In /</span>
+                    <span>Check-Out</span>
+                  </div>,
+                  "Followup Type",
+                  "Notes",
+                  "Action",
+                ]}
+              />
+            }
+          >
+            {visits.map((v, index) => (
+              <EntityTableRow
+                key={v.id}
+                row={v}
+                index={index}
+                columns={visitColumns}
+                onView={(r) => {
+                  setSelectedVisit(r);
+                  setMode("view");
+                }}
+                onEdit={handleEdit}
+                onDelete={async (id) => {
+                  try {
+                    const res = await VisitsAPI.delete(id);
+                    setSuccess(res.data?.message || "Deleted successfully");
+                    fetchData();
+                  } catch (error) {
+                    setError(parseBackendErrors(error));
+                  }
+                }}
+              />
+            ))}
+          </Table>)}
       </PageContainer>
     );
   }
@@ -988,132 +997,133 @@ const handleEdit = (r) => {
   }
 
   // ================= FORM MODE =================
-// ================= FORM MODE =================
-return (
-  <EntityPageLayout title="Visit Details" showBack onBack={() => setMode("list")}>
-    <EntityForm
-      title={selectedVisit ? "Edit Visit" : "Create Visit"}
-      selectedItem={selectedVisit}
-      onSubmit={onSubmit}
-      setMode={setMode}
-      fields={[
-        {
-          label: "Employee",
-          name: "employee_id",
-          type: "select",
-          options: employees.map(e => ({
-            label: `${e.first_name} ${e.last_name}`,
-            value: e.id,
-          })),
-          required: true,
-        },
-        {
-          label: "Lead",
-          name: "lead_id",
-          type: "select",
-          options: leads.map(l => ({
-            label: l.business_name,
-            value: l.id,
-          })),
-          required: true,
-        },
-        {
-          label: "Lead Type",
-          name: "lead_type",
-          type: "select",
-          options: [
-            { label: "Distributor", value: "Distributor" },
-            { label: "Direct", value: "Direct" },
-            { label: "Retailer", value: "Retailer" },
-          ],
-          required: true,
-        },
-        { 
-          label: "Address", 
-          name: "address", 
-          type: "textarea",
-          required: true 
-        },
-        { 
-          label: "Location", 
-          name: "location" 
-        },
-        { 
-          label: "Visit Purpose", 
-          name: "visit_purpose", 
-          required: true 
-        },
-        { 
-          label: "Visit Date", 
-          name: "visit_date", 
-          type: "datetime-local", 
-          required: true 
-        },
-        { 
-          label: "Check In Time", 
-          name: "check_in_time", 
-          type: "datetime-local" 
-        },
-        { 
-          label: "Checkout Time", 
-          name: "checkout_time", 
-          type: "datetime-local" 
-        },
-        { 
-          label: "Followup Date", 
-          name: "followup_date", 
-          type: "datetime-local" 
-        },
-        {
-          label: "Followup Type",
-          name: "followup_type",
-          type: "select",
-          options: [
-            { label: "CALL", value: "CALL" },
-            { label: "MEETING", value: "MEETING" },
-            { label: "VISIT", value: "VISIT" },
-          ],
-        },
-        { 
-          label: "Contact Person", 
-          name: "contact_person" 
-        },
-        { 
-          label: "Notes", 
-          name: "notes", 
-          type: "textarea", 
-          required: true 
-        },
-        { 
-          label: "Order Information", 
-          name: "order_information", 
-          type: "textarea" 
-        },
-        { 
-          label: "Payment Details", 
-          name: "payment_details", 
-          type: "textarea" 
-        },
-        { 
-          label: "Order Name", 
-          name: "order_name" 
-        },
-        {
-          label: "Payment Image",
-          name: "payment_image",
-          type: "file",
-          required: !selectedVisit,  // Not required in edit mode
-          previewKey: "payment_image",  // 🔥 Shows existing image
-        },
-        {
-          label: "Visit Image",
-          name: "images",
-          type: "file",
-          required: !selectedVisit,  // Not required in edit mode
-          previewKey: "images",  // 🔥 Shows existing image
-        },
-      ]}
-    />
-  </EntityPageLayout>
-);
+  // ================= FORM MODE =================
+  return (
+    <EntityPageLayout title="Visit Details" showBack onBack={() => setMode("list")}>
+      <EntityForm
+        title={selectedVisit ? "Edit Visit" : "Create Visit"}
+        selectedItem={selectedVisit}
+        onSubmit={onSubmit}
+        setMode={setMode}
+        fields={[
+          {
+            label: "Employee",
+            name: "employee_id",
+            type: "select",
+            options: employees.map(e => ({
+              label: `${e.first_name} ${e.last_name}`,
+              value: e.id,
+            })),
+            required: true,
+          },
+          {
+            label: "Lead",
+            name: "lead_id",
+            type: "select",
+            options: leads.map(l => ({
+              label: l.business_name,
+              value: l.id,
+            })),
+            required: true,
+          },
+          {
+            label: "Lead Type",
+            name: "lead_type",
+            type: "select",
+            options: [
+              { label: "Distributor", value: "Distributor" },
+              { label: "Direct", value: "Direct" },
+              { label: "Retailer", value: "Retailer" },
+            ],
+            required: true,
+          },
+          {
+            label: "Address",
+            name: "address",
+            type: "textarea",
+            required: true
+          },
+          {
+            label: "Location",
+            name: "location"
+          },
+          {
+            label: "Visit Purpose",
+            name: "visit_purpose",
+            required: true
+          },
+          {
+            label: "Visit Date",
+            name: "visit_date",
+            type: "datetime-local",
+            required: true
+          },
+          {
+            label: "Check In Time",
+            name: "check_in_time",
+            type: "datetime-local"
+          },
+          {
+            label: "Checkout Time",
+            name: "checkout_time",
+            type: "datetime-local"
+          },
+          {
+            label: "Followup Date",
+            name: "followup_date",
+            type: "datetime-local"
+          },
+          {
+            label: "Followup Type",
+            name: "followup_type",
+            type: "select",
+            options: [
+              { label: "CALL", value: "CALL" },
+              { label: "WHATSAPP", value: "WHATSAPP" },
+              { label: "EMAIL", value: "EMAIL" },
+                { label: "MEETING", value: "MEETING" },
+            ],
+          },
+          {
+            label: "Contact Person",
+            name: "contact_person"
+          },
+          {
+            label: "Notes",
+            name: "notes",
+            type: "textarea",
+            required: true
+          },
+          {
+            label: "Order Information",
+            name: "order_information",
+            type: "textarea"
+          },
+          {
+            label: "Payment Details",
+            name: "payment_details",
+            type: "textarea"
+          },
+          {
+            label: "Order Name",
+            name: "order_name"
+          },
+          {
+            label: "Payment Image",
+            name: "payment_image",
+            type: "file",
+            required: !selectedVisit,  // Not required in edit mode
+            previewKey: "payment_image",  // 🔥 Shows existing image
+          },
+          {
+            label: "Visit Image",
+            name: "images",
+            type: "file",
+            required: !selectedVisit,  // Not required in edit mode
+            previewKey: "images",  // 🔥 Shows existing image
+          },
+        ]}
+      />
+    </EntityPageLayout>
+  );
 }

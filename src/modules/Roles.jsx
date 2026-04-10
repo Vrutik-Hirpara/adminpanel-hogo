@@ -15,21 +15,27 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Roles() {
   const { setError, setSuccess } = useOutletContext();
   const [roles, setRoles] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedRole, setSelectedRole] = useState(null);
+  const [loading, setLoading] = useState(false);
 
 
   const fetchRoles = async () => {
+    setLoading(true); // 🔥 START
+
     try {
       const res = await RolesAPI.getAll();
       setRoles(res.data.data || res);
     }
     catch (error) {
       setError(parseBackendErrors(error));
+    } finally {
+      setLoading(false); // 🔥 END
     }
   };
 
@@ -65,32 +71,32 @@ export default function Roles() {
   //     );
   //   }
   // };
-const handleStatusToggle = async (role) => {
-  const newStatus = !role.status;
+  const handleStatusToggle = async (role) => {
+    const newStatus = !role.status;
 
-  // Instant UI update
-  setRoles((prev) =>
-    prev.map((r) =>
-      r.id === role.id ? { ...r, status: newStatus } : r
-    )
-  );
-
-  try {
-    const response = await RolesAPI.update(role.id, { ...role, status: newStatus });
-    setSuccess(response.data?.message || "Status updated successfully");
-  } catch (error) {
-    setError(parseBackendErrors(error));
-
-    console.log("Status update failed, reverting...", error);
-
-    // revert if API fails
+    // Instant UI update
     setRoles((prev) =>
       prev.map((r) =>
-        r.id === role.id ? { ...r, status: !newStatus } : r
+        r.id === role.id ? { ...r, status: newStatus } : r
       )
     );
-  }
-};
+
+    try {
+      const response = await RolesAPI.update(role.id, { ...role, status: newStatus });
+      setSuccess(response.data?.message || "Status updated successfully");
+    } catch (error) {
+      setError(parseBackendErrors(error));
+
+      console.log("Status update failed, reverting...", error);
+
+      // revert if API fails
+      setRoles((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, status: !newStatus } : r
+        )
+      );
+    }
+  };
   // const onSubmit = async (data) => {
   //   const payload = { ...data, status: data.status === "Active" };
 
@@ -197,6 +203,8 @@ const handleStatusToggle = async (role) => {
           ))}
 
         </Table>
+        {loading && <LoadingSpinner text="Loading Roles Details..." />}
+
       </PageContainer>
     );
   }

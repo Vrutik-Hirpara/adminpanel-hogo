@@ -209,7 +209,7 @@
 //         onSubmit={onSubmit}
 //         setMode={setMode}
 //         fields={[
-          
+
 //           {
 //             label: "Employee",
 //             name: "employee_id",
@@ -263,8 +263,9 @@ import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function Users() {
+export default function Users({ employeeFilterId, asSubcomponent }) {
 
   // 🔥 role based values
   const { setError, setSuccess } = useOutletContext();
@@ -275,9 +276,10 @@ export default function Users() {
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-
+  const [loading, setLoading] = useState(false);
   // ================= FETCH USERS =================
   const fetchUsers = async () => {
+    setLoading(true); // 🔥 START
     try {
       let res;
 
@@ -310,9 +312,16 @@ export default function Users() {
         setUsers(formatted);
       }
 
+
+      if (employeeFilterId && isHR) {
+        setUsers(prev => prev.filter(u => Number(u.employee_id || u.employee) === Number(employeeFilterId)));
+      }
+
     } catch (err) {
       setError(parseBackendErrors(err));
       console.log("USER FETCH ERROR:", err);
+    } finally {
+      setLoading(false); // 🔥 END
     }
   };
 
@@ -423,9 +432,8 @@ export default function Users() {
           }}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full transition-all duration-500 ${
-              row.status ? "translate-x-6" : "translate-x-1"
-            }`}
+            className={`inline-block h-4 w-4 transform rounded-full transition-all duration-500 ${row.status ? "translate-x-6" : "translate-x-1"
+              }`}
             style={{ backgroundColor: themes.textWhite }}
           />
         </button>
@@ -435,27 +443,27 @@ export default function Users() {
 
   // ================= LIST =================
   if (mode === "list") {
-    return (
-      <PageContainer>
+    const listContent = (
+      <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="Users" />
+          <SectionTitle title="USERS" />
 
-          <div className="flex flex-wrap gap-3 self-end">
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar
               value={search}
               onChange={setSearch}
               placeholder="Search users..."
             />
-{isHR && (
-            <ActionButtons
-              showAdd
-              addText="+ Add"
-              onAdd={() => {
-                setSelectedItem(null);
-                setMode("form");
-              }}
-            />
-)}
+            {isHR && (
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedItem(null);
+                  setMode("form");
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -472,8 +480,15 @@ export default function Users() {
             />
           ))}
         </Table>
-      </PageContainer>
+        {loading && <LoadingSpinner text="Loading User Details..." />}
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   // ================= VIEW =================
@@ -516,9 +531,9 @@ export default function Users() {
         selectedItem={
           selectedItem
             ? {
-                ...selectedItem,
-                status: selectedItem.is_active ? "Active" : "Inactive",
-              }
+              ...selectedItem,
+              status: selectedItem.is_active ? "Active" : "Inactive",
+            }
             : {}
         }
         onSubmit={onSubmit}
@@ -533,6 +548,8 @@ export default function Users() {
               label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
+            disabled: !!employeeFilterId,
+            defaultValue: employeeFilterId || "",
           },
           { label: "Username", name: "username", required: true },
           {

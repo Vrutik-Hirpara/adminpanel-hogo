@@ -1305,6 +1305,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { EmployeeAttendanceAPI, EmployeeAPI } from "../services";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // Helper function to get date range for last 1 week
 const getLastWeekRange = () => {
@@ -1330,7 +1331,7 @@ const getCurrentMonth = () => {
   return new Date().getMonth() + 1;
 };
 
-export default function EmployeeAttendance() {
+export default function EmployeeAttendance({ employeeFilterId, asSubcomponent }) {
 
   const { setError, setSuccess } = useOutletContext();
   const [attendance, setAttendance] = useState([]);
@@ -1420,6 +1421,10 @@ export default function EmployeeAttendance() {
         attendanceData = [response.data.data];
       } else if (response?.data && Array.isArray(response.data)) {
         attendanceData = response.data;
+      }
+
+      if (employeeFilterId) {
+        attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
       }
 
       console.log("Extracted attendance data:", attendanceData);
@@ -2136,29 +2141,32 @@ export default function EmployeeAttendance() {
       );
     }
 
-    return (
-      <PageContainer>
+    const listContent = (
+      <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 w-full">
-          <SectionTitle
-            title={roleName === "hr" ? "Employee Attendance" : "My Attendance"}
-          />
+            <SectionTitle
+              title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
+            />
 
           {/* Add button for both HR and Employee */}
-          <ActionButtons
-            showAdd
-            addText="+ Add"
-            onAdd={() => {
-              setSelectedItem(null);
-              setMode("form");
-            }}
-          />
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedItem(null);
+                setMode("form");
+              }}
+            />
+          </div>
         </div>
 
         <FilterBar />
 
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8"><LoadingSpinner text="Loading Employee Attandence Details..." /></div>
         ) : attendance && attendance.length > 0 ? (
+          <>
           <Table
             key={`${selectedDate}-${selectedMonth}`}
             header={
@@ -2199,13 +2207,21 @@ export default function EmployeeAttendance() {
               />
             ))}
           </Table>
+          </>
+          
         ) : (
           <div className="text-center py-8 text-gray-500">
             No attendance records found
           </div>
         )}
-      </PageContainer>
+      </>
     );
+
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+    }
+
+    return <PageContainer>{listContent}</PageContainer>;
   }
 
   // ================= VIEW PAGE =================
@@ -2288,7 +2304,9 @@ export default function EmployeeAttendance() {
                 label: `${emp.first_name} ${emp.last_name}`,
                 value: emp.id
               })),
-              required: true
+              required: true,
+              disabled: !!employeeFilterId,
+              defaultValue: employeeFilterId || "",
             },
             {
               label: "Date",
