@@ -856,18 +856,48 @@ export default function Visits() {
     { key: "payment_image", label: "Payment Image", column: "right" },
     { key: "images", label: "Visit Image", column: "right" },
   ];
+  const formatTime = (val) => {
+    if (!val) return "-";
 
+    try {
+      let timePart;
+
+      if (val.includes("T")) {
+        timePart = val.split("T")[1];
+      } else {
+        timePart = val.split(" ")[1];
+      }
+
+      let [hours, minutes] = timePart.split(":");
+
+      const hourNum = parseInt(hours);
+      const ampm = hourNum >= 12 ? "PM" : "AM";
+      const hour12 = hourNum % 12 || 12;
+
+      return `${hour12}:${minutes} ${ampm}`;
+    } catch {
+      return val;
+    }
+  };
   // ================= TABLE COLUMNS =================
   const visitColumns = [
     { key: "employee_name" },
     { key: "lead_name" },
+    // {
+    //   key: "time",
+    //   render: (row) =>
+    //     row.check_in_time && row.checkout_time
+    //       ? `${new Date(row.check_in_time).toLocaleTimeString()} / ${new Date(row.checkout_time).toLocaleTimeString()}`
+    //       : "-",
+    // }
     {
       key: "time",
       render: (row) =>
         row.check_in_time && row.checkout_time
-          ? `${new Date(row.check_in_time).toLocaleTimeString()} / ${new Date(row.checkout_time).toLocaleTimeString()}`
+          ? `${formatTime(row.check_in_time)} / ${formatTime(row.checkout_time)}`
           : "-",
     },
+    ,
     {
       key: "followup_type",
       render: (row) =>
@@ -1081,7 +1111,7 @@ export default function Visits() {
               { label: "CALL", value: "CALL" },
               { label: "WHATSAPP", value: "WHATSAPP" },
               { label: "EMAIL", value: "EMAIL" },
-                { label: "MEETING", value: "MEETING" },
+              { label: "MEETING", value: "MEETING" },
             ],
           },
           {
