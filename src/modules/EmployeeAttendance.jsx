@@ -1818,7 +1818,7 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
 
-      const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 
       const displayTime = now.toLocaleTimeString('en-US', {
         hour12: true,
@@ -1903,7 +1903,10 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
     },
     {
       key: "date",
-      render: (row) => row.date || "-"
+      render: (row) => {
+        if (!row.date) return "-";
+        return new Date(row.date).toLocaleDateString("en-GB"); // dd/mm/yyyy
+      }
     },
     {
       key: "start_time",

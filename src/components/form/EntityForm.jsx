@@ -379,7 +379,7 @@ export default function EntityForm({
             fields.forEach((f) => (empty[f.name] = ""));
             reset(empty);
           }
-        }, [selectedItem, reset, fields]);
+        }, [selectedItem, reset]);
 
         // ================= VALIDATION =================
         const getRules = (field) => ({

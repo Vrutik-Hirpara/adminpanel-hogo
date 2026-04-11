@@ -5,7 +5,6 @@ import { createCRUD } from "./apiFactory";
 import { appendQueryParams } from "../utils/apiFilter";
 /* ================= BASIC CRUD APIs ================= */
 export const DepartmentAPI = createCRUD("departments");
-export const EmployeeAPI = createCRUD("employee");
 export const EmployeePersonalAPI = createCRUD("Employeepersonaldetails");
 // export const SalaryAPI = createCRUD("employee-salary");
 export const EmployeeDocsAPI = createCRUD("employee-documents");
@@ -25,6 +24,14 @@ export const DailyPlanAPI = createCRUD("daily-plan");
 //   ...createCRUD("leads"),
 //   getByEmployee: (employeeId) => api.get(`leads/${employeeId}/`),
 // };
+
+export const EmployeeAPI = createCRUD("employee");
+
+// 🔥 NEW FUNCTION (HR filter mate)
+EmployeeAPI.getHR = () => {
+  return api.get("/employee/?role_name=hr");
+};
+
 export const SalaryAPI = {
   ...createCRUD("employee-salary"),
 
@@ -46,6 +53,9 @@ export const LeadsAPI = {
   filter: (params) => {
     const url = appendQueryParams("leads/", params);
     return api.get(url);
+  },
+  getByCreatedUser: (userId) => {
+    return api.get(`leads/?created_by=${userId}`);
   },
 };
 /* ================= VISITS CUSTOM ================= */

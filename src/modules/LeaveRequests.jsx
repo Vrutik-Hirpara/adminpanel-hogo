@@ -296,10 +296,12 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
 
   const [leaves, setLeaves] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [hrEmployees, setHrEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   // ================= FILTERED LEAVES =================
   const filteredLeaves = leaves.filter(l => {
     const emp = employees.find(e => e.id === l.employee_id);
@@ -331,31 +333,44 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
       setLeaves(data);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }finally { setLoading(false); // 🔥 END 
-} 
+    } finally {
+      setLoading(false); // 🔥 END 
+    }
   };
 
   const fetchEmployees = async () => {
     try {
       const res = await EmployeeAPI.getAll();
       let empData = res.data?.data || [];
-      
+
       // 🔒 NON-HR → only show self in dropdown
       if (!isHR) {
         empData = empData.filter(e => e.id === employeeId);
       }
-      
+
       setEmployees(empData);
     } catch (err) {
       setError(parseBackendErrors(err));
     }
   };
-  
+
   useEffect(() => {
     fetchLeaves();
     fetchEmployees();
   }, [employeeId, isHR]);
+  useEffect(() => {
+    const fetchHR = async () => {
+      try {
+        const res = await EmployeeAPI.getHR();
+        setHrEmployees(res.data?.data || []);
 
+      } catch (err) {
+        console.error("HR fetch error:", err);
+      }
+    };
+
+    fetchHR();
+  }, []);
   // ================= SAVE =================
   const onSubmit = async (data) => {
     try {
@@ -375,11 +390,11 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
           formData.append(key, value);
         }
       });
-      
+
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-      
+
       if (selectedItem) {
         const res = await LeaveRequestsAPI.update(selectedItem.id, formData);
         setSuccess(res.data?.message || "Saved successfully");
@@ -417,8 +432,20 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
       }
     },
     { key: "leave_type" },
-    { key: "start_date" },
-    { key: "end_date" },
+    {
+      key: "start_date",
+      render: (row) => {
+        const date = new Date(row.start_date);
+        return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+      }
+    },
+    {
+      key: "end_date",
+      render: (row) => {
+        const date = new Date(row.end_date);
+        return date.toLocaleDateString("en-GB");
+      }
+    },
     { key: "total_leaves" },
     { key: "reason" },
     {
@@ -459,14 +486,23 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
             : "Pending",
     },
     { key: "upload_doc", label: "Document", render: (v) => v && <img src={v} className="h-20 rounded border" /> },
+    // {
+    //   key: "approved_by",
+    //   label: "Approved By",
+    //   format: (id) => {
+    //     const emp = employees.find(e => e.id === id);
+    //     return emp ? `${emp.first_name} ${emp.last_name}` : "-";
+    //   },
+    // },
     {
-      key: "approved_by",
       label: "Approved By",
-      format: (id) => {
-        const emp = employees.find(e => e.id === id);
-        return emp ? `${emp.first_name} ${emp.last_name}` : "-";
-      },
-    },
+      name: "approved_by",
+      type: "select",
+      options: hrEmployees.map(e => ({
+        label: `${e.first_name} ${e.last_name}`,
+        value: e.id,
+      })),
+    }
   ];
 
   // ================= FORM FIELDS =================
@@ -508,7 +544,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
           label: "Approved By",
           name: "approved_by",
           type: "select",
-          options: employees.map(e => ({
+          options: hrEmployees.map(e => ({
             label: `${e.first_name} ${e.last_name}`,
             value: e.id,
           })),
@@ -581,14 +617,14 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
               index={index}
               columns={leaveColumns}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
-              onEdit={(r) => { 
+              onEdit={(r) => {
                 // 🔥 Non-HR can only edit their own pending requests
                 if (!isHR && r.status !== "pending") {
                   alert("You can only edit pending leave requests");
                   return;
                 }
-                setSelectedItem(r); 
-                setMode("form"); 
+                setSelectedItem(r);
+                setMode("form");
               }}
               onDelete={(id) => {
                 // 🔥 Non-HR can only delete their own pending requests

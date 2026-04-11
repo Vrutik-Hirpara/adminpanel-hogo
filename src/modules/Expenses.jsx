@@ -12,12 +12,11 @@ import api from "../services/api";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
-import { ExpenseAPI, LeadsAPI } from "../services";
+import { ExpenseAPI, LeadsAPI, EmployeeAPI} from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
     const { employeeId, isHR } = useUser();
@@ -27,7 +26,7 @@ export default function Expenses() {
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
     const [loading, setLoading] = useState(false);
-
+const [employees, setEmployees] = useState([]);
     // ================= FETCH =================
     // ================= FETCH =================
     const fetchExpenses = async () => {
@@ -55,7 +54,23 @@ export default function Expenses() {
         }
     };
 
+const fetchEmployees = async () => {
+  try {
+    const res = await EmployeeAPI.getAll();
 
+    let empList = res.data?.data || [];
+
+    // 🔒 NON HR → only self
+    if (!isHR) {
+      empList = empList.filter(emp => emp.id === employeeId);
+    }
+
+    setEmployees(empList);
+
+  } catch (err) {
+    setError(parseBackendErrors(err));
+  }
+};
 
     const fetchLeads = async () => {
         setLoading(true); // 🔥 START 
@@ -72,6 +87,8 @@ export default function Expenses() {
     useEffect(() => {
         fetchExpenses();
         fetchLeads();
+          fetchEmployees(); // 🔥 ADD THIS
+
     }, [isHR, employeeId]); // ← Add dependencies
     // ================= SAVE =================
     // ================= SAVE =================
@@ -135,7 +152,7 @@ export default function Expenses() {
         }
     };
     const filteredExpenses = expenses.filter(exp =>
-        `${exp.vendor_name} ${exp.expense_type} ${exp.amount}`
+        `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
             .toLowerCase()
             .includes(search.toLowerCase())
     );
@@ -215,11 +232,11 @@ export default function Expenses() {
                     <SectionTitle title="Expenses" />
 
                     <div className="flex flex-wrap gap-3 self-end">
-                        <SearchBar
+                        {/* <SearchBar
                             value={search}
                             onChange={setSearch}
                             placeholder="Search expenses..."
-                        />
+                        /> */}
                         {/* {(isHR) && (
                             <ActionButtons
                                 showAdd
@@ -242,7 +259,7 @@ export default function Expenses() {
                 </div>
 
                 <Table header={<TableHeader columns={["Vendor", "Lead name", "Type", "Amount", "Date", "Status", "Action"]} />}>
-                    {expenses.map((exp, index) => (
+                    {filteredExpenses.map((exp, index) => (
                         <EntityTableRow
                             key={exp.id}
                             row={exp}
@@ -310,6 +327,30 @@ export default function Expenses() {
 
                 // ]}
                 fields={[
+                    ...(isHR
+  ? [
+      {
+        label: "Employee",
+        name: "employee_id",
+        type: "select",
+        options: employees.map(e => ({
+          label: `${e.first_name} ${e.last_name}`,
+          value: e.id,
+        })),
+        required: true,
+      },
+    ]
+  : [
+      {
+        label: "Employee",
+        name: "employee_name",
+        type: "text",
+        value: employees[0]
+          ? `${employees[0].first_name} ${employees[0].last_name}`
+          : "",
+        disabled: true, // 🔥 non-editable
+      },
+    ]),
                     { label: "Vendor Name", name: "vendor_name", required: true },
 
                     { label: "Expense Type", name: "expense_type", required: true },

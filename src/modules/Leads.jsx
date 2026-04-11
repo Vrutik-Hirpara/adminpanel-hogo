@@ -374,7 +374,8 @@ export default function Leads() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 👈 ADD THIS
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // 👈 ADD THIS
   const [statusFilter, setStatusFilter] = useState("all");
-const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  const [leadFilter, setLeadFilter] = useState("created");
 
   // ================= FETCH =================
   useEffect(() => {
@@ -386,56 +387,84 @@ const [loading, setLoading] = useState(false);
     loadData();
   }, [isHR, employeeId]);
 
+  // const fetchLeads = async () => {
+  //   setLoading(true); // 🔥 START 
+  //   try {
+  //     const res = await LeadsAPI.getAll();
+  //     let data = res.data.data || [];
+
+  //     console.log("All leads before filter:", data);
+  //     console.log("Current employee ID:", employeeId);
+  //     console.log("isHR:", isHR);
+
+  //     // 🔒 NON HR → only leads assigned to this employee
+  //     if (!isHR) {
+  //       data = data.filter(l => {
+  //         const isAssigned = Number(l.assigned_to) === Number(employeeId);
+  //         console.log(`Lead ${l.id} - assigned_to: ${l.assigned_to}, isAssigned: ${isAssigned}`);
+  //         return isAssigned;
+  //       });
+  //     }
+
+  //     console.log("Filtered leads:", data);
+  //     console.log("Employees list:", employees);
+
+  //     // 🔥 Add assigned_to_name to each lead using employees list
+  //     // const enhancedData = data.map(lead => {
+  //     //   const assignedEmployee = employees.find(emp => emp.id === lead.assigned_to);
+  //     //   const createdEmployee = employees.find(emp => emp.id === lead.created_by);
+
+  //     //   return {
+  //     //     ...lead,
+  //     //     assigned_to_name: assignedEmployee
+  //     //       ? `${assignedEmployee.first_name} ${assignedEmployee.last_name}`
+  //     //       : "Unassigned",
+  //     //     created_by_name: createdEmployee
+  //     //       ? `${createdEmployee.first_name} ${createdEmployee.last_name}`
+  //     //       : "Unknown"
+  //     //   };
+  //     // });
+  //     const enhancedData = data.map(lead => ({
+  //       ...lead,
+  //       assigned_to_name: lead.assigned_to_name || "Unassigned",
+  //       created_by_name: lead.created_by_name || "Unknown",  // ✅ USE BACKEND VALUE
+  //     }));
+  //     setLeads(enhancedData);
+  //   } catch (err) {
+  //     setError(parseBackendErrors(err));
+  //     console.error("Error fetching leads:", err);
+  //   } finally {
+  //     setLoading(false); // 🔥 END 
+  //   }
+  // };
   const fetchLeads = async () => {
-    setLoading(true); // 🔥 START 
+    setLoading(true);
     try {
       const res = await LeadsAPI.getAll();
       let data = res.data.data || [];
 
-      console.log("All leads before filter:", data);
-      console.log("Current employee ID:", employeeId);
-      console.log("isHR:", isHR);
-
-      // 🔒 NON HR → only leads assigned to this employee
+      // 🔥 EMPLOYEE FILTER
       if (!isHR) {
-        data = data.filter(l => {
-          const isAssigned = Number(l.assigned_to) === Number(employeeId);
-          console.log(`Lead ${l.id} - assigned_to: ${l.assigned_to}, isAssigned: ${isAssigned}`);
-          return isAssigned;
-        });
+        data = data.filter(
+          (l) =>
+            Number(l.created_by) === Number(employeeId) ||
+            Number(l.assigned_to) === Number(employeeId)
+        );
       }
 
-      console.log("Filtered leads:", data);
-      console.log("Employees list:", employees);
-
-      // 🔥 Add assigned_to_name to each lead using employees list
-      // const enhancedData = data.map(lead => {
-      //   const assignedEmployee = employees.find(emp => emp.id === lead.assigned_to);
-      //   const createdEmployee = employees.find(emp => emp.id === lead.created_by);
-
-      //   return {
-      //     ...lead,
-      //     assigned_to_name: assignedEmployee
-      //       ? `${assignedEmployee.first_name} ${assignedEmployee.last_name}`
-      //       : "Unassigned",
-      //     created_by_name: createdEmployee
-      //       ? `${createdEmployee.first_name} ${createdEmployee.last_name}`
-      //       : "Unknown"
-      //   };
-      // });
-      const enhancedData = data.map(lead => ({
+      const enhancedData = data.map((lead) => ({
         ...lead,
         assigned_to_name: lead.assigned_to_name || "Unassigned",
-        created_by_name: lead.created_by_name || "Unknown",  // ✅ USE BACKEND VALUE
+        created_by_name: lead.created_by_name || "Unknown",
       }));
+
       setLeads(enhancedData);
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.error("Error fetching leads:", err);
-    }finally { setLoading(false); // 🔥 END 
-} 
+    } finally {
+      setLoading(false);
+    }
   };
-
   const fetchEmployees = async () => {
     try {
       const res = await EmployeeAPI.getAll();
@@ -503,14 +532,14 @@ const [loading, setLoading] = useState(false);
       setSelectedVisits([]); // Set empty array on error
     }
   };
-  useEffect(() => {
-    // First fetch employees, then fetch leads
-    const loadData = async () => {
-      await fetchEmployees();
-      await fetchLeads();
-    };
-    loadData();
-  }, [isHR, employeeId]);
+  // useEffect(() => {
+  //   // First fetch employees, then fetch leads
+  //   const loadData = async () => {
+  //     await fetchEmployees();
+  //     await fetchLeads();
+  //   };
+  //   loadData();
+  // }, [isHR, employeeId]);
 
 
 
@@ -1062,6 +1091,25 @@ const [loading, setLoading] = useState(false);
   };
   // ================= LIST =================
   if (mode === "list") {
+    const getFilteredLeads = () => {
+      let filtered = [...leads];
+
+      if (!isHR) {
+        if (leadFilter === "created") {
+          filtered = filtered.filter(
+            (l) => Number(l.created_by) === Number(employeeId)
+          );
+        } else if (leadFilter === "assigned") {
+          filtered = filtered.filter(
+            (l) => Number(l.assigned_to) === Number(employeeId)
+          );
+        }
+      }
+
+      return filtered;
+    };
+
+    const filteredLeads = getFilteredLeads();
     return (
       <>
         <PageContainer>
@@ -1079,20 +1127,38 @@ const [loading, setLoading] = useState(false);
                 📊 Monthly Report
               </button>
               {/* {isHR && ( */}
-                <ActionButtons
-                  showAdd
-                  addText="+ Add"
-                  onAdd={() => {
-                    setSelectedItem(null);
-                    setMode("form");
-                  }}
-                />
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedItem(null);
+                  setMode("form");
+                }}
+              />
               {/* )} */}
             </div>
           </div>
-
+          {!isHR && (
+            <div className="flex gap-3 mb-3">
+              {[
+                { key: "created", label: "Created By Me" },
+                { key: "assigned", label: "Assigned To Me" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setLeadFilter(tab.key)}
+                  className={`px-4 py-2 rounded font-medium ${leadFilter === tab.key
+                      ? "bg-[var(--primary)] text-white shadow-md"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
           <Table header={<LeadsTableHeader />}>
-            {leads.map((l, index) => (
+            {filteredLeads.map((l, index) => (
               <EntityTableRow
                 key={l.id}
                 row={l}
@@ -1110,7 +1176,7 @@ const [loading, setLoading] = useState(false);
               />
             ))}
           </Table>
-                          {loading && <LoadingSpinner text="Loading Leads Details..." />}
+          {loading && <LoadingSpinner text="Loading Leads Details..." />}
 
         </PageContainer>
         <ReportModal /> {/* 👈 ADD THIS */}
@@ -1366,7 +1432,7 @@ const [loading, setLoading] = useState(false);
                         : ["Total Leads", "Converted", "Conversion Ratio"]
                     }
                   />
-                  
+
                 }
               >
                 {reportData.employees.map((emp, index) => (
