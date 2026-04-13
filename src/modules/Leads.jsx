@@ -376,7 +376,7 @@ export default function Leads() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [leadFilter, setLeadFilter] = useState("created");
-
+  const [selectedFollowups, setSelectedFollowups] = useState([]);
   // ================= FETCH =================
   useEffect(() => {
     // First fetch employees, then fetch leads
@@ -463,6 +463,25 @@ export default function Leads() {
       setError(parseBackendErrors(err));
     } finally {
       setLoading(false);
+    }
+  };
+  const fetchFollowupsByLead = async (leadId) => {
+    try {
+      const res = await api.get(`/lead_followups/?lead_id=${leadId}`);
+
+      let data = [];
+
+      if (Array.isArray(res.data)) {
+        data = res.data;
+      } else if (res.data?.data) {
+        data = res.data.data;
+      }
+
+      setSelectedFollowups(data);
+      setMode("followups");
+    } catch (err) {
+      console.error("Followup fetch error", err);
+      setSelectedFollowups([]);
     }
   };
   const fetchEmployees = async () => {
@@ -745,10 +764,10 @@ export default function Leads() {
           style={{
             color:
               row.interest_level === "Hot"
-                ? themes.danger
+                ? themes.success
                 : row.interest_level === "Warm"
                   ? themes.warning
-                  : themes.success,
+                  : themes.danger,
           }}
         >
           {row.interest_level}
@@ -781,6 +800,30 @@ export default function Leads() {
             View Visits
           </button>
         </div>
+      ),
+    },
+    {
+      key: "followup_list",
+      className: "text-center",
+      render: (row) => (
+        <button
+          onClick={() => {
+            setSelectedItem(row);
+            fetchFollowupsByLead(row.id);
+          }}
+          className="rounded px-2 py-1 text-xs font-semibold flex items-center gap-1"
+          style={{
+            border: `1px solid ${themes.borderLight}`,
+            backgroundColor: themes.textWhite,
+            color: themes.textPrimary,
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          View Followups
+        </button>
       ),
     },
 
@@ -1089,6 +1132,96 @@ export default function Leads() {
       </div>
     );
   };
+  if (mode === "followups") {
+    const followupsArray = Array.isArray(selectedFollowups)
+      ? selectedFollowups
+      : [];
+
+    return (
+      <EntityPageLayout
+        title={`Followups for ${selectedItem?.business_name || "Lead"}`}
+        showBack
+        onBack={() => setMode("list")}
+      >
+        {followupsArray.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <p className="text-gray-500">No followups found</p>
+          </div>
+        ) : (
+          <>
+            {/* 🔥 SAME LIKE VISITS HEADER */}
+            <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                <div>
+                  <p className="text-gray-500">Lead Type</p>
+                  <p className="font-semibold">
+                    {followupsArray[0]?.lead_type || "-"}
+                  </p>
+                </div>
+                <div>
+                    <p className="text-gray-500">Lead Status</p>
+                    <p className="font-semibold">
+                      {followupsArray[0]?.lead_status || "-"}
+                    </p>
+                  </div>
+
+                <div>
+                  <p className="text-gray-500">Contact Person</p>
+                  <p className="font-semibold">
+                    {followupsArray[0]?.contact_person || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500">Contact Number</p>
+                  <p className="font-semibold">
+                    {followupsArray[0]?.contact_person_display || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 🔥 TABLE */}
+            <Table
+              header={
+                <TableHeader
+                  columns={[
+                    "Followup Date",
+                    "Next Followup",
+                    "Notes",
+                  ]}
+                />
+              }
+            >
+              {followupsArray.map((f, index) => (
+                <EntityTableRow
+                  key={f.id || index}
+                  row={f}
+                  index={index}
+                  columns={[
+                    { key: "followup_date" },
+                    { key: "next_followup_date" },
+                    {
+                      key: "notes",
+                      render: (row) =>
+                        row.notes ? (
+                          <div className="relative group flex justify-center">
+                            <span className="cursor-pointer text-lg">📝</span>
+
+                            <div className="absolute hidden group-hover:block z-50 text-xs rounded-lg px-3 py-2 w-48 break-words shadow-xl top-7 left-1/2 -translate-x-1/2 -translate-y-full bg-black text-white">
+                              {row.notes}
+                            </div>
+                          </div>
+                        ) : "-",
+                    }]}
+                />
+              ))}
+            </Table>
+          </>
+        )}
+      </EntityPageLayout>
+    );
+  }
   // ================= LIST =================
   if (mode === "list") {
     const getFilteredLeads = () => {
@@ -1148,8 +1281,8 @@ export default function Leads() {
                   key={tab.key}
                   onClick={() => setLeadFilter(tab.key)}
                   className={`px-4 py-2 rounded font-medium ${leadFilter === tab.key
-                      ? "bg-[var(--primary)] text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-[var(--primary)] text-white shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                 >
                   {tab.label}
@@ -1282,32 +1415,67 @@ export default function Leads() {
               <p className="text-gray-500">No visits recorded for this lead yet</p>
             </div>
           ) : (
-            <Table
-              header={
-                <TableHeader
-                  columns={[
-                    "Followup Date",
-                    "Status",
-                    "Employee",
-                    "Notes",
-                  ]}
-                />
-              }
-            >
-              {visitsArray.map((v, index) => (
-                <EntityTableRow
-                  key={v.id || index}
-                  row={v}
-                  index={index}
-                  columns={[
-                    { key: "followup_date_display" },
-                    { key: "status_display" },
-                    { key: "employee_name" },
-                    { key: "notes" },
-                  ]}
-                />
-              ))}
-            </Table>
+            <>
+              {/* 🔥 LEAD INFO SECTION */}
+              <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+
+                  <div>
+                    <p className="text-gray-500">Lead Type</p>
+                    <p className="font-semibold">
+                      {visitsArray[0]?.lead_type || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Lead Status</p>
+                    <p className="font-semibold">
+                      {visitsArray[0]?.lead_status || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Contact Person</p>
+                    <p className="font-semibold">
+                      {visitsArray[0]?.contact_person || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-500">Contact Number</p>
+                    <p className="font-semibold">
+                      {visitsArray[0]?.contact_person_display || "-"}
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              <Table
+                header={
+                  <TableHeader
+                    columns={[
+                      "Followup Date",
+                      "Status",
+                      "Employee",
+                      "Notes",
+                    ]}
+                  />
+                }
+              >
+                {visitsArray.map((v, index) => (
+                  <EntityTableRow
+                    key={v.id || index}
+                    row={v}
+                    index={index}
+                    columns={[
+                      { key: "followup_date_display" },
+                      { key: "status_display" },
+                      { key: "employee_name" },
+                      { key: "notes" },
+                    ]}
+                  />
+                ))}
+              </Table>
+            </>
           )}
         </EntityPageLayout>
         <ReportModal /> {/* 👈 ADD THIS */}

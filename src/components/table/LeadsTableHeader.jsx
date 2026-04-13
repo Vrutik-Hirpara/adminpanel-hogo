@@ -16,6 +16,8 @@ export default function LeadsTableHeader() {
         <th className="px-3 py-3 text-center whitespace-nowrap">Interest</th>
         {/* <th className="px-3 py-3 text-center whitespace-nowrap">Status</th> */}
         <th className="px-3 py-3 text-center whitespace-nowrap">Visit List</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">Leads Followup</th>
+
         {/* {isHR && (
         <th className="px-3 py-3 text-center whitespace-nowrap">Assigned To</th>
                 

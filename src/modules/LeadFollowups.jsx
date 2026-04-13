@@ -289,7 +289,8 @@ export default function LeadFollowups() {
   const [leads, setLeads] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  
   const fetchData = async () => {
     setLoading(true); // 🔥 START 
     try {
@@ -322,8 +323,9 @@ const [loading, setLoading] = useState(false);
       setLeads(l.data.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
-    }finally { setLoading(false); // 🔥 END 
-} 
+    } finally {
+      setLoading(false); // 🔥 END 
+    }
   };
 
   useEffect(() => {
@@ -381,7 +383,7 @@ const [loading, setLoading] = useState(false);
   // ================= TABLE COLUMNS =================
   const columns = [
     { key: "employee_name" },
-        { key: "lead_name" },
+    { key: "lead_name" },
 
     {
       key: "followup_date",
@@ -425,9 +427,8 @@ const [loading, setLoading] = useState(false);
           }}
         >
           <span
-            className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${
-              row.status ? "translate-x-6" : ""
-            }`}
+            className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${row.status ? "translate-x-6" : ""
+              }`}
             style={{ backgroundColor: themes.textWhite }}
           />
         </button>
@@ -441,14 +442,15 @@ const [loading, setLoading] = useState(false);
       <PageContainer>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Lead Followups" />
-          {isHR &&(
-          <ActionButtons showAdd addText="+ Add" onAdd={() => {
-  setSelectedItem(null);   // ⭐ RESET
-  setMode("form");}} />
+          {isHR && (
+            <ActionButtons showAdd addText="+ Add" onAdd={() => {
+              setSelectedItem(null);   // ⭐ RESET
+              setMode("form");
+            }} />
           )}
         </div>
 
-        <Table header={<TableHeader columns={["Employee","bussiness name","Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
+        <Table header={<TableHeader columns={["Employee", "bussiness name", "Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
           {followups.map((r, index) => (
             <EntityTableRow
               key={r.id}
