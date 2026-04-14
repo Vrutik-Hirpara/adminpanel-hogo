@@ -1683,8 +1683,6 @@ export default function Employee() {
           <div className="p-0 bg-[#f9fafb]">
             {activeTab === "profile" && (
               <div className="p-6">
-                <SectionTitle title="EMPLOYEE PROFILE" />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-5 rounded-lg border">
                   {employeeFields.map(f => (
                     <div key={f.key}>

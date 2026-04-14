@@ -177,7 +177,7 @@ const filteredData = data.filter(item => {
   {/* ROW 1: Title + Search */}
   <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-    <SectionTitle title="LEAVE BALANCE" />
+    {!asSubcomponent && <SectionTitle title="LEAVE BALANCE" />}
 
     <div className="w-full sm:w-auto sm:ml-auto">
       <SearchBar

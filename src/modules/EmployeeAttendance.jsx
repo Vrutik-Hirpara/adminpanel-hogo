@@ -2305,9 +2305,11 @@ const fetchAttendance = async (date = null, month = null, year = null) => {
     const listContent = (
       <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 w-full">
-          <SectionTitle
-            title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
-          />
+          {!asSubcomponent && (
+            <SectionTitle
+              title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
+            />
+          )}
 
           
         </div>

@@ -609,16 +609,8 @@ const Sidebar = () => {
         <div className="pt-4 border-t" style={{ borderColor: themes.borderLight }}>
           <Dropdown id="employee" label="Profile" icon={Users} color={themes.cardEmployee}>
             <LinkItem to="/employee" icon={Users} label="Employee" color={themes.cardEmployee} />
-            <LinkItem to="/users" icon={Users} label="Users" color={themes.cardUsers} />
-            <LinkItem to="/employee-personal-details" icon={UserCircle2} label="Personal Details" color={themes.cardPersonalDetails} />
-            <LinkItem to="/employee-salary" icon={Wallet} label="Employee Salary" color={themes.cardSalary} />
-            <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color={themes.cardDocuments} />
-            <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
-            <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
-            {/* <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} /> */}
             <LinkItem to="/employee_attendence" icon={PhoneCall} label="Employee Attendance" color={themes.cardUsers} />
             <LinkItem to="/salary-payment" icon={PhoneCall} label="salary payout" color={themes.cardUsers} />
-
           </Dropdown>
         </div>
       )}

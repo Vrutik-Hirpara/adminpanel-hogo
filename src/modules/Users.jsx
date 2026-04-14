@@ -448,7 +448,7 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
         <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 mb-4 ">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center  w-full gap-3">
             <div>
-              <SectionTitle title="USERS" />
+              {!asSubcomponent && <SectionTitle title="USERS" />}
             </div>
 
             <div>

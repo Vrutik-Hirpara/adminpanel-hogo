@@ -878,7 +878,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
       const noDataContent = (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-            <SectionTitle title="EMPLOYEE PERSONAL DETAILS" />
+            {!asSubcomponent && <SectionTitle title="EMPLOYEE PERSONAL DETAILS" />}
             <ActionButtons
               showAdd
               addText="+ Add Personal Details"
@@ -938,7 +938,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
 
             <div>
-              <SectionTitle title="EMPLOYEE PERSONAL DETAILS" />
+              {!asSubcomponent && <SectionTitle title="EMPLOYEE PERSONAL DETAILS" />}
             </div>
 
             <div>

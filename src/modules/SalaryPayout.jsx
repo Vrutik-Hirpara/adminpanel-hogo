@@ -1123,11 +1123,11 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
 
   // Table columns configuration - VIEW ONLY (no actions)
   const salaryColumns = [
-    {
+    ...(isHR ? [{
       render: (row) => (
         <div className="min-w-[150px]">{row.employee_name || "-"}</div>
       ),
-    },
+    }] : []),
     {
       render: (row) => (
         <div className="min-w-[110px]">
@@ -1215,7 +1215,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
     const listContent = (
       <>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="SALARY PAYOUT" />
+          {!asSubcomponent && <SectionTitle title="SALARY PAYOUT" />}
           <button
             onClick={() => setShowFilterModal(true)}
             className="px-4 py-2 rounded text-sm font-semibold flex items-center gap-2 ml-auto"
@@ -1232,7 +1232,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
             <table className="min-w-full">
               <TableHeader
                 columns={[
-                  "Employee",
+                  ...(isHR ? ["Employee"] : []),
                   "Month/Year",
                   "Present",
                   "Paid Leave",

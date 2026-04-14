@@ -272,13 +272,13 @@ export default function Expenses() {
                             columns={expenseColumns}
                             onView={(r) => { setSelectedItem(r); setMode("view"); }}
                             // onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
-                            onEdit={(r) => {
+                            onEdit={isHR ? (r) => {
                                 setSelectedItem({
                                     ...r,
                                     status: String(r.status) // ⭐ IMPORTANT FIX
                                 });
                                 setMode("form");
-                            }}
+                            } : null}
 
                             onDelete={handleDelete}
                         />

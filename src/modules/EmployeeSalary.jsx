@@ -729,10 +729,10 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= TABLE COLUMNS =================
   const salaryColumns = [
-    {
+    ...(isHR ? [{
       key: "employeeName",
       render: (row) => row.employeeName,
-    },
+    }] : []),
     { key: "basic_salary" },
     { key: "alloances" },
     { key: "deductions" },
@@ -779,7 +779,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   ];
 
   const tableHeaders = [
-    "Employee",
+    ...(isHR ? ["Employee"] : []),
     "Basic",
     "Allowances",
     "Deductions",
@@ -837,7 +837,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   {/* ROW 1: Title + Search */}
  <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-  <SectionTitle title="EMPLOYEE SALARY" />
+  {!asSubcomponent && <SectionTitle title="EMPLOYEE SALARY" />}
 
   <div className="w-full sm:w-auto sm:ml-auto">
     <SearchBar

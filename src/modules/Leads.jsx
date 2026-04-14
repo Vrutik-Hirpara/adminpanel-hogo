@@ -351,7 +351,7 @@ import LeadsTableHeader from "../components/table/LeadsTableHeader";
 import { themes } from "../config/theme.config";
 import api from "../services/api"; // 👈 ADD THIS LINE
 
-import { LeadsAPI, EmployeeAPI, VisitsAPI } from "../services";
+import { LeadsAPI, EmployeeAPI, VisitsAPI, RegionsAPI } from "../services";
 import EntityTableRow from "../components/table/EntityTableRow";
 
 // 🔥 ROLE HOOK
@@ -360,9 +360,9 @@ import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function Leads() {
+export default function Leads({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
-  const { employeeId, isHR } = useUser();
+  const { employeeId, isHR, userData } = useUser();
   const [selectedVisits, setSelectedVisits] = useState([]);
   const [leads, setLeads] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -377,12 +377,14 @@ export default function Leads() {
   const [loading, setLoading] = useState(false);
   const [leadFilter, setLeadFilter] = useState("created");
   const [selectedFollowups, setSelectedFollowups] = useState([]);
+  const [regions, setRegions] = useState([]);
   // ================= FETCH =================
   useEffect(() => {
     // First fetch employees, then fetch leads
     const loadData = async () => {
       await fetchEmployees();
       await fetchLeads();
+      await fetchRegions();
     };
     loadData();
   }, [isHR, employeeId]);
@@ -503,6 +505,16 @@ export default function Leads() {
       console.error("Error fetching employees:", err);
     }
   };
+  const fetchRegions = async () => {
+    try {
+      const res = await RegionsAPI.getAll();
+      const data = res.data?.data || [];
+      // Show all regions as requested by user
+      setRegions(data);
+    } catch (err) {
+      console.error("Error fetching regions:", err);
+    }
+  };
   // const fetchVisitsByLead = async (leadId) => {
   //   try {
   //     const res = await VisitsAPI.getByLeadId(leadId);
@@ -587,30 +599,26 @@ export default function Leads() {
   // ================= SAVE =================
   const onSubmit = async (data) => {
     try {
-      // const payload = {
-      //   ...data,
-      //   created_by: Number(data.created_by),
-      //   assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
-
-      // };
       const payload = {
         ...data,
-
-        created_by: isHR ? Number(data.created_by) : employeeId,
         assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
-
-        // 🔥 THIS IS MAIN FIX
+        cars_per_month: data.cars_per_month ? Number(data.cars_per_month) : 0,
+        dealer_landing_cost: data.dealer_landing_cost ? Number(data.dealer_landing_cost) : 0,
         date: data.date,
-
-        // optional
         month: new Date(data.date).getMonth() + 1,
         year: new Date(data.date).getFullYear(),
       };
 
       if (selectedItem) {
+        // 🔥 PREVENT OVERWRITING CREATED_BY ON UPDATE
+        delete payload.created_by;
+        delete payload.created_by_name;
+
         const res = await LeadsAPI.update(selectedItem.id, payload);
         setSuccess(res.data?.message || "Saved successfully");
       } else {
+        // 🔥 SET CREATED_BY ON CREATE
+        payload.created_by = employeeId;
         const res = await LeadsAPI.create(payload);
         setSuccess(res.data?.message || "Saved successfully");
       }
@@ -924,12 +932,22 @@ export default function Leads() {
     { key: "address", label: "Address" },
     { key: "city", label: "City" },
     { key: "state", label: "State" },
+    { key: "cars_per_month", label: "Cars Per Month" },
+    { key: "dealer_landing_cost", label: "Dealer Landing Cost" },
     { key: "interest_level", label: "Interest Level" },
     { key: "lead_status", label: "Lead Status" },
     { key: "remarks", label: "Remarks" },
     { key: "created_by_name", label: "Created By" },
     { key: "assigned_to_name", label: "Assigned To" },
     { key: "lead_source", label: "Lead Source" },
+    { key: "region", label: "Region" },
+    { key: "outlet_age", label: "Outlet Age" },
+    { key: "ppf_installers", label: "PPF Installers", format: (v) => v ? "Yes" : "No" },
+    { key: "brand_dealing", label: "Brand Dealing" },
+    { key: "past_distributor_name", label: "Past Distributor" },
+    { key: "price_feedback", label: "Price Feedback" },
+    { key: "quality_feedback", label: "Quality Feedback" },
+    { key: "demo", label: "Demo", format: (v) => v ? "Yes" : "No" },
   ];
   // Report Selection Modal
   // const ReportModal = () => {
@@ -1247,7 +1265,7 @@ export default function Leads() {
       <>
         <PageContainer>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-            <SectionTitle title="Leads" />
+            {!asSubcomponent && <SectionTitle title="Leads List" />}
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setShowReportModal(true)}
@@ -1669,52 +1687,15 @@ export default function Leads() {
           onSubmit={onSubmit}
           setMode={setMode}
           fields={[
-            // {
-            //   label: "Created By",
-            //   name: "created_by",
-            //   type: "select",
-            //   required: true,
-            //   options: employees.map((e) => ({
-            //     label: `${e.first_name} ${e.last_name}`,
-            //     value: e.id,
-            //   })),
-            // },
-            // {
-            //   label: "Created By",
-            //   name: isHR ? "created_by" : "created_by_name",
-            //   type: isHR ? "select" : "text",
-            //   ...(isHR && {
-            //     options: employees.map((e) => ({
-            //       label: `${e.first_name} ${e.last_name}`,
-            //       value: e.id,
-            //     })),
-            //   }),
-            //   ...(!isHR && {
-            //     value: (() => {
-            //       const emp = employees.find(e => e.id === employeeId);
-            //       return emp ? `${emp.first_name} ${emp.last_name}` : "";
-            //     })(),
-            //   }),
-            //   readOnly: !isHR,  // Non-HR users can't edit
-            //   disabled: !isHR,  // Non-HR users can't edit
-            //   required: isHR,   // Only required for HR
-            // }
             {
               label: "Created By",
-
-              name: isHR ? "created_by" : "created_by_name",  // 👈 KEY CHANGE
-
-              type: isHR ? "select" : "text",
-
-              ...(isHR && {
-                options: employees.map((e) => ({
-                  label: `${e.first_name} ${e.last_name}`,
-                  value: e.id,
-                })),
-              }),
-
-              readOnly: !isHR,
-              disabled: !isHR,
+              name: "created_by_name",
+              type: "text",
+              readOnly: true,
+              disabled: true,
+              value: selectedItem 
+                ? selectedItem.created_by_name 
+                : (userData ? `${userData.first_name} ${userData.last_name}` : ""),
             },
             // 📅 Follow-up Date
             // {
@@ -1786,6 +1767,8 @@ export default function Leads() {
             { label: "Address", name: "address", type: "textarea", required: true },
             { label: "City", name: "city", required: true },
             { label: "State", name: "state", required: true },
+            { label: "Cars Per Month", name: "cars_per_month", type: "number", required: true },
+            { label: "Dealer Landing Cost", name: "dealer_landing_cost", type: "number", required: true },
             { label: "Location", name: "location" },
             {
               label: "Assign To",
@@ -1819,6 +1802,20 @@ export default function Leads() {
                 { label: "Lost", value: "Lost" },
               ],
             },
+            {
+              label: "Region",
+              name: "region",
+              type: "select",
+              options: regions.map(r => ({ label: r.name, value: r.name })),
+              required: true
+            },
+            { label: "Outlet Age", name: "outlet_age", type: "number" },
+            { label: "PPF Installers", name: "ppf_installers", type: "checkbox" },
+            { label: "Brand Dealing", name: "brand_dealing" },
+            { label: "Past Distributor Name", name: "past_distributor_name" },
+            { label: "Price Feedback", name: "price_feedback" },
+            { label: "Quality Feedback", name: "quality_feedback" },
+            { label: "Demo", name: "demo", type: "checkbox" },
             { label: "Remarks", name: "remarks", type: "textarea" },
           ]}
         />

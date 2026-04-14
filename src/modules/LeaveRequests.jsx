@@ -612,7 +612,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
           {/* ROW 1: Title + Search */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-            <SectionTitle title="LEAVE REQUESTS" />
+            {!asSubcomponent && <SectionTitle title="LEAVE REQUESTS" />}
 
             <div className="w-full sm:w-auto sm:ml-auto">
               <SearchBar

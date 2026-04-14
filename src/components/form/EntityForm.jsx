@@ -377,7 +377,7 @@ export default function EntityForm({
             reset(data);
           } else {
             const empty = {};
-            fields.forEach((f) => (empty[f.name] = ""));
+            fields.forEach((f) => (empty[f.name] = f.value !== undefined ? f.value : ""));
             reset(empty);
           }
         }, [selectedItem, reset]);

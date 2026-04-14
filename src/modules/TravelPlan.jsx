@@ -662,7 +662,7 @@ import { useEffect, useState } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
-import { TravelPlanAPI, DailyPlanAPI, EmployeeAPI } from "../services";
+import { TravelPlanAPI, DailyPlanAPI, EmployeeAPI, RegionsAPI } from "../services";
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
@@ -673,7 +673,7 @@ import { parseBackendErrors } from "../utils/parseBackendErrors";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-export default function TravelPlan() {
+export default function TravelPlan({ asSubcomponent }) {
   const [selectedMonthYear, setSelectedMonthYear] = useState(null);
 
   const { setError, setSuccess } = useOutletContext();
@@ -696,6 +696,7 @@ export default function TravelPlan() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isHR, setIsHR] = useState(false);
+  const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Month index mapping
@@ -738,6 +739,7 @@ export default function TravelPlan() {
         console.error("Error parsing user:", e);
       }
     }
+    fetchRegions();
   }, []);
 
   const convertToInputMonthFormat = (monthStr) => {
@@ -752,21 +754,16 @@ export default function TravelPlan() {
   // Add this helper function
   const extractMonthName = (monthStr) => {
     if (!monthStr) return "";
-    // If it's "May - 2026" format
-    if (monthStr.includes(" - ")) {
-      return monthStr.split(" - ")[0];
-    }
-    // If it's already "May"
-    return monthStr;
+    // Handle "May - 2026", "may-2026", "May" formats
+    const parts = monthStr.split(/[ -]+/);
+    const name = parts[0];
+    // Return Proper case (e.g. "January") to match monthIndexMap
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
   const extractYear = (monthStr) => {
     if (!monthStr) return "";
-    // If it's "May - 2026" format
-    if (monthStr.includes(" - ")) {
-      return monthStr.split(" - ")[1];
-    }
-    // If it's already "May"
-    return monthStr;
+    const parts = monthStr.split(/[ -]+/);
+    return parts.length > 1 ? parts[parts.length - 1] : "";
   };
   // Fetch all employees for HR dropdown
   const fetchEmployees = async () => {
@@ -789,19 +786,30 @@ export default function TravelPlan() {
 
     setLoading(true);
     try {
-      // Fetch all travel plans first
-      const res = await TravelPlanAPI.getAll();
+      // ✅ Use server-side filter
+      const res = await TravelPlanAPI.getByEmployee(selectedEmployeeId);
       let data = res.data?.data || [];
-
-      // Filter by selected employee ID
-      data = data.filter(plan => plan.employee_id === selectedEmployeeId);
-
+      
       console.log(`Travel plans for employee ${selectedEmployeeId}:`, data);
       setTravelPlans(data);
 
-      const months = [...new Set(data.map(plan => plan.month))];
-      console.log("Available months for selected employee:", months);
-      setAvailableMonths(months);
+      const rawMonths = [...new Set(data.map(plan => plan.month))];
+      
+      // 🔥 Chronological Sort: Year ASC, then Month Index ASC
+      const sortedMonths = rawMonths.sort((a, b) => {
+        const yearA = parseInt(extractYear(a)) || 0;
+        const yearB = parseInt(extractYear(b)) || 0;
+        if (yearA !== yearB) return yearA - yearB;
+
+        const mIndexA = monthIndexMap[extractMonthName(a)] ?? -1;
+        const mIndexB = monthIndexMap[extractMonthName(b)] ?? -1;
+        return mIndexA - mIndexB;
+      });
+
+      console.log("Sorted months for UI:", sortedMonths);
+      setAvailableMonths(sortedMonths);
+      
+      const months = sortedMonths; // Use sorted array for follow-up logic
 
       // In fetchTravelPlans function, where you set selectedMonth and calendarMonth
       if (months.length > 0) {
@@ -828,6 +836,16 @@ export default function TravelPlan() {
       console.error("Error fetching travel plans:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRegions = async () => {
+    try {
+      const res = await RegionsAPI.getAll();
+      const data = res.data?.data || [];
+      setRegions(data);
+    } catch (err) {
+      console.error("Error fetching regions:", err);
     }
   };
 
@@ -1374,7 +1392,7 @@ export default function TravelPlan() {
         )}
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 w-full">
-          <SectionTitle title="Travel Plan Manager" />
+          {!asSubcomponent && <SectionTitle title="Travel Plan Manager" />}
           {/* <ActionButtons
             showAdd
             addText="+ New Travel Plan"
@@ -1445,7 +1463,7 @@ export default function TravelPlan() {
 
         {/* Month Navigation - Changes both table AND calendar */}
         {!loading && availableMonths.length > 0 && (
-          <div className="flex gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-6">
             {availableMonths.map((month) => {
               const displayMonth = extractMonthName(month);  // "May" for display
               return (
@@ -1550,7 +1568,7 @@ export default function TravelPlan() {
                 ←
               </button>
               <h3 className="text-xl font-semibold text-gray-800">
-                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth}
+                {calendarMonth} - {calendarYear}
               </h3>
               <button
                 onClick={goToNextMonth}
@@ -1689,7 +1707,13 @@ export default function TravelPlan() {
           },
           // { label: "Start Date", name: "start_date", type: "date", required: true },
           // { label: "End Date", name: "end_date", type: "date", required: true },
-          { label: "Region", name: "region", required: true },
+          { 
+            label: "Region", 
+            name: "region", 
+            type: "select",
+            required: true,
+            options: regions.map(r => ({ label: r.name, value: r.name })),
+          },
           { label: "State", name: "states", required: true },
           { label: "RM", name: "rm", required: true },
           { label: "TSM", name: "tsm", required: true },

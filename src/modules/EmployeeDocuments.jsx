@@ -536,7 +536,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
       const noDataContent = (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-            <SectionTitle title="EMPLOYEE DOCUMENTS" />
+            {!asSubcomponent && <SectionTitle title="EMPLOYEE DOCUMENTS" />}
             <ActionButtons
               showAdd
               addText="+ Upload Documents"
@@ -583,7 +583,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
   {/* ROW 1: Title + Search */}
   <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-    <SectionTitle title="EMPLOYEE DOCUMENTS" />
+    {!asSubcomponent && <SectionTitle title="EMPLOYEE DOCUMENTS" />}
 
     <div className="w-full sm:w-auto sm:ml-auto">
       <SearchBar

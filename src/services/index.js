@@ -16,8 +16,12 @@ export const LeaveBalanceAPI = createCRUD("leave-balance");
 export const LeaveRequestsAPI = createCRUD("leave-requests");
 // export const ExpenseAPI = createCRUD("expenses");
 export const LeadFollowupsAPI = createCRUD("lead_followups");
-export const TravelPlanAPI = createCRUD("travel-plan");
+export const TravelPlanAPI = {
+  ...createCRUD("travel-plan"),
+  getByEmployee: (employeeId) => api.get(`/travel-plan/?employee=${employeeId}`),
+};
 export const DailyPlanAPI = createCRUD("daily-plan");
+export const RegionsAPI = createCRUD("regions");
 
 /* ================= LEADS CUSTOM ================= */
 // export const LeadsAPI = {
@@ -163,13 +167,6 @@ export const SalaryPaymentAPI = {
 };
 
 export const ExpenseAPI = {
-  getAll: () => api.get("/expenses/"),
-
-  // Add this new method for employee-specific expenses
+  ...createCRUD("expenses"),
   getByEmployee: (employeeId) => api.get(`/expenses/?employee_id=${employeeId}`),
-
-  getById: (id) => api.get(`/expenses/${id}/`),
-  create: (data) => api.post("/expenses/", data),
-  update: (id, data) => api.patch(`/expenses/${id}/`, data),
-  delete: (id) => api.delete(`/expenses/${id}/`),
 };
