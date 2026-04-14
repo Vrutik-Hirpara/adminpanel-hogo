@@ -150,7 +150,7 @@ const filteredData = data.filter(item => {
   if (mode === "list") {
     const listContent = (
       <>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+        {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="LEAVE BALANCE" />
 
           <div className="flex flex-wrap gap-3 self-end ml-auto">
@@ -171,8 +171,39 @@ const filteredData = data.filter(item => {
               />
             )}
           </div>
-        </div>
+        </div> */}
+<div className="flex flex-col gap-4 mb-4 w-full">
 
+  {/* ROW 1: Title + Search */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+
+    <SectionTitle title="LEAVE BALANCE" />
+
+    <div className="w-full sm:w-auto sm:ml-auto">
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search leave balance..."
+      />
+    </div>
+
+  </div>
+
+  {/* ROW 2: Add Button */}
+  <div className="flex justify-end w-full">
+    {isHR && (
+      <ActionButtons
+        showAdd
+        addText="+ Add"
+        onAdd={() => {
+          setSelected(null);
+          setMode("form");
+        }}
+      />
+    )}
+  </div>
+
+</div>
         <Table header={<TableHeader columns={["Employee","Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (
             <EntityTableRow

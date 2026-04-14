@@ -1,7 +1,8 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 
+@import "tailwindcss";
 
 
 :root {
@@ -45,3 +46,5 @@ body {
     filter: brightness(0.9);
   }
 }
+
+    /* // "@tailwindcss/vite": "^4.1.18", */

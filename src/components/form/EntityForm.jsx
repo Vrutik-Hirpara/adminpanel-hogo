@@ -353,6 +353,7 @@ export default function EntityForm({
   selectedItem,
   onSubmit,
   setMode,
+  onCancel,
 }) {
   return (
     <FormWrapper onSubmit={onSubmit}>
@@ -490,7 +491,7 @@ export default function EntityForm({
             </div>
 
             {/* ACTION BUTTONS */}
-            <FormActions onCancel={() => setMode("list")} />
+            <FormActions onCancel={onCancel ? onCancel : () => setMode("list")} />
           </FormContainer>
         );
       }}

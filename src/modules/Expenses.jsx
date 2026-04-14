@@ -12,7 +12,7 @@ import api from "../services/api";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
-import { ExpenseAPI, LeadsAPI, EmployeeAPI} from "../services";
+import { ExpenseAPI, LeadsAPI, EmployeeAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
@@ -26,7 +26,7 @@ export default function Expenses() {
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
     const [loading, setLoading] = useState(false);
-const [employees, setEmployees] = useState([]);
+    const [employees, setEmployees] = useState([]);
     // ================= FETCH =================
     // ================= FETCH =================
     const fetchExpenses = async () => {
@@ -54,23 +54,23 @@ const [employees, setEmployees] = useState([]);
         }
     };
 
-const fetchEmployees = async () => {
-  try {
-    const res = await EmployeeAPI.getAll();
+    const fetchEmployees = async () => {
+        try {
+            const res = await EmployeeAPI.getAll();
 
-    let empList = res.data?.data || [];
+            let empList = res.data?.data || [];
 
-    // 🔒 NON HR → only self
-    if (!isHR) {
-      empList = empList.filter(emp => emp.id === employeeId);
-    }
+            // 🔒 NON HR → only self
+            if (!isHR) {
+                empList = empList.filter(emp => emp.id === employeeId);
+            }
 
-    setEmployees(empList);
+            setEmployees(empList);
 
-  } catch (err) {
-    setError(parseBackendErrors(err));
-  }
-};
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
+    };
 
     const fetchLeads = async () => {
         setLoading(true); // 🔥 START 
@@ -80,14 +80,15 @@ const fetchEmployees = async () => {
             setLeads(data);
         } catch (err) {
             setError(parseBackendErrors(err));
-        }finally { setLoading(false); // 🔥 END 
-} 
+        } finally {
+            setLoading(false); // 🔥 END 
+        }
     };
 
     useEffect(() => {
         fetchExpenses();
         fetchLeads();
-          fetchEmployees(); // 🔥 ADD THIS
+        fetchEmployees(); // 🔥 ADD THIS
 
     }, [isHR, employeeId]); // ← Add dependencies
     // ================= SAVE =================
@@ -254,8 +255,12 @@ const fetchEmployees = async () => {
                                 setSelectedItem(null);
                                 setMode("form");
                             }}
+
                         />
                     </div>
+                </div>
+                <div className="flex justify-end">
+
                 </div>
 
                 <Table header={<TableHeader columns={["Vendor", "Lead name", "Type", "Amount", "Date", "Status", "Action"]} />}>
@@ -328,29 +333,29 @@ const fetchEmployees = async () => {
                 // ]}
                 fields={[
                     ...(isHR
-  ? [
-      {
-        label: "Employee",
-        name: "employee_id",
-        type: "select",
-        options: employees.map(e => ({
-          label: `${e.first_name} ${e.last_name}`,
-          value: e.id,
-        })),
-        required: true,
-      },
-    ]
-  : [
-      {
-        label: "Employee",
-        name: "employee_name",
-        type: "text",
-        value: employees[0]
-          ? `${employees[0].first_name} ${employees[0].last_name}`
-          : "",
-        disabled: true, // 🔥 non-editable
-      },
-    ]),
+                        ? [
+                            {
+                                label: "Employee",
+                                name: "employee_id",
+                                type: "select",
+                                options: employees.map(e => ({
+                                    label: `${e.first_name} ${e.last_name}`,
+                                    value: e.id,
+                                })),
+                                required: true,
+                            },
+                        ]
+                        : [
+                            {
+                                label: "Employee",
+                                name: "employee_name",
+                                type: "text",
+                                value: employees[0]
+                                    ? `${employees[0].first_name} ${employees[0].last_name}`
+                                    : "",
+                                disabled: true, // 🔥 non-editable
+                            },
+                        ]),
                     { label: "Vendor Name", name: "vendor_name", required: true },
 
                     { label: "Expense Type", name: "expense_type", required: true },

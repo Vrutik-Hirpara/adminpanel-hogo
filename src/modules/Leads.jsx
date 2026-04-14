@@ -1072,7 +1072,7 @@ export default function Leads() {
       <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-[2px] bg-black/20">
         <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
           {/* Header with primary color background */}
-          <div className={`bg-[${themes.primary}] px-6 py-4`}>
+          <div className={` px-6 py-4`}    style={{ 'background-color': themes.primary }}>
             <h3 className="text-lg font-semibold text-white">Select Month & Year</h3>
           </div>
 

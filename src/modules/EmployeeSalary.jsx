@@ -709,7 +709,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
         setSuccess(res.data?.message || "Saved successfully");
       }
 
-      setMode("list");
+      setMode(isHR ? "list" : "view");
       await fetchAllSalary(employees);
     } catch (err) {
       setError(parseBackendErrors(err));
@@ -791,12 +791,16 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= LIST =================
   if (mode === "list") {
+    if (!isHR && salaryData.length > 0) {
+      setSelectedItem(salaryData[0]);
+      setMode("view");
+      return null;
+    }
     const listContent = (
       <>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+        {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="EMPLOYEE SALARY" />
           
-          {/* 🔥 FILTER BUTTONS - Local filtering */}
           {isHR && (
             <div className="flex gap-3">
               {["all", "true", "false"].map((filter) => (
@@ -827,8 +831,63 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
               }} />
             )}
           </div>
-        </div>
+        </div> */}
+<div className="flex flex-col gap-4 mb-4 w-full">
 
+  {/* ROW 1: Title + Search */}
+ <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+
+  <SectionTitle title="EMPLOYEE SALARY" />
+
+  <div className="w-full sm:w-auto sm:ml-auto">
+    <SearchBar
+      value={search}
+      onChange={setSearch}
+      placeholder="Search salary..."
+    />
+  </div>
+
+</div>
+
+  {/* ROW 2: Tabs + Add */}
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-3">
+
+    {/* Tabs */}
+    {isHR && (
+      <div className="flex gap-3 flex-wrap">
+        {["all", "true", "false"].map((filter) => (
+          <button
+            key={filter}
+            onClick={() => setStatusFilter(filter)}
+            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 capitalize ${
+              statusFilter === filter 
+                ? "bg-[var(--primary)] text-white shadow-md" 
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {filter === "all" ? "All" : filter === "true" ? "Active" : "Inactive"}
+          </button>
+        ))}
+      </div>
+    )}
+
+    {/* Add Button */}
+    <div className="ml-auto">
+      {isHR && (
+        <ActionButtons
+          showAdd
+          addText="+ Add"
+          onAdd={() => {
+            setSelectedItem(null);
+            setMode("form");
+          }}
+        />
+      )}
+    </div>
+
+  </div>
+
+</div>
         {/* Show record count */}
         <div className="mb-2 text-sm text-gray-500">
           Showing {salaryData.length} of {allSalaryData.length} records
@@ -865,57 +924,80 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= VIEW =================
   if (mode === "view" && selectedItem) {
+    const viewContent = (
+      <EntityViewCard
+        title="Salary Details"
+        data={selectedItem}
+        fields={salaryFields}
+        api={SalaryAPI}
+        onUpdated={() => fetchAllSalary(employees)}
+        onDeleted={() => fetchAllSalary(employees)}
+        headerKeys={["employeeName"]}
+      />
+    );
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{viewContent}</div>;
+    }
     return (
-      <EntityPageLayout title="Salary Details" showBack onBack={() => setMode("list")}>
-        <EntityViewCard
-          title="Salary Details"
-          data={selectedItem}
-          fields={salaryFields}
-          api={SalaryAPI}
-          onUpdated={() => fetchAllSalary(employees)}
-          onDeleted={() => fetchAllSalary(employees)}
-          headerKeys={["employeeName"]}
-        />
+      <EntityPageLayout 
+        title="Salary Details" 
+        showBack={isHR} 
+        onBack={() => setMode("list")}
+      >
+        {viewContent}
       </EntityPageLayout>
     );
   }
 
   // ================= FORM =================
+  const formContent = (
+    <EntityForm
+      title={selectedItem ? "Edit Salary" : "Create Salary"}
+      selectedItem={selectedItem}
+      onSubmit={onSubmit}
+      setMode={setMode}
+      onCancel={() => setMode(isHR ? "list" : "view")}
+      fields={[
+        {
+          label: "Employee",
+          name: "employee_id",
+          type: "select",
+          options: employees.map((e) => ({
+            label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+            value: e.id,
+          })),
+          required: true,
+          disabled: !!employeeFilterId,
+          defaultValue: employeeFilterId || "",
+        },
+        { label: "Basic Salary", name: "basic_salary", type: "number", required: true },
+        { label: "Allowances", name: "alloances", type: "number", required: true },
+        { label: "Deductions", name: "deductions", type: "number", required: true },
+        { label: "Effective From", name: "effective_from", type: "date", required: true },
+        ...(isHR && selectedItem ? [{
+          label: "Status",
+          name: "status",
+          type: "select",
+          options: [
+            { label: "Active", value: 1 },
+            { label: "Inactive", value: 0 },
+          ],
+        }] : []),
+      ]}
+    />
+  );
+
+  if (asSubcomponent) {
+    return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{formContent}</div>;
+  }
+
   return (
-    <EntityPageLayout title="Employee Salary" showBack onBack={() => setMode("list")}>
-      <EntityForm
-        title={selectedItem ? "Edit Salary" : "Create Salary"}
-        selectedItem={selectedItem}
-        onSubmit={onSubmit}
-        setMode={setMode}
-        fields={[
-          {
-            label: "Employee",
-            name: "employee_id",
-            type: "select",
-            options: employees.map((e) => ({
-              label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
-              value: e.id,
-            })),
-            required: true,
-            disabled: !!employeeFilterId,
-            defaultValue: employeeFilterId || "",
-          },
-          { label: "Basic Salary", name: "basic_salary", type: "number", required: true },
-          { label: "Allowances", name: "alloances", type: "number", required: true },
-          { label: "Deductions", name: "deductions", type: "number", required: true },
-          { label: "Effective From", name: "effective_from", type: "date", required: true },
-          ...(isHR && selectedItem ? [{
-            label: "Status",
-            name: "status",
-            type: "select",
-            options: [
-              { label: "Active", value: 1 },
-              { label: "Inactive", value: 0 },
-            ],
-          }] : []),
-        ]}
-      />
+    <EntityPageLayout 
+      title="Employee Salary" 
+      showBack={isHR} 
+      onBack={() => setMode(isHR ? "list" : "view")}
+    >
+      {formContent}
     </EntityPageLayout>
   );
 }

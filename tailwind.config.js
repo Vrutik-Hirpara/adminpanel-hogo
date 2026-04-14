@@ -24,6 +24,7 @@ import { themes } from "./src/config/theme.config";
 
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
+  
   theme: {
     extend: {
       colors: {

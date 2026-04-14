@@ -289,7 +289,7 @@ import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
-export default function EmployeeDocuments({ employeeFilterId, asSubcomponent }) {
+export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, setTabActions }) {
   const { setError, setSuccess } = useOutletContext();
 
   const { employeeId, isHR } = useUser();
@@ -299,7 +299,21 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent }) 
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (asSubcomponent && setTabActions) {
+      if (mode === "view" && selectedItem) {
+        setTabActions({
+          onEdit: () => setMode("form"),
+          onDelete: () => handleDelete(selectedItem.id),
+        });
+      } else {
+        setTabActions(null);
+      }
+      return () => setTabActions(null);
+    }
+  }, [asSubcomponent, setTabActions, mode, selectedItem]);
   // ================= FETCH =================
   const fetchDocuments = async (empList) => {
     setLoading(true); // 🔥 START 
@@ -326,10 +340,16 @@ const [loading, setLoading] = useState(false);
       });
 
       setDocuments(formatted);
+
+      if (asSubcomponent && !isHR && formatted.length > 0) {
+        setSelectedItem(formatted[0]);
+        setMode("view");
+      }
     } catch (err) {
       setError(parseBackendErrors(err));
-    }finally { setLoading(false); // 🔥 END 
-      } 
+    } finally {
+      setLoading(false); // 🔥 END 
+    }
   };
 
   // ================= LOAD =================
@@ -425,7 +445,11 @@ const [loading, setLoading] = useState(false);
         setSuccess(res.data?.message || "Saved successfully");
       }
 
-      setMode("list");
+      if (asSubcomponent && !isHR && formatted.length > 0) {
+        setSelectedItem(formatted[0]);
+        setMode("view");
+      }
+      setMode(isHR ? "list" : "view");
       fetchDocuments(employees);
 
     } catch (err) {
@@ -458,20 +482,134 @@ const [loading, setLoading] = useState(false);
   ];
 
   // ================= LIST =================
+  // if (mode === "list") {
+  //   const listContent = (
+  //     <>
+  //       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+  //         <SectionTitle title="EMPLOYEE DOCUMENTS" />
+
+  //         <div className="flex flex-wrap gap-3 self-end ml-auto">
+  //           <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
+  //           {/* <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} /> */}
+  //           {/* )} */}
+  //           <div className="flex flex-wrap gap-3 self-end ml-auto">
+  //             {(filteredDocuments.length === 0) && (
+  //               <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
+  //             )}
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
+  //         {filteredDocuments.map((doc, index) => (
+  //           <EntityTableRow
+  //             key={doc.id}
+  //             row={doc}
+  //             index={index}
+  //             columns={[
+  //               { key: "employeeName" },
+  //               { key: "pancard_number" },
+  //               { key: "aadhar_number" },
+  //               { key: "driving_license_number" },
+  //               { key: "uploaded_at", render: r => formatDate(r.uploaded_at)?.slice(0, 10) },
+  //             ]}
+  //             onView={(r) => { setSelectedItem(r); setMode("view"); }}
+  //             onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
+  //             onDelete={handleDelete}
+  //           />
+  //         ))}
+  //       </Table>
+  //       {loading && <LoadingSpinner text="Loading Employee Document..." />}
+  //     </>
+  //   );
+
+  //   if (asSubcomponent) {
+  //     return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{listContent}</div>;
+  //   }
+
+  //   return <PageContainer>{listContent}</PageContainer>;
+  // }
+  // ================= LIST =================
   if (mode === "list") {
+    // For non-HR with 0 documents, don't show table
+    if (!isHR && filteredDocuments.length === 0) {
+      const noDataContent = (
+        <>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+            <SectionTitle title="EMPLOYEE DOCUMENTS" />
+            <ActionButtons
+              showAdd
+              addText="+ Upload Documents"
+              onAdd={() => { setSelectedItem(null); setMode("form"); }}
+            />
+          </div>
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-gray-500 mb-4">No documents found</div>
+
+          </div>
+        </>
+      );
+
+      if (asSubcomponent) {
+        return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{noDataContent}</div>;
+      }
+      return <PageContainer>{noDataContent}</PageContainer>;
+    }
+
+    // For HR or non-HR with data, show the table
     const listContent = (
       <>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+        {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="EMPLOYEE DOCUMENTS" />
 
           <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
-            {isHR &&(
-            <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
-            )}
+            <div className="flex flex-wrap gap-3 self-end ml-auto">
+              {isHR && (
+                <ActionButtons
+                  showAdd
+                  addText="+ Add"
+                  onAdd={() => {
+                    setSelectedItem(null);
+                    setMode("form");
+                  }}
+                />
+              )}
             </div>
-        </div>
+          </div>
+        </div> */}
+<div className="flex flex-col gap-4 mb-4 w-full">
 
+  {/* ROW 1: Title + Search */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+
+    <SectionTitle title="EMPLOYEE DOCUMENTS" />
+
+    <div className="w-full sm:w-auto sm:ml-auto">
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search documents..."
+      />
+    </div>
+
+  </div>
+
+  {/* ROW 2: Add Button */}
+  <div className="flex justify-end w-full">
+    {isHR && (
+      <ActionButtons
+        showAdd
+        addText="+ Add"
+        onAdd={() => {
+          setSelectedItem(null);
+          setMode("form");
+        }}
+      />
+    )}
+  </div>
+
+</div>
         <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
           {filteredDocuments.map((doc, index) => (
             <EntityTableRow
@@ -501,63 +639,71 @@ const [loading, setLoading] = useState(false);
 
     return <PageContainer>{listContent}</PageContainer>;
   }
-
   // ================= VIEW =================
   if (mode === "view" && selectedItem) {
+    const viewContent = (
+      <EntityViewCard
+        title="Employee Documents"
+        data={selectedItem}
+        fields={documentFields}
+        api={EmployeeDocsAPI}
+        onUpdated={() => fetchDocuments(employees)}
+        onDeleted={() => fetchDocuments(employees)}
+        headerKeys={["employeeName"]}
+      />
+    );
+    if (asSubcomponent) {
+      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{viewContent}</div>;
+    }
     return (
-      <EntityPageLayout title="Employee Documents" showBack onBack={() => setMode("list")}>
-        <EntityViewCard
-          title="Employee Documents"
-          data={selectedItem}
-          fields={documentFields}
-          api={EmployeeDocsAPI}
-          onUpdated={() => fetchDocuments(employees)}
-          onDeleted={() => fetchDocuments(employees)}
-          headerKeys={["employeeName"]}
-        />
+      <EntityPageLayout title="Employee Documents" showBack={isHR} onBack={() => setMode("list")}>
+        {viewContent}
       </EntityPageLayout>
     );
   }
 
   // ================= FORM =================
+  const formContent = (
+    <EntityForm
+      title={selectedItem ? "Edit Documents" : "Upload Documents"}
+      selectedItem={selectedItem}
+      onSubmit={onSubmit}
+      setMode={setMode}
+      onCancel={() => setMode(isHR ? "list" : "view")}
+      fields={[
+        {
+          label: "Employee",
+          name: "employee_id",
+          type: "select",
+          required: true,
+          options: employees.map(e => ({
+            label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+            value: e.id,
+          })),
+          // disabled: !!employeeFilterId,
+          defaultValue: employeeFilterId || "",
+        },
+        { label: "PAN Number", name: "pancard_number" },
+        { label: "Aadhar Number", name: "aadhar_number" },
+        { label: "Driving License Number", name: "driving_license_number" },
+
+        { label: "Photo", name: "photo", type: "file", required: !selectedItem, previewKey: "photo" },
+        { label: "Aadhar Front", name: "aadhar_front", type: "file", required: !selectedItem, previewKey: "aadhar_front" },
+        { label: "Aadhar Back", name: "aadhar_back", type: "file", required: !selectedItem, previewKey: "aadhar_back" },
+        { label: "PAN Card", name: "pan_card", type: "file", required: !selectedItem, previewKey: "pan_card" },
+        { label: "DL Front", name: "driving_license_front", type: "file", required: !selectedItem, previewKey: "driving_license_front" },
+        { label: "DL Back", name: "driving_license_back", type: "file", required: !selectedItem, previewKey: "driving_license_back" },
+      ]}
+    />
+  );
+
+  if (asSubcomponent) {
+    return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{formContent}</div>;
+  }
+
   return (
     <EntityPageLayout title="Employee Documents" showBack onBack={() => setMode("list")}>
-      <EntityForm
-        title={selectedItem ? "Edit Documents" : "Upload Documents"}
-        selectedItem={selectedItem}
-        onSubmit={onSubmit}
-        setMode={setMode}
-        fields={[
-          {
-            label: "Employee",
-            name: "employee_id",
-            type: "select",
-            required: true,
-            options: employees.map(e => ({
-              label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
-              value: e.id,
-            })),
-            disabled: !!employeeFilterId,
-            defaultValue: employeeFilterId || "",
-          },
-          { label: "PAN Number", name: "pancard_number" },
-          { label: "Aadhar Number", name: "aadhar_number" },
-          { label: "Driving License Number", name: "driving_license_number" },
-
-          // { label: "Photo", name: "photo", type: "file", required: true },
-          // { label: "Aadhar Front", name: "aadhar_front", type: "file", required: true },
-          // { label: "Aadhar Back", name: "aadhar_back", type: "file", required: true },
-          // { label: "PAN Card", name: "pan_card", type: "file", required: true },
-          // { label: "DL Front", name: "driving_license_front", type: "file", required: true },
-          // { label: "DL Back", name: "driving_license_back", type: "file", required: true },
-          { label: "Photo", name: "photo", type: "file", required: !selectedItem, previewKey: "photo" },
-          { label: "Aadhar Front", name: "aadhar_front", type: "file", required: !selectedItem, previewKey: "aadhar_front" },
-          { label: "Aadhar Back", name: "aadhar_back", type: "file", required: !selectedItem, previewKey: "aadhar_back" },
-          { label: "PAN Card", name: "pan_card", type: "file", required: !selectedItem, previewKey: "pan_card" },
-          { label: "DL Front", name: "driving_license_front", type: "file", required: !selectedItem, previewKey: "driving_license_front" },
-          { label: "DL Back", name: "driving_license_back", type: "file", required: !selectedItem, previewKey: "driving_license_back" },
-        ]}
-      />
+      {formContent}
     </EntityPageLayout>
   );
 }

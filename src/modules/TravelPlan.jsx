@@ -1258,8 +1258,10 @@ export default function TravelPlan() {
         {showAddModal && (
           <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/20">
             <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
-              <div className={`bg-[${themes.primary}] px-6 py-4`}>
-                <h3 className="text-lg font-semibold text-white">Add Plan — {selectedDate}</h3>
+              <div
+                className="px-6 py-4"
+                style={{ backgroundColor: themes.primary }}
+              >                <h3 className="text-lg font-semibold text-white">Add Plan — {selectedDate}</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -1315,8 +1317,10 @@ export default function TravelPlan() {
         {editDailyPlan && (
           <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-[2px] bg-black/20">
             <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
-              <div className={`bg-[${themes.primary}] px-6 py-4`}>
-                <h3 className="text-lg font-semibold text-white">Edit — {editDailyPlan.date}</h3>
+              <div
+                className="px-6 py-4"
+                style={{ backgroundColor: themes.primary }}
+              >                <h3 className="text-lg font-semibold text-white">Edit — {editDailyPlan.date}</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -1371,7 +1375,7 @@ export default function TravelPlan() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 w-full">
           <SectionTitle title="Travel Plan Manager" />
-          <ActionButtons
+          {/* <ActionButtons
             showAdd
             addText="+ New Travel Plan"
             buttonClassName={`bg-[${themes.primary}] hover:bg-[${themes.hover}]`}
@@ -1379,34 +1383,54 @@ export default function TravelPlan() {
               setSelectedPlan(null);
               setMode("form");
             }}
-          />
+          /> */}
+ <ActionButtons
+                  showAdd
+                  addText="+ New Travel Plan"
+                  buttonClassName="text-white"
+                  style={{
+                    backgroundColor: themes.primary,
+                  }}
+                  onAdd={() => {
+                    setSelectedPlan(null);
+                    setMode("form");
+                  }}
+                />
         </div>
 
         {/* Employee Selector - Only show for HR/Admin */}
         {isHR && employees.length > 0 && (
-          <div className="mb-6 flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Select Employee:</label>
-            <select
-              value={selectedEmployeeId || ""}
-              onChange={(e) => {
-                const newEmployeeId = Number(e.target.value);
-                setSelectedEmployeeId(newEmployeeId);
-                // Reset months and selected plan when employee changes
-                setSelectedMonth("");
-                setCalendarMonth("");
-                setFilteredPlans([]);
-                setSelectedPlan(null);
-                setDailyPlans([]);
-              }}
-              className="border border-[var(--bg-black)] rounded-lg px-4 py-2 focus:outline-none "
-            >
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name || emp.first_name || emp.username || `Employee ${emp.id}`}
-                </option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div className="mb-6 flex justify-between items-center gap-4 ">
+              <div>
+                <label className="text-sm font-medium text-gray-700 ">Select Employee:</label>
+                <select
+                  value={selectedEmployeeId || ""}
+                  onChange={(e) => {
+                    const newEmployeeId = Number(e.target.value);
+                    setSelectedEmployeeId(newEmployeeId);
+                    // Reset months and selected plan when employee changes
+                    setSelectedMonth("");
+                    setCalendarMonth("");
+                    setFilteredPlans([]);
+                    setSelectedPlan(null);
+                    setDailyPlans([]);
+                  }}
+                  className="border border-[var(--bg-black)] rounded-lg px-4 py-2 ml-2 focus:outline-none "
+                >
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name || emp.first_name || emp.username || `Employee ${emp.id}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="">
+               
+              </div>
+            </div>
+
+          </>
         )}
 
         {/* Loading State */}
@@ -1434,10 +1458,19 @@ export default function TravelPlan() {
                     setCalendarMonth(monthName);  // Set "May" for calendar
                     setCalendarYear(year);
                   }}
+                  // className={`px-5 py-2 rounded-lg transition-all font-medium ${selectedMonth === month
+                  //   ? `bg-[${themes.primary}] text-white shadow-md`
+                  //   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  //   }`}
                   className={`px-5 py-2 rounded-lg transition-all font-medium ${selectedMonth === month
-                    ? `bg-[${themes.primary}] text-white shadow-md`
+                    ? "text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
+                  style={
+                    selectedMonth === month
+                      ? { backgroundColor: themes.primary }
+                      : {}
+                  }
                 >
                   {month}
                 </button>
@@ -1517,7 +1550,7 @@ export default function TravelPlan() {
                 ←
               </button>
               <h3 className="text-xl font-semibold text-gray-800">
-                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth} 
+                {availableMonths.months ? extractMonthName(availableMonths.months[0]) : calendarMonth}
               </h3>
               <button
                 onClick={goToNextMonth}

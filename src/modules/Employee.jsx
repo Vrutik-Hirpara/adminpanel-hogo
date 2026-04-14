@@ -1275,7 +1275,8 @@ export default function Employee() {
   const [search, setSearch] = useState("");
   const [branches, setBranches] = useState([]);
   const [activeTab, setActiveTab] = useState("profile");
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [tabActions, setTabActions] = useState(null);
 
   // FETCH EMPLOYEES
   const fetchEmployees = async () => {
@@ -1335,6 +1336,10 @@ const [loading, setLoading] = useState(false);
         }];
 
         setEmployees(formatted);
+        if (formatted.length > 0) {
+          setSelectedEmployee(formatted[0].raw);
+          setMode("view");
+        }
       }
     } catch (err) {
       setError(parseBackendErrors(err));
@@ -1342,6 +1347,33 @@ const [loading, setLoading] = useState(false);
     }
     finally {
       setLoading(false); // 🔥 END
+    }
+  };
+
+  const handleGlobalEdit = () => {
+    if (activeTab === "profile") {
+      setMode("form");
+    } else if (tabActions?.onEdit) {
+      tabActions.onEdit();
+    }
+  };
+
+  const handleGlobalDelete = async () => {
+    if (activeTab === "profile") {
+      if (window.confirm("Delete this employee?")) {
+        try {
+          const res = await EmployeeAPI.delete(selectedEmployee.id);
+          setSuccess(res.data?.message || "Deleted successfully");
+          fetchEmployees();
+          setMode("list");
+        } catch (error) {
+          setError(parseBackendErrors(error));
+        }
+      }
+    } else if (tabActions?.onDelete) {
+      if (window.confirm("Delete this record?")) {
+        tabActions.onDelete();
+      }
     }
   };
 
@@ -1472,43 +1504,80 @@ const [loading, setLoading] = useState(false);
 
   // LIST
   if (mode === "list") {
+    if (!isHR && employees.length > 0) {
+      setSelectedEmployee(employees[0].raw);
+      setMode("view");
+      return null;
+    }
+
     return (
       <PageContainer>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="Employees" />
-
-          <div className="flex items-center gap-3 ml-auto">
+        {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+          <div className="flex flex-row justify-between items-center w-full">
+            <SectionTitle title="Employees" />
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="border px-3 py-2 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-
             />
+          </div>
+          <div className="flex items-center gap-3 ml-auto">
 
-            {/* <ActionButtons
-              showAdd
-              addText="+ Add"
-              onAdd={() => {
-                setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
-                setMode("form");
-              }}
-            /> */}
+
+          
 
             {isHR && (
               <ActionButtons
                 showAdd
                 addText="+ Add"
                 onAdd={() => {
-                  setSelectedEmployee(null);   // ⭐ IMPORTANT RESET
+                  setSelectedEmployee(null);  
                   setMode("form");
                 }}
               />
             )}
           </div>
-        </div>
+        </div> */}
+<div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 mb-4">
 
+  {/* LEFT: Title + Search */}
+  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
+
+    <div>
+      <SectionTitle title="Employees" />
+    </div>
+
+    <div>
+      <input
+        type="text"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="border px-3 py-2 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+    </div>
+
+  </div>
+
+</div>
+
+{/* RIGHT: Add Button (SEPARATE — SAME AS USERS) */}
+<div className="flex flex-wrap gap-3 self-end ml-auto">
+
+  {isHR && (
+    <ActionButtons
+      showAdd
+      addText="+ Add"
+      onAdd={() => {
+        setSelectedEmployee(null);
+        setMode("form");
+      }}
+    />
+  )}
+
+</div>
         <Table header={<TableHeader columns={["Code", "Branch", "Name", "DOB", "Phone", "Role", "Status", "Action"]} />}>
           {filteredEmployees.map((emp, index) => (
             <EntityTableRow
@@ -1543,7 +1612,7 @@ const [loading, setLoading] = useState(false);
           ))}
 
         </Table>
-            {loading && <LoadingSpinner text="Loading Employee details..." />}
+        {loading && <LoadingSpinner text="Loading Employee details..." />}
 
       </PageContainer>
     );
@@ -1554,7 +1623,7 @@ const [loading, setLoading] = useState(false);
     return (
       <EntityPageLayout
         title="Employee Details"
-        showBack
+        showBack={isHR}
         onBack={() => { setMode("list"); setActiveTab("profile"); }}
       >
         <div className="w-full bg-white rounded-lg shadow overflow-hidden">
@@ -1574,23 +1643,16 @@ const [loading, setLoading] = useState(false);
             </div>
 
             <div className="flex gap-2 mt-6 md:mt-0 self-end">
-              <button onClick={() => setMode("form")} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
-                Edit
-              </button>
-              <button onClick={async () => {
-                if (window.confirm("Delete this employee?")) {
-                  try {
-                    const res = await EmployeeAPI.delete(selectedEmployee.id);
-                    setSuccess(res.data?.message || "Deleted successfully");
-                    fetchEmployees();
-                    setMode("list");
-                  } catch (error) {
-                    setError(parseBackendErrors(error));
-                  }
-                }
-              }} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
-                Delete
-              </button>
+              {(activeTab === "profile" || tabActions?.onEdit) && (
+                <button onClick={handleGlobalEdit} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
+                  Edit
+                </button>
+              )}
+              {(activeTab === "profile" || tabActions?.onDelete) && (
+                <button onClick={handleGlobalDelete} className="border border-white/90 text-white px-5 py-2 rounded hover:bg-white hover:text-red-600 transition flex items-center text-sm font-semibold">
+                  Delete
+                </button>
+              )}
             </div>
           </div>
 
@@ -1635,14 +1697,14 @@ const [loading, setLoading] = useState(false);
                 </div>
               </div>
             )}
-            {activeTab === "documents" && <EmployeeDocuments employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "personal" && <EmployeePersonalDetails employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "salary" && <EmployeeSalary employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "users" && <Users employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "leave_balance" && <LeaveBalance employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "leave_requests" && <LeaveRequests employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "attendance" && <EmployeeAttendance employeeFilterId={selectedEmployee.id} asSubcomponent />}
-            {activeTab === "salary_payout" && <SalaryPayout employeeFilterId={selectedEmployee.id} asSubcomponent />}
+            {activeTab === "documents" && <EmployeeDocuments employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "personal" && <EmployeePersonalDetails employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "salary" && <EmployeeSalary employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "users" && <Users employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "leave_balance" && <LeaveBalance employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "leave_requests" && <LeaveRequests employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "attendance" && <EmployeeAttendance employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
+            {activeTab === "salary_payout" && <SalaryPayout employeeFilterId={selectedEmployee.id} asSubcomponent setTabActions={setTabActions} />}
           </div>
         </div>
       </EntityPageLayout>
@@ -1651,7 +1713,11 @@ const [loading, setLoading] = useState(false);
 
   // FORM
   return (
-    <EntityPageLayout title="Employee Details" showBack onBack={() => setMode("list")}>
+    <EntityPageLayout
+      title="Employee Details"
+      showBack={isHR}
+      onBack={() => setMode(isHR ? "list" : "view")}
+    >
       <EntityForm
         title={selectedEmployee ? "Edit Employee" : "Create Employee"}
         selectedItem={
@@ -1669,6 +1735,7 @@ const [loading, setLoading] = useState(false);
 
         onSubmit={onSubmit}
         setMode={setMode}
+        onCancel={() => setMode(isHR ? "list" : "view")}
         fields={[
           { label: "Employee Code", name: "employee_code", required: true },
 

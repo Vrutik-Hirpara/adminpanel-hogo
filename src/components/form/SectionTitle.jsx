@@ -2,7 +2,7 @@ import { themes } from "../../config/theme.config";
 
 export default function SectionTitle({ title }) {
   return (
-    <div className="mb-6">
+    <div className="">
       <h2
         className="text-sm font-bold tracking-wider uppercase"
         style={{

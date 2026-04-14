@@ -1332,7 +1332,7 @@ const getCurrentMonth = () => {
 };
 
 export default function EmployeeAttendance({ employeeFilterId, asSubcomponent }) {
-  const [monthTab, setMonthTab] = useState("previous");
+  const [monthTab, setMonthTab] = useState("current");
   const { setError, setSuccess } = useOutletContext();
   const [attendance, setAttendance] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -1386,62 +1386,119 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
   }, []);
 
   // ================= FETCH DATA WITH FILTERS =================
-  const fetchAttendance = async (date = null, month = null, year = null) => {
-    if (isRoleLoading || !roleName) return;
+  // const fetchAttendance = async (date = null, month = null, year = null) => {
+  //   if (isRoleLoading || !roleName) return;
 
-    setLoading(true);
-    try {
-      let response;
+  //   setLoading(true);
+  //   try {
+  //     let response;
 
-      if (roleName === "hr") {
-        if (date) {
-          response = await EmployeeAttendanceAPI.getByDate(date);
-        } else if (month && year) {
-          response = await EmployeeAttendanceAPI.getByMonth(month, year);
-        } else {
-          const weekRange = getLastWeekRange();
-          response = await EmployeeAttendanceAPI.getByDateRange(
-            weekRange.start,
-            weekRange.end
-          );
-        }
-      } else if (roleName === "employee") {
-        if (monthTab === "previous") {
-          response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
-        } else {
-          const currentMonth = getCurrentMonth();
-          response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
-        }
+  //     if (roleName === "hr") {
+  //       if (date) {
+  //         response = await EmployeeAttendanceAPI.getByDate(date);
+  //       } else if (month && year) {
+  //         response = await EmployeeAttendanceAPI.getByMonth(month, year);
+  //       } else {
+  //         const weekRange = getLastWeekRange();
+  //         response = await EmployeeAttendanceAPI.getByDateRange(
+  //           weekRange.start,
+  //           weekRange.end
+  //         );
+  //       }
+  //     } else if (roleName === "employee") {
+  //       if (monthTab === "previous") {
+  //         response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
+  //       } else {
+  //         const currentMonth = getCurrentMonth();
+  //         response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
+  //       }
+  //     }
+
+  //     console.log("API Response:", response);
+
+  //     let attendanceData = [];
+
+  //     if (response?.data?.data && Array.isArray(response.data.data)) {
+  //       attendanceData = response.data.data;
+  //     } else if (response?.data?.data && !Array.isArray(response.data.data)) {
+  //       attendanceData = [response.data.data];
+  //     } else if (response?.data && Array.isArray(response.data)) {
+  //       attendanceData = response.data;
+  //     }
+
+  //     if (employeeFilterId) {
+  //       attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
+  //     }
+
+  //     console.log("Extracted attendance data:", attendanceData);
+  //     setAttendance(attendanceData);
+
+  //   } catch (error) {
+  //     setError(parseBackendErrors(error));
+  //     console.error("Error fetching attendance:", error);
+  //     setAttendance([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+// ================= FETCH DATA WITH FILTERS =================
+const fetchAttendance = async (date = null, month = null, year = null) => {
+  if (isRoleLoading || !roleName) return;
+
+  setLoading(true);
+  try {
+    let response;
+
+    if (roleName === "hr") {
+      if (date) {
+        response = await EmployeeAttendanceAPI.getByDate(date);
+      } else if (month && year) {
+        response = await EmployeeAttendanceAPI.getByMonth(month, year);
+      } else {
+        // 🆕 Default to current month for HR
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        
+        console.log(`HR defaulting to current month: ${currentMonth}/${currentYear}`);
+        response = await EmployeeAttendanceAPI.getByMonth(currentMonth, currentYear);
       }
-
-      console.log("API Response:", response);
-
-      let attendanceData = [];
-
-      if (response?.data?.data && Array.isArray(response.data.data)) {
-        attendanceData = response.data.data;
-      } else if (response?.data?.data && !Array.isArray(response.data.data)) {
-        attendanceData = [response.data.data];
-      } else if (response?.data && Array.isArray(response.data)) {
-        attendanceData = response.data;
+    } else if (roleName === "employee") {
+      if (monthTab === "previous") {
+        response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
+      } else {
+        const currentMonth = getCurrentMonth();
+        response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
       }
-
-      if (employeeFilterId) {
-        attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
-      }
-
-      console.log("Extracted attendance data:", attendanceData);
-      setAttendance(attendanceData);
-
-    } catch (error) {
-      setError(parseBackendErrors(error));
-      console.error("Error fetching attendance:", error);
-      setAttendance([]);
-    } finally {
-      setLoading(false);
     }
-  };
 
+    console.log("API Response:", response);
+
+    let attendanceData = [];
+
+    if (response?.data?.data && Array.isArray(response.data.data)) {
+      attendanceData = response.data.data;
+    } else if (response?.data?.data && !Array.isArray(response.data.data)) {
+      attendanceData = [response.data.data];
+    } else if (response?.data && Array.isArray(response.data)) {
+      attendanceData = response.data;
+    }
+
+    if (employeeFilterId) {
+      attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
+    }
+
+    console.log("Extracted attendance data:", attendanceData);
+    setAttendance(attendanceData);
+
+  } catch (error) {
+    setError(parseBackendErrors(error));
+    console.error("Error fetching attendance:", error);
+    setAttendance([]);
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchEmployees = async () => {
     try {
       const res = await EmployeeAPI.getAll();
@@ -2033,11 +2090,23 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
                 Reset Filters
               </button>
             )}
+
+            {/* Add button for both HR and Employee */}
+          <div className="flex flex-wrap gap-3 self-end ml-auto">
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedItem(null);
+                setMode("form");
+              }}
+            />
+          </div>
           </>
         )}
 
         {/* ✅ EMPLOYEE TABS */}
-        {roleName !== "hr" && (
+        {/* {roleName !== "hr" && (
           <div className="flex gap-3">
             {["current", "previous"].map((tab) => (
               <button
@@ -2054,9 +2123,28 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
               </button>
             ))}
           </div>
+        )} */}
+        {/* ✅ EMPLOYEE TABS */}
+        {roleName !== "hr" && (
+          <div className="flex gap-3">
+            {["previous", "current"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setMonthTab(tab);
+                }}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 capitalize ${monthTab === tab
+                  ? "bg-[var(--primary)] text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+              >
+                {tab === "previous" ? "Previous Month" : "Current Month"}
+              </button>
+            ))}
+          </div>
         )}
-
       </div>
+
     );
   };
   // ================= EMPLOYEE ATTENDANCE FORM COMPONENT =================
@@ -2221,17 +2309,7 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
             title={roleName === "hr" ? "EMPLOYEE ATTENDANCE" : "MY ATTENDANCE"}
           />
 
-          {/* Add button for both HR and Employee */}
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
-            <ActionButtons
-              showAdd
-              addText="+ Add"
-              onAdd={() => {
-                setSelectedItem(null);
-                setMode("form");
-              }}
-            />
-          </div>
+          
         </div>
 
         <FilterBar />

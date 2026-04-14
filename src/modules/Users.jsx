@@ -445,26 +445,33 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
   if (mode === "list") {
     const listContent = (
       <>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="USERS" />
+        <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 mb-4 ">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center  w-full gap-3">
+            <div>
+              <SectionTitle title="USERS" />
+            </div>
 
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder="Search users..."
-            />
-            {isHR && (
-              <ActionButtons
-                showAdd
-                addText="+ Add"
-                onAdd={() => {
-                  setSelectedItem(null);
-                  setMode("form");
-                }}
+            <div>
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search users..."
               />
-            )}
+            </div>
           </div>
+        </div>
+        <div className="flex flex-wrap gap-3 self-end ml-auto">
+
+          {isHR && (
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedItem(null);
+                setMode("form");
+              }}
+            />
+          )}
         </div>
 
         <Table header={<TableHeader columns={["Name", "Status", "Action"]} />}>

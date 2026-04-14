@@ -592,12 +592,11 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
   if (mode === "list") {
     const listContent = (
       <>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
+        {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="LEAVE REQUESTS" />
 
           <div className="flex flex-wrap gap-3 self-end ml-auto">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
-            {/* 🔥 Add button visible to both HR and non-HR */}
             <ActionButtons
               showAdd
               addText="+ Add"
@@ -607,8 +606,37 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
               }}
             />
           </div>
-        </div>
+        </div> */}
+        <div className="flex flex-col gap-4 mb-4 w-full">
 
+          {/* ROW 1: Title + Search */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+
+            <SectionTitle title="LEAVE REQUESTS" />
+
+            <div className="w-full sm:w-auto sm:ml-auto">
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search leaves..."
+              />
+            </div>
+
+          </div>
+
+          {/* ROW 2: Add Button */}
+          <div className="flex justify-end w-full">
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedItem(null);
+                setMode("form");
+              }}
+            />
+          </div>
+
+        </div>
         <Table header={<TableHeader columns={["Employee", "Type", "Start", "End", "Days", "Reason", "Status", "Action"]} />}>
           {filteredLeaves.map((l, index) => (
             <EntityTableRow
