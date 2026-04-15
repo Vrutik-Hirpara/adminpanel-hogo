@@ -87,7 +87,7 @@ export default function FormTextarea({
       <textarea
         {...register(name, rules)}
         readOnly={readOnly}
-        rows={4}
+        rows={1}
         className="px-4 py-2 rounded outline-none resize-none"
         style={{
           backgroundColor: readOnly ? themes.surfaceMuted : themes.textWhite,

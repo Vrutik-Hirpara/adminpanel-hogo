@@ -477,6 +477,8 @@ import {
   Wallet,
   ShieldCheck,
   UserPlus,
+  Map,
+  IndianRupee,
   MapPin,
   CalendarDays,
   ClipboardList,
@@ -582,7 +584,7 @@ const Sidebar = () => {
             <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
             <LinkItem to="/employee_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} />
-            <LinkItem to="/salary-payment" icon={PhoneCall} label="salary payment" color={themes.cardUsers} />
+            <LinkItem to="/salary-payment" icon={IndianRupee} label="salary payout" color={themes.cardUsers} />
 
           </Dropdown>
         )}
@@ -592,7 +594,7 @@ const Sidebar = () => {
           <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
           <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
           {/* <LinkItem to="/employ_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} /> */}
-          <LinkItem to="/travel-plan" icon={PhoneCall} label="travel-plan" color={themes.cardUsers} />
+          <LinkItem to="/travel-plan" icon={Map} label="travel-plan" color={themes.cardUsers} />
             <LinkItem to="/expense" icon={Receipt} label="Expense" color={themes.cardSalary} />
 
         </Dropdown>

@@ -442,12 +442,12 @@ export default function LeadFollowups() {
       <PageContainer>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Lead Followups" />
-          {isHR && (
+          {/* {isHR && ( */}
             <ActionButtons showAdd addText="+ Add" onAdd={() => {
               setSelectedItem(null);   // ⭐ RESET
               setMode("form");
             }} />
-          )}
+          {/* )} */}
         </div>
 
         <Table header={<TableHeader columns={["Employee", "bussiness name", "Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>

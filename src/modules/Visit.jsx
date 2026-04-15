@@ -948,8 +948,8 @@ export default function Visits({ asSubcomponent }) {
     return (
       <PageContainer>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
-          <SectionTitle title="Visits" />
-          {isHR && (
+          {!asSubcomponent && <SectionTitle title="Visits" />}
+          {/* {isHR && ( */}
             <ActionButtons
               showAdd
               addText="+ Add"
@@ -958,7 +958,7 @@ export default function Visits({ asSubcomponent }) {
                 setMode("form");
               }}
             />
-          )}
+          {/* )} */}
         </div>
         {loading ? (
           <div className="py-12">

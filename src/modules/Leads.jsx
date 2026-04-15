@@ -353,7 +353,7 @@ import api from "../services/api"; // 👈 ADD THIS LINE
 
 import { LeadsAPI, EmployeeAPI, VisitsAPI, RegionsAPI } from "../services";
 import EntityTableRow from "../components/table/EntityTableRow";
-
+import LeadInfoHeader from "../components/common/LeadInfoHeader";
 // 🔥 ROLE HOOK
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
@@ -1090,7 +1090,7 @@ export default function Leads({ asSubcomponent }) {
       <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-[2px] bg-black/20">
         <div className="bg-white rounded-lg shadow-2xl w-96 border border-[var(--border-black-200)] transform transition-all overflow-hidden">
           {/* Header with primary color background */}
-          <div className={` px-6 py-4`}    style={{ 'background-color': themes.primary }}>
+          <div className={` px-6 py-4`} style={{ 'background-color': themes.primary }}>
             <h3 className="text-lg font-semibold text-white">Select Month & Year</h3>
           </div>
 
@@ -1168,7 +1168,7 @@ export default function Leads({ asSubcomponent }) {
         ) : (
           <>
             {/* 🔥 SAME LIKE VISITS HEADER */}
-            <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+            {/* <div className="bg-gray-50 border rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                 <div>
                   <p className="text-gray-500">Lead Type</p>
@@ -1197,8 +1197,8 @@ export default function Leads({ asSubcomponent }) {
                   </p>
                 </div>
               </div>
-            </div>
-
+            </div> */}
+            <LeadInfoHeader data={followupsArray} title="Lead Information" />
             {/* 🔥 TABLE */}
             <Table
               header={
@@ -1435,7 +1435,7 @@ export default function Leads({ asSubcomponent }) {
           ) : (
             <>
               {/* 🔥 LEAD INFO SECTION */}
-              <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+              {/* <div className="bg-gray-50 border rounded-lg p-4 mb-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
 
                   <div>
@@ -1465,7 +1465,8 @@ export default function Leads({ asSubcomponent }) {
                   </div>
 
                 </div>
-              </div>
+              </div> */}
+            <LeadInfoHeader data={visitsArray} title="Lead Information" />
 
               <Table
                 header={
@@ -1693,8 +1694,8 @@ export default function Leads({ asSubcomponent }) {
               type: "text",
               readOnly: true,
               disabled: true,
-              value: selectedItem 
-                ? selectedItem.created_by_name 
+              value: selectedItem
+                ? selectedItem.created_by_name
                 : (userData ? `${userData.first_name} ${userData.last_name}` : ""),
             },
             // 📅 Follow-up Date
@@ -1807,16 +1808,22 @@ export default function Leads({ asSubcomponent }) {
               name: "region",
               type: "select",
               options: regions.map(r => ({ label: r.name, value: r.name })),
-              required: true
+              required: true,
+              value: selectedItem?.region || "", 
+
             },
             { label: "Outlet Age", name: "outlet_age", type: "number" },
-            { label: "PPF Installers", name: "ppf_installers", type: "checkbox" },
+
             { label: "Brand Dealing", name: "brand_dealing" },
             { label: "Past Distributor Name", name: "past_distributor_name" },
             { label: "Price Feedback", name: "price_feedback" },
             { label: "Quality Feedback", name: "quality_feedback" },
             { label: "Demo", name: "demo", type: "checkbox" },
+            { label: "PPF Installers", name: "ppf_installers", type: "checkbox" },
+                        
+
             { label: "Remarks", name: "remarks", type: "textarea" },
+            
           ]}
         />
       </EntityPageLayout>

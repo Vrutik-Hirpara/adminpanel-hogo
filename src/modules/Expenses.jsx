@@ -77,6 +77,7 @@ export default function Expenses() {
         try {
             const res = await LeadsAPI.getAll();
             const data = res.data?.data || res.data || [];
+            console.log("Fetched leads:", data); // 🔍 Debug log
             setLeads(data);
         } catch (err) {
             setError(parseBackendErrors(err));
@@ -117,6 +118,7 @@ export default function Expenses() {
                 const res = await ExpenseAPI.update(selectedItem.id, formData);
                 setSuccess(res.data?.message || "Saved successfully");
             } else {
+                console.log("Creating expense with data:", Object.fromEntries(formData.entries())); // 🔍 Debug log
                 const res = await ExpenseAPI.create(formData);
                 setSuccess(res.data?.message || "Saved successfully");
             }
@@ -357,6 +359,13 @@ export default function Expenses() {
                             },
                         ]),
                     { label: "Vendor Name", name: "vendor_name", required: true },
+                    {
+                        label: "Lead Name", name: "lead_id", type: "select",
+                        options: leads.map(e => ({
+                            label: `${e.business_name} `,
+                            value: e.id,
+                        })), required: true
+                    },
 
                     { label: "Expense Type", name: "expense_type", required: true },
 
