@@ -470,6 +470,7 @@ import { themes } from "../config/theme.config";
 import {
   LayoutDashboard,
   Users,
+  Navigation,
   UserCircle2,
   Building2,
   Briefcase,
@@ -583,7 +584,7 @@ const Sidebar = () => {
             <LinkItem to="/employee-documents" icon={FileText} label="Employee Documents" color={themes.cardDocuments} />
             <LinkItem to="/leave-balance" icon={CalendarCheck} label="Leave Balance" color={themes.cardDepartment} />
             <LinkItem to="/leave-requests" icon={ClipboardList} label="Leave Request" color={themes.cardDepartment} />
-            <LinkItem to="/employee_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} />
+            <LinkItem to="/employee_attendence" icon={CalendarCheck} label="employee-attendence" color={themes.cardUsers} />
             <LinkItem to="/salary-payment" icon={IndianRupee} label="salary payout" color={themes.cardUsers} />
 
           </Dropdown>
@@ -591,7 +592,7 @@ const Sidebar = () => {
 
         <Dropdown id="sales" label="Sales" icon={TrendingUp} color={themes.cardUsers}>
           <LinkItem to="/leads" icon={UserPlus} label="Leads" color={themes.cardUsers} />
-          <LinkItem to="/visits" icon={MapPin} label="Visits" color={themes.cardSalary} />
+          <LinkItem to="/visits" icon={Navigation} label="Visits" color={themes.cardSalary} />
           <LinkItem to="/lead_followups" icon={PhoneCall} label="lead-followups" color={themes.cardUsers} />
           {/* <LinkItem to="/employ_attendence" icon={PhoneCall} label="employee-attendence" color={themes.cardUsers} /> */}
           <LinkItem to="/travel-plan" icon={Map} label="travel-plan" color={themes.cardUsers} />
@@ -611,8 +612,8 @@ const Sidebar = () => {
         <div className="pt-4 border-t" style={{ borderColor: themes.borderLight }}>
           <Dropdown id="employee" label="Profile" icon={Users} color={themes.cardEmployee}>
             <LinkItem to="/employee" icon={Users} label="Employee" color={themes.cardEmployee} />
-            <LinkItem to="/employee_attendence" icon={PhoneCall} label="Employee Attendance" color={themes.cardUsers} />
-            <LinkItem to="/salary-payment" icon={PhoneCall} label="salary payout" color={themes.cardUsers} />
+            <LinkItem to="/employee_attendence" icon={CalendarCheck} label="Employee Attendance" color={themes.cardUsers} />
+            <LinkItem to="/salary-payment" icon={IndianRupee} label="salary payout" color={themes.cardUsers} />
           </Dropdown>
         </div>
       )}
