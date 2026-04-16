@@ -278,59 +278,57 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 
 export default function LeadFollowups() {
-
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { 
+    leads, refreshLeads, 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
 
   const [followups, setFollowups] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [leads, setLeads] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   
-  const fetchData = async () => {
-    setLoading(true); // 🔥 START 
+  const fetchFollowups = async () => {
+    setLocalLoading(true);
     try {
-      const [f, e, l] = await Promise.all([
-        LeadFollowupsAPI.getAll(),
-        EmployeeAPI.getAll(),
-        LeadsAPI.getAll(),
-      ]);
-
-      let followupData = f.data.data || [];
-
-      // 🔒 FILTER FOR NON-HR
-      if (!isHR) {
-        followupData = followupData.filter(
-          item => Number(item.employee_id) === Number(employeeId)
-        );
-      }
-
-      setFollowups(followupData);
-
-      let empList = e.data.data || [];
-
-      // 🔒 NON HR → dropdown ma only self
-      if (!isHR) {
-        empList = empList.filter(emp => emp.id === employeeId);
-      }
-
-      setEmployees(empList);
-
-      setLeads(l.data.data || []);
+      const f = await LeadFollowupsAPI.getAll();
+      setFollowups(f.data.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false); // 🔥 END 
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [isHR, employeeId]);
+    fetchFollowups();
+    if (leads.length === 0) refreshLeads();
+    if (employees.length === 0) refreshEmployees();
+  }, [isHR, employeeId, leads.length, employees.length]);
+
+  // 🔥 FILTERED FOLLOWUPS (Memoized)
+  const filteredFollowups = useMemo(() => {
+    let data = [...followups];
+    if (!isHR) {
+      data = data.filter(
+        item => Number(item.employee_id) === Number(employeeId)
+      );
+    }
+    return data;
+  }, [followups, isHR, employeeId]);
+
+  // 🔥 FILTERED EMPLOYEES for dropdown
+  const dropdownEmployees = useMemo(() => {
+    if (isHR) return employees;
+    return employees.filter(emp => emp.id === employeeId);
+  }, [employees, isHR, employeeId]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -351,7 +349,7 @@ export default function LeadFollowups() {
       }
 
       setMode("list");
-      fetchData();
+      fetchFollowups();
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -370,6 +368,7 @@ export default function LeadFollowups() {
     try {
       const res = await LeadFollowupsAPI.update(item.id, { status: newStatus });
       setSuccess(res.data?.message || "Status updated successfully");
+      fetchFollowups();
     } catch (error) {
       setError(parseBackendErrors(error));
       setFollowups(prev =>
@@ -451,7 +450,7 @@ export default function LeadFollowups() {
         </div>
 
         <Table header={<TableHeader columns={["Employee", "bussiness name", "Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
-          {followups.map((r, index) => (
+          {filteredFollowups.map((r, index) => (
             <EntityTableRow
               key={r.id}
               row={r}
@@ -463,7 +462,7 @@ export default function LeadFollowups() {
                 try {
                   const res = await LeadFollowupsAPI.delete(id);
                   setSuccess(res.data?.message || "Deleted successfully");
-                  fetchData();
+                  fetchFollowups();
                 } catch (err) {
                   setError(parseBackendErrors(err));
                 }
@@ -471,7 +470,8 @@ export default function LeadFollowups() {
             />
           ))}
         </Table>
-        {loading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
+        {localLoading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
+        {globalLoading.leads && <LoadingSpinner text="Refreshing Meta Data..." />}
       </PageContainer>
     );
   }
@@ -484,8 +484,8 @@ export default function LeadFollowups() {
           title="Followup"
           data={selectedItem}
           api={LeadFollowupsAPI}
-          onUpdated={fetchData}
-          onDeleted={fetchData}
+          onUpdated={fetchFollowups}
+          onDeleted={fetchFollowups}
           headerKeys={["employee_name"]}
           fields={[
             { key: "employee_name", label: "Employee Name" },
@@ -521,7 +521,7 @@ export default function LeadFollowups() {
             label: "Employee",
             name: "employee_id",
             type: "select",
-            options: employees.map(e => ({
+            options: dropdownEmployees.map(e => ({
               label: `${e.first_name} ${e.last_name}`,
               value: e.id,
             })),

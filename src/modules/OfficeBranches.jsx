@@ -20,27 +20,19 @@ import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
 
 export default function OfficeBranch() {
   const { setError, setSuccess } = useOutletContext();
-  const [branches, setBranches] = useState([]);
+  const { branches, refreshBranches, loading: globalLoading } = useData();
+
   const [mode, setMode] = useState("list");
   const [selectedBranch, setSelectedBranch] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
-const fetchBranches = async () => {
-      setLoading(true); // 🔥 START
-
-  try {
-    const res = await BranchAPI.getAll();
-    setBranches(res.data.data);   // ✅ actual array
-  } catch (err) {
-    setError(parseBackendErrors(err));
-  }finally {
-      setLoading(false); // 🔥 END
-    }
-};
-  useEffect(() => { fetchBranches(); }, []);
+  useEffect(() => {
+    if (branches.length === 0) refreshBranches();
+  }, []);
 
   const onSubmit = async (data) => {
     try {
@@ -52,7 +44,7 @@ const fetchBranches = async () => {
         setSuccess(res.data?.message || "Saved successfully");
       }
       setMode("list");
-      fetchBranches();
+      refreshBranches();
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -102,7 +94,7 @@ const branchFields = [
       try {
         const res = await BranchAPI.delete(id);
         setSuccess(res.data?.message || "Deleted successfully");
-        fetchBranches();
+        refreshBranches();
       } catch (err) {
         setError(parseBackendErrors(err));
       }
@@ -111,7 +103,7 @@ const branchFields = [
 ))}
 
         </Table>
-        {loading && <LoadingSpinner text="Loading Office Branch Details..." />}
+        {globalLoading.branches && <LoadingSpinner text="Loading Office Branch Details..." />}
       </PageContainer>
     );
   }
@@ -128,8 +120,8 @@ if (mode === "view" && selectedBranch) {
         data={selectedBranch}
         fields={branchFields}
         api={BranchAPI}
-        onUpdated={fetchBranches}
-        onDeleted={fetchBranches}
+        onUpdated={refreshBranches}
+        onDeleted={refreshBranches}
         headerKeys={["name"]}   // ⭐ dynamic red header
       />
     </EntityPageLayout>

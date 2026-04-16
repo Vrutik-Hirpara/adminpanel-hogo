@@ -289,35 +289,41 @@ import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 
 export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees,
+    hrEmployees, refreshHrEmployees,
+    loading: globalLoading 
+  } = useData();
 
   const [leaves, setLeaves] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [hrEmployees, setHrEmployees] = useState([]);
-
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   // ================= FILTERED LEAVES =================
-  const filteredLeaves = leaves.filter(l => {
-    const emp = employees.find(e => e.id === l.employee_id);
-    const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
-    return `${empName} ${l.leave_type} ${l.reason} ${l.status}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  });
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter(l => {
+      const emp = employees.find(e => e.id === l.employee_id);
+      const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
+      return `${empName} ${l.leave_type} ${l.reason} ${l.status}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
+    });
+  }, [leaves, employees, search]);
 
   // ================= FETCH =================
   const fetchLeaves = async () => {
-    setLoading(true); // 🔥 START 
+    setLocalLoading(true); // 🔥 START 
     try {
       const res = await LeaveRequestsAPI.getAll();
-      let data = res.data?.data || [];
-
+      let data = res.data?.data || res.data || [];
+ 
       // 🔒 NON-HR → only own leave requests
       if (!isHR) {
         data = data.filter(
@@ -329,48 +335,23 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
           (leave) => Number(leave.employee_id) === Number(employeeFilterId)
         );
       }
-
-      setLeaves(data);
+ 
+      setLeaves(data.map(l => ({
+        ...l,
+        employee_id: Number(l.employee_id)
+      })));
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false); // 🔥 END 
-    }
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      const res = await EmployeeAPI.getAll();
-      let empData = res.data?.data || [];
-
-      // 🔒 NON-HR → only show self in dropdown
-      if (!isHR) {
-        empData = empData.filter(e => e.id === employeeId);
-      }
-
-      setEmployees(empData);
-    } catch (err) {
-      setError(parseBackendErrors(err));
+      setLocalLoading(false); // 🔥 END 
     }
   };
 
   useEffect(() => {
     fetchLeaves();
-    fetchEmployees();
-  }, [employeeId, isHR]);
-  useEffect(() => {
-    const fetchHR = async () => {
-      try {
-        const res = await EmployeeAPI.getHR();
-        setHrEmployees(res.data?.data || []);
-
-      } catch (err) {
-        console.error("HR fetch error:", err);
-      }
-    };
-
-    fetchHR();
-  }, []);
+    if (employees.length === 0) refreshEmployees();
+    if (hrEmployees.length === 0) refreshHrEmployees();
+  }, [employeeId, isHR, employeeFilterId]);
   // ================= SAVE =================
   const onSubmit = async (data) => {
     try {
@@ -485,7 +466,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
             ? "Rejected"
             : "Pending",
     },
-    { key: "upload_doc", label: "Document", render: (v) => v && <img src={v} className="h-20 rounded border" /> },
+    { key: "upload_doc", label: "Document", render: (v) => v && <img src={v} className="h-20 rounded border object-contain" /> },
     // {
     //   key: "approved_by",
     //   label: "Approved By",
@@ -559,12 +540,12 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
         name: "employee_id",
         type: "select",
         required: true,
-        options: employees.map(e => ({
+        options: (isHR ? employees : employees.filter(e => e.id === employeeId)).map(e => ({
           label: `${e.first_name} ${e.last_name}`,
           value: e.id,
         })),
-        disabled: !!employeeFilterId,
-        defaultValue: employeeFilterId || "",
+        disabled: !!employeeFilterId || !isHR,
+        defaultValue: employeeFilterId || (isHR ? "" : employeeId),
       });
     }
 
@@ -595,7 +576,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
         {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="LEAVE REQUESTS" />
 
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
+          <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
             <SearchBar value={search} onChange={setSearch} placeholder="Search leaves..." />
             <ActionButtons
               showAdd
@@ -666,7 +647,8 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
             />
           ))}
         </Table>
-        {loading && <LoadingSpinner text="Loading Leave Request..." />}
+        {localLoading && <LoadingSpinner text="Loading Leave Requests..." />}
+        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
       </>
     );
 

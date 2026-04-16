@@ -359,160 +359,93 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 
 export default function Leads({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR, userData } = useUser();
+  const { 
+    leads: allLeads, refreshLeads, 
+    employees, refreshEmployees, 
+    regions, refreshRegions,
+    loading: globalLoading 
+  } = useData();
+
   const [selectedVisits, setSelectedVisits] = useState([]);
-  const [leads, setLeads] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [reportData, setReportData] = useState(null); // 👈 ADD THIS LINE
-  const [showReport, setShowReport] = useState(false); // 👈 ADD THIS LINE
-  const [showReportModal, setShowReportModal] = useState(false); // 👈 ADD THIS
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 👈 ADD THIS
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // 👈 ADD THIS
+  const [reportData, setReportData] = useState(null);
+  const [showReport, setShowReport] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [leadFilter, setLeadFilter] = useState("created");
   const [selectedFollowups, setSelectedFollowups] = useState([]);
-  const [regions, setRegions] = useState([]);
   // ================= FETCH =================
   useEffect(() => {
-    // First fetch employees, then fetch leads
-    const loadData = async () => {
-      await fetchEmployees();
-      await fetchLeads();
-      await fetchRegions();
-    };
-    loadData();
-  }, [isHR, employeeId]);
+    if (allLeads.length === 0) refreshLeads();
+    if (employees.length === 0) refreshEmployees();
+    if (regions.length === 0) refreshRegions();
+  }, [allLeads.length, employees.length, regions.length, refreshLeads, refreshEmployees, refreshRegions]);
 
-  // const fetchLeads = async () => {
-  //   setLoading(true); // 🔥 START 
-  //   try {
-  //     const res = await LeadsAPI.getAll();
-  //     let data = res.data.data || [];
+  // 🔥 FILTERED LEADS (Memoized for performance)
+  const filteredLeads = useMemo(() => {
+    let data = [...allLeads];
 
-  //     console.log("All leads before filter:", data);
-  //     console.log("Current employee ID:", employeeId);
-  //     console.log("isHR:", isHR);
-
-  //     // 🔒 NON HR → only leads assigned to this employee
-  //     if (!isHR) {
-  //       data = data.filter(l => {
-  //         const isAssigned = Number(l.assigned_to) === Number(employeeId);
-  //         console.log(`Lead ${l.id} - assigned_to: ${l.assigned_to}, isAssigned: ${isAssigned}`);
-  //         return isAssigned;
-  //       });
-  //     }
-
-  //     console.log("Filtered leads:", data);
-  //     console.log("Employees list:", employees);
-
-  //     // 🔥 Add assigned_to_name to each lead using employees list
-  //     // const enhancedData = data.map(lead => {
-  //     //   const assignedEmployee = employees.find(emp => emp.id === lead.assigned_to);
-  //     //   const createdEmployee = employees.find(emp => emp.id === lead.created_by);
-
-  //     //   return {
-  //     //     ...lead,
-  //     //     assigned_to_name: assignedEmployee
-  //     //       ? `${assignedEmployee.first_name} ${assignedEmployee.last_name}`
-  //     //       : "Unassigned",
-  //     //     created_by_name: createdEmployee
-  //     //       ? `${createdEmployee.first_name} ${createdEmployee.last_name}`
-  //     //       : "Unknown"
-  //     //   };
-  //     // });
-  //     const enhancedData = data.map(lead => ({
-  //       ...lead,
-  //       assigned_to_name: lead.assigned_to_name || "Unassigned",
-  //       created_by_name: lead.created_by_name || "Unknown",  // ✅ USE BACKEND VALUE
-  //     }));
-  //     setLeads(enhancedData);
-  //   } catch (err) {
-  //     setError(parseBackendErrors(err));
-  //     console.error("Error fetching leads:", err);
-  //   } finally {
-  //     setLoading(false); // 🔥 END 
-  //   }
-  // };
-  const fetchLeads = async () => {
-    setLoading(true);
-    try {
-      const res = await LeadsAPI.getAll();
-      let data = res.data.data || [];
-
-      // 🔥 EMPLOYEE FILTER
-      if (!isHR) {
-        data = data.filter(
-          (l) =>
-            Number(l.created_by) === Number(employeeId) ||
-            Number(l.assigned_to) === Number(employeeId)
-        );
-      }
-
-      const enhancedData = data.map((lead) => ({
-        ...lead,
-        assigned_to_name: lead.assigned_to_name || "Unassigned",
-        created_by_name: lead.created_by_name || "Unknown",
-      }));
-
-      setLeads(enhancedData);
-    } catch (err) {
-      setError(parseBackendErrors(err));
-    } finally {
-      setLoading(false);
+    // Role-based filter
+    if (!isHR) {
+      data = data.filter(
+        (l) =>
+          Number(l.created_by) === Number(employeeId) ||
+          Number(l.assigned_to) === Number(employeeId)
+      );
     }
-  };
+
+    // Status filter
+    if (statusFilter !== "all") {
+      data = data.filter((l) => l.lead_status === statusFilter);
+    }
+
+    // Lead filter (created vs assigned) - if applicable in UI
+    // if (leadFilter === "assigned") { ... }
+
+    return data.map((lead) => ({
+      ...lead,
+      assigned_to_name: lead.assigned_to_name || "Unassigned",
+      created_by_name: lead.created_by_name || "Unknown",
+    }));
+  }, [allLeads, isHR, employeeId, statusFilter]);
+
   const fetchFollowupsByLead = async (leadId) => {
+    setLocalLoading(true);
     try {
       const res = await api.get(`/lead_followups/?lead_id=${leadId}`);
-
-      let data = [];
-
-      if (Array.isArray(res.data)) {
-        data = res.data;
-      } else if (res.data?.data) {
-        data = res.data.data;
-      }
-
+      let data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setSelectedFollowups(data);
       setMode("followups");
     } catch (err) {
       console.error("Followup fetch error", err);
       setSelectedFollowups([]);
+    } finally {
+      setLocalLoading(false);
     }
   };
-  const fetchEmployees = async () => {
+
+  const fetchVisitsByLead = async (leadId) => {
+    setLocalLoading(true);
     try {
-      const res = await EmployeeAPI.getAll();
-      let list = res.data.data || [];
-
-      console.log("All employees:", list);
-
-      // 🔒 non HR → only self
-      // if (!isHR) {
-      //   list = list.filter(e => e.id === employeeId);
-      // }
-
-      console.log("Filtered employees:", list);
-      setEmployees(list);
+      const response = await VisitsAPI.getByLeadId(leadId);
+      let visits = Array.isArray(response) ? response : (response.data || response.results || []);
+      setSelectedVisits(visits);
+      setMode("visits");
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.error("Error fetching employees:", err);
-    }
-  };
-  const fetchRegions = async () => {
-    try {
-      const res = await RegionsAPI.getAll();
-      const data = res.data?.data || [];
-      // Show all regions as requested by user
-      setRegions(data);
-    } catch (err) {
-      console.error("Error fetching regions:", err);
+      setSelectedVisits([]);
+    } finally {
+      setLocalLoading(false);
     }
   };
   // const fetchVisitsByLead = async (leadId) => {
@@ -527,42 +460,7 @@ export default function Leads({ asSubcomponent }) {
   //     alert("Failed to load visits");
   //   }
   // };
-  const fetchVisitsByLead = async (leadId) => {
-    try {
-      console.log("🔍 Fetching visits for Lead ID:", leadId);
 
-      const response = await VisitsAPI.getByLeadId(leadId);
-      console.log("📦 Response type:", typeof response);
-      console.log("📦 Response:", response);
-
-      // Ensure we always have an array
-      let visits = [];
-      if (Array.isArray(response)) {
-        visits = response;
-      } else if (response && typeof response === 'object') {
-        // If it's an object, try to extract array from common patterns
-        if (Array.isArray(response.data)) {
-          visits = response.data;
-        } else if (Array.isArray(response.results)) {
-          visits = response.results;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          visits = response.data.data;
-        } else {
-          // If it's a single object, wrap it in array
-          console.warn("Response is not an array, wrapping:", response);
-          visits = [];
-        }
-      }
-
-      console.log("✅ Final visits array:", visits);
-      setSelectedVisits(visits);
-      setMode("visits");
-    } catch (err) {
-      setError(parseBackendErrors(err));
-      console.error("❌ Visit fetch error:", err);
-      setSelectedVisits([]); // Set empty array on error
-    }
-  };
   // useEffect(() => {
   //   // First fetch employees, then fetch leads
   //   const loadData = async () => {
@@ -598,6 +496,7 @@ export default function Leads({ asSubcomponent }) {
   }
   // ================= SAVE =================
   const onSubmit = async (data) => {
+    setLocalLoading(true);
     try {
       const payload = {
         ...data,
@@ -607,27 +506,27 @@ export default function Leads({ asSubcomponent }) {
         date: data.date,
         month: new Date(data.date).getMonth() + 1,
         year: new Date(data.date).getFullYear(),
+        week: data.week ? Number(data.week) : null,
       };
 
       if (selectedItem) {
-        // 🔥 PREVENT OVERWRITING CREATED_BY ON UPDATE
         delete payload.created_by;
         delete payload.created_by_name;
 
         const res = await LeadsAPI.update(selectedItem.id, payload);
         setSuccess(res.data?.message || "Saved successfully");
       } else {
-        // 🔥 SET CREATED_BY ON CREATE
         payload.created_by = employeeId;
         const res = await LeadsAPI.create(payload);
         setSuccess(res.data?.message || "Saved successfully");
       }
 
       setMode("list");
-      fetchLeads();
+      refreshLeads(); // 🔥 Refresh global context
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.log("API ERROR 👉", err.response?.data);
+    } finally {
+      setLocalLoading(false);
     }
   };
   // const fetchMonthlyReport = async () => {
@@ -723,22 +622,22 @@ export default function Leads({ asSubcomponent }) {
     }
   };
   const handleDelete = async (id) => {
+    setLocalLoading(true);
     try {
       const res = await LeadsAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      fetchLeads();
+      refreshLeads(); // 🔥 Refresh global context
     } catch (error) {
       setError(parseBackendErrors(error));
+    } finally {
+      setLocalLoading(false);
     }
   };
 
   // ================= ASSIGN CHANGE =================
   const handleAssignChange = async (row, employeeId) => {
     const emp = employees.find(e => e.id === Number(employeeId));
-
-    const empName = emp
-      ? `${emp.first_name} ${emp.last_name}`
-      : "Unassigned";
+    const empName = emp ? `${emp.first_name} ${emp.last_name}` : "Unassigned";
 
     const confirmChange = window.confirm(
       `Are you sure you want to assign this lead to "${empName}"?`
@@ -746,15 +645,17 @@ export default function Leads({ asSubcomponent }) {
 
     if (!confirmChange) return;
 
+    setLocalLoading(true);
     try {
       const res = await LeadsAPI.update(row.id, {
         assigned_to: employeeId ? Number(employeeId) : null,
       });
       setSuccess(res.data?.message || "Assigned successfully");
-      fetchLeads();
+      refreshLeads(); // 🔥 Refresh global context
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.log("Assign update failed", err);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -948,6 +849,7 @@ export default function Leads({ asSubcomponent }) {
     { key: "price_feedback", label: "Price Feedback" },
     { key: "quality_feedback", label: "Quality Feedback" },
     { key: "demo", label: "Demo", format: (v) => v ? "Yes" : "No" },
+    { key: "week", label: "Week" },
   ];
   // Report Selection Modal
   // const ReportModal = () => {
@@ -1242,25 +1144,6 @@ export default function Leads({ asSubcomponent }) {
   }
   // ================= LIST =================
   if (mode === "list") {
-    const getFilteredLeads = () => {
-      let filtered = [...leads];
-
-      if (!isHR) {
-        if (leadFilter === "created") {
-          filtered = filtered.filter(
-            (l) => Number(l.created_by) === Number(employeeId)
-          );
-        } else if (leadFilter === "assigned") {
-          filtered = filtered.filter(
-            (l) => Number(l.assigned_to) === Number(employeeId)
-          );
-        }
-      }
-
-      return filtered;
-    };
-
-    const filteredLeads = getFilteredLeads();
     return (
       <>
         <PageContainer>
@@ -1327,7 +1210,7 @@ export default function Leads({ asSubcomponent }) {
               />
             ))}
           </Table>
-          {loading && <LoadingSpinner text="Loading Leads Details..." />}
+          {globalLoading.leads && <LoadingSpinner text="Loading Leads Details..." />}
 
         </PageContainer>
         <ReportModal /> {/* 👈 ADD THIS */}
@@ -1670,8 +1553,8 @@ export default function Leads({ asSubcomponent }) {
           data={selectedItem}
           fields={leadFields}
           api={LeadsAPI}
-          onUpdated={fetchLeads}
-          onDeleted={fetchLeads}
+          onUpdated={refreshLeads}
+          onDeleted={refreshLeads}
           headerKeys={["business_name"]}
         />
       </EntityPageLayout>
@@ -1823,7 +1706,19 @@ export default function Leads({ asSubcomponent }) {
                         
 
             { label: "Remarks", name: "remarks", type: "textarea" },
-            
+            {
+              label: "Week",
+              name: "week",
+              type: "select",
+              options: [
+                { label: "1", value: 1 },
+                { label: "2", value: 2 },
+                { label: "3", value: 3 },
+                { label: "4", value: 4 },
+                { label: "5", value: 5 },
+              ],
+              defaultValue: selectedItem?.week || "",
+            },
           ]}
         />
       </EntityPageLayout>

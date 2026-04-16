@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 
@@ -17,44 +17,24 @@ import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
 export default function Department() {
   const { setError, setSuccess } = useOutletContext();
-  const [departments, setDepartments] = useState([]);
+  const { departments: allDepartments, refreshDepartments, loading: globalLoading } = useData();
+
   const [mode, setMode] = useState("list");
   const [selectedDept, setSelectedDept] = useState(null);
-  const [loading, setLoading] = useState(false);
-  // ✅ FETCH + convert "Active/Inactive" → boolean
-  // const fetchDepartments = async () => {
-  //   const res = await DepartmentAPI.getAll();
-  //   const data = res.data?.data || [];
+  const [localLoading, setLocalLoading] = useState(false);
+  const departments = useMemo(() => {
+    return allDepartments.map(d => ({
+      ...d,
+      status: d.status === "Active"
+    }));
+  }, [allDepartments]);
 
-  //   const formatted = data.map(d => ({
-  //     ...d,
-  //     status: d.status === "Active"
-  //   }));
-
-  //   setDepartments(formatted);
-  // };
-  const fetchDepartments = async () => {
-    setLoading(true); // 🔥 START
-
-    try {
-      const res = await DepartmentAPI.getAll();
-      const data = res.data?.data || [];
-
-      const formatted = data.map(d => ({
-        ...d,
-        status: d.status === "Active"
-      }));
-
-      setDepartments(formatted);
-    } catch (error) {
-      setError(parseBackendErrors(error));
-    } finally {
-      setLoading(false); // 🔥 END
-    }
-  };
-  useEffect(() => { fetchDepartments(); }, []);
+  useEffect(() => { 
+    if (allDepartments.length === 0) refreshDepartments();
+  }, []);
 
   // 🔥 SAME TOGGLE SYSTEM AS ROLES
   // const handleStatusToggle = async (dept) => {
@@ -79,11 +59,6 @@ export default function Department() {
   const handleStatusToggle = async (dept) => {
     const newStatus = !dept.status;
 
-    // instant UI update
-    setDepartments(prev =>
-      prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
-    );
-
     try {
       const res = await DepartmentAPI.update(dept.id, {
         ...dept,
@@ -91,13 +66,9 @@ export default function Department() {
       });
 
       setSuccess(res.data?.message || "Status updated");
+      refreshDepartments();
     } catch (error) {
       setError(parseBackendErrors(error));
-
-      // revert if API fails
-      setDepartments(prev =>
-        prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
-      );
     }
   };
   // const onSubmit = async (data) => {
@@ -143,7 +114,7 @@ export default function Department() {
       setSuccess(res.data?.message || "Saved successfully");
 
       setMode("list");
-      fetchDepartments();
+      refreshDepartments();
     } catch (error) {
       setError(parseBackendErrors(error));
     }
@@ -155,7 +126,19 @@ export default function Department() {
       key: "status",
       render: (row) => (
         <button
-          onClick={() => handleStatusToggle(row)}
+          onClick={async () => {
+            const newStatus = !row.status;
+            try {
+              const res = await DepartmentAPI.update(row.id, {
+                ...row,
+                status: newStatus ? "Active" : "Inactive"
+              });
+              setSuccess(res.data?.message || "Status updated");
+              refreshDepartments();
+            } catch (error) {
+              setError(parseBackendErrors(error));
+            }
+          }}
           className="relative w-12 h-6 rounded-full transition-colors duration-300"
           style={{
             backgroundColor: row.status
@@ -218,7 +201,7 @@ export default function Department() {
                 try {
                   const res = await DepartmentAPI.delete(id);
                   setSuccess(res.data?.message || "Deleted successfully");
-                  fetchDepartments();
+                  refreshDepartments();
                 } catch (error) {
                   setError(parseBackendErrors(error));
                 }
@@ -228,7 +211,7 @@ export default function Department() {
 
 
         </Table>
-          {loading && <LoadingSpinner text="Loading Department Details..." />}
+          {globalLoading.departments && <LoadingSpinner text="Loading Department Details..." />}
 
       </PageContainer>
     );
@@ -250,8 +233,8 @@ export default function Department() {
           data={selectedDept}
           fields={departmentFields}
           api={DepartmentAPI}
-          onUpdated={fetchDepartments}
-          onDeleted={fetchDepartments}
+          onUpdated={refreshDepartments}
+          onDeleted={refreshDepartments}
           headerKeys={["name"]}   // ⭐ REQUIRED for red header
 
         />

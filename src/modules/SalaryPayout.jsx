@@ -976,10 +976,13 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
 
 export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { loading: globalLoading } = useData();
+
   const [salaryData, setSalaryData] = useState([]);
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [mode, setMode] = useState("list");
@@ -988,7 +991,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [tempMonth, setTempMonth] = useState(selectedMonth);
   const [tempYear, setTempYear] = useState(selectedYear);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   // Month options
   const months = [
     { value: 1, label: "January" },
@@ -1014,7 +1017,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
 
   // Fetch salary data
   const fetchSalaryData = async (monthParam, yearParam) => {
-    setLoading(true); // 🔥 START 
+    setLocalLoading(true); // 🔥 START 
     try {
       const month = monthParam ?? selectedMonth;
       const year = yearParam ?? selectedYear;
@@ -1041,7 +1044,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
       console.error("Failed to fetch salary data:", err);
       setSalaryData([]);
     } finally {
-      setLoading(false); // 🔥 END 
+      setLocalLoading(false); // 🔥 END 
     }
   };
 
@@ -1269,7 +1272,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
 
           </div>
         </div>
-        {loading ? (
+        {localLoading ? (
           <div className="py-12">
             <LoadingSpinner text="Loading salary data..." />
           </div>

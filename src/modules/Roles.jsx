@@ -16,31 +16,19 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
 import EntityTableRow from "../components/table/EntityTableRow";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
 
 export default function Roles() {
   const { setError, setSuccess } = useOutletContext();
-  const [roles, setRoles] = useState([]);
+  const { roles, refreshRoles, loading: globalLoading } = useData();
+
   const [mode, setMode] = useState("list");
   const [selectedRole, setSelectedRole] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
-
-  const fetchRoles = async () => {
-    setLoading(true); // 🔥 START
-
-    try {
-      const res = await RolesAPI.getAll();
-      setRoles(res.data.data || res);
-    }
-    catch (error) {
-      setError(parseBackendErrors(error));
-    } finally {
-      setLoading(false); // 🔥 END
-    }
-  };
 
   useEffect(() => {
-    fetchRoles();
+    if (roles.length === 0) refreshRoles();
   }, []);
 
   // 🔥 SMOOTH OPTIMISTIC STATUS TOGGLE
@@ -74,27 +62,12 @@ export default function Roles() {
   const handleStatusToggle = async (role) => {
     const newStatus = !role.status;
 
-    // Instant UI update
-    setRoles((prev) =>
-      prev.map((r) =>
-        r.id === role.id ? { ...r, status: newStatus } : r
-      )
-    );
-
     try {
       const response = await RolesAPI.update(role.id, { ...role, status: newStatus });
       setSuccess(response.data?.message || "Status updated successfully");
+      refreshRoles();
     } catch (error) {
       setError(parseBackendErrors(error));
-
-      console.log("Status update failed, reverting...", error);
-
-      // revert if API fails
-      setRoles((prev) =>
-        prev.map((r) =>
-          r.id === role.id ? { ...r, status: !newStatus } : r
-        )
-      );
     }
   };
   // const onSubmit = async (data) => {
@@ -121,7 +94,7 @@ export default function Roles() {
 
       setSuccess(res.data?.message || "Saved successfully");
       setMode("list");
-      fetchRoles();
+      refreshRoles();
     } catch (error) {
       setError(parseBackendErrors(error));
     }
@@ -136,7 +109,16 @@ export default function Roles() {
       key: "status",
       render: (row) => (
         <button
-          onClick={() => handleStatusToggle(row)}
+          onClick={async () => {
+            const newStatus = !row.status;
+            try {
+              const res = await RolesAPI.update(row.id, { ...row, status: newStatus });
+              setSuccess(res.data?.message || "Status updated successfully");
+              refreshRoles();
+            } catch (error) {
+              setError(parseBackendErrors(error));
+            }
+          }}
           className="relative w-12 h-6 rounded-full transition-colors duration-300"
           style={{
             backgroundColor: row.status ? themes.toggleOn : themes.toggleOff,
@@ -194,7 +176,7 @@ export default function Roles() {
                 try {
                   const res = await RolesAPI.delete(id);
                   setSuccess(res.data?.message || "Deleted successfully");
-                  fetchRoles();
+                  refreshRoles();
                 } catch (error) {
                   setError(parseBackendErrors(error));
                 }
@@ -203,7 +185,7 @@ export default function Roles() {
           ))}
 
         </Table>
-        {loading && <LoadingSpinner text="Loading Roles Details..." />}
+        {globalLoading.roles && <LoadingSpinner text="Loading Roles Details..." />}
 
       </PageContainer>
     );
@@ -222,8 +204,8 @@ export default function Roles() {
           data={selectedRole}
           fields={roleFields}
           api={RolesAPI}
-          onUpdated={fetchRoles}
-          onDeleted={fetchRoles}
+          onUpdated={refreshRoles}
+          onDeleted={refreshRoles}
           headerKeys={["name"]}   // ⭐ Dynamic red header
         />
       </EntityPageLayout>

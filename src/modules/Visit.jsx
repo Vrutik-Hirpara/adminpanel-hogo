@@ -703,56 +703,51 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 
 export default function Visits({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const [leads, setLeads] = useState([]);
+  const { 
+    leads, refreshLeads, 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
+
   const [visits, setVisits] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   // ================= FETCH =================
-  const fetchData = async () => {
-    setLoading(true); // 🔥 START LOADING
-
+  const fetchVisits = async () => {
+    setLocalLoading(true);
     try {
-      const [v, e, l] = await Promise.all([
-        VisitsAPI.getAll(),
-        EmployeeAPI.getAll(),
-        LeadsAPI.getAll(),
-      ]);
-
-      let visitsData = v.data.data || [];
-
-      // 🔒 FILTER FOR NON-HR
-      if (!isHR) {
-        visitsData = visitsData.filter(
-          visit => Number(visit.employee_id) === Number(employeeId)
-        );
-      }
-
-      setVisits(visitsData);
-
-      let empList = e.data.data || [];
-      // 🔒 NON HR → dropdown ma only self
-      if (!isHR) {
-        empList = empList.filter(emp => emp.id === employeeId);
-      }
-
-      setEmployees(empList);
-      setLeads(l.data.data || []);
+      const v = await VisitsAPI.getAll();
+      setVisits(v.data.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false); // 🔥 STOP LOADING
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [isHR, employeeId]);
+    fetchVisits();
+    if (leads.length === 0) refreshLeads();
+    if (employees.length === 0) refreshEmployees();
+  }, [isHR, employeeId, leads.length, employees.length]);
+
+  // 🔥 FILTERED VISITS (Memoized)
+  const filteredVisits = useMemo(() => {
+    let data = [...visits];
+    if (!isHR) {
+      data = data.filter(
+        visit => Number(visit.employee_id) === Number(employeeId)
+      );
+    }
+    return data;
+  }, [visits, isHR, employeeId]);
 
   // ================= HELPER FUNCTION FOR DATE FORMATTING =================
   const formatDateForInput = (dateStr) => {
@@ -772,6 +767,7 @@ export default function Visits({ asSubcomponent }) {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
+      setLocalLoading(true);
 
       Object.keys(data).forEach((key) => {
         const value = data[key];
@@ -794,10 +790,11 @@ export default function Visits({ asSubcomponent }) {
       }
 
       setMode("list");
-      fetchData();
-
+      fetchVisits();
     } catch (err) {
       setError(parseBackendErrors(err));
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -960,7 +957,7 @@ export default function Visits({ asSubcomponent }) {
             />
           {/* )} */}
         </div>
-        {loading ? (
+        {localLoading ? (
           <div className="py-12">
             <LoadingSpinner text="Loading visits data..." />
           </div>
@@ -982,7 +979,7 @@ export default function Visits({ asSubcomponent }) {
               />
             }
           >
-            {visits.map((v, index) => (
+            {filteredVisits.map((v, index) => (
               <EntityTableRow
                 key={v.id}
                 row={v}

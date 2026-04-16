@@ -16,22 +16,28 @@ import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo } from "react";
 
 export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
+
   const [data, setData] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selected, setSelected] = useState(null);
-const [search, setSearch] = useState("");
-const [loading, setLoading] = useState(false); 
+  const [search, setSearch] = useState("");
+  const [localLoading, setLocalLoading] = useState(false); 
 const fetchData = async () => {
-  setLoading(true); // 🔥 START 
+  setLocalLoading(true); // 🔥 START 
   try {
     const res = await LeaveBalanceAPI.getAll();
     let list = res.data?.data || [];
-
+ 
     // 🔒 NON-HR → only own leave balance
     if (!isHR) {
       list = list.filter(
@@ -43,26 +49,18 @@ const fetchData = async () => {
         item => Number(item.employee_id) === Number(employeeFilterId)
       );
     }
-
+ 
     setData(list);
   } catch (err) {
     setError(parseBackendErrors(err));
-  }finally { setLoading(false); // 🔥 END 
-} 
+  } finally {
+    setLocalLoading(false); // 🔥 END 
+  } 
 };
-
-  const fetchEmployees = async () => {
-    try {
-      const res = await api.get("employee/");
-      setEmployees(res.data?.data || []);
-    } catch (err) {
-      setError(parseBackendErrors(err));
-    }
-  };
 
 useEffect(() => {
   fetchData();
-  fetchEmployees();
+  if (employees.length === 0) refreshEmployees();
 }, [employeeId, isHR]);
 
   const onSubmit = async (form) => {
@@ -95,14 +93,16 @@ useEffect(() => {
     }
   };
 
-const filteredData = data.filter(item => {
-  const emp = employees.find(e => e.id === item.employee_id);
-  const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
+const filteredData = useMemo(() => {
+  return data.filter(item => {
+    const emp = employees.find(e => e.id === item.employee_id);
+    const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
 
-  return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
-    .toLowerCase()
-    .includes(search.toLowerCase());
-});
+    return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
+  });
+}, [data, employees, search]);
   const leaveColumns = [
       {
     key: "employee_id",
@@ -153,7 +153,7 @@ const filteredData = data.filter(item => {
         {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="LEAVE BALANCE" />
 
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
+          <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
             <SearchBar
               value={search}
               onChange={setSearch}
@@ -232,7 +232,8 @@ const filteredData = data.filter(item => {
           ))}
 
         </Table>
-        {loading && <LoadingSpinner text="Loading Leave Balance Details..." />}
+        {localLoading && <LoadingSpinner text="Loading Leave Balance Details..." />}
+        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
       </>
     );
 

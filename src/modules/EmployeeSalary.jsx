@@ -449,7 +449,7 @@
 //               </button>
 //             ))}
 //           </div>
-//           <div className="flex flex-wrap gap-3 self-end ml-auto">
+//           <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
 //             <SearchBar value={search} onChange={setSearch} placeholder="Search salary..." />
 
 //             {isHR && (
@@ -576,28 +576,33 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 
-import { SalaryAPI, EmployeeAPI } from "../services";
+import { SalaryAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo } from "react";
 
 export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
 
   const [allSalaryData, setAllSalaryData] = useState([]); // 🔥 Store all data
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   // ================= FETCH ALL SALARY =================
-  const fetchAllSalary = async (empList) => {
-    setLoading(true);
+  const fetchAllSalary = async () => {
+    setLocalLoading(true);
     try {
       const res = await SalaryAPI.getAll();
       let data = res.data?.data || res.data || [];
@@ -611,7 +616,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       }
 
       const formatted = data.map((d) => {
-        const emp = empList.find((e) => e.id === d.employee_id);
+        const emp = employees.find((e) => e.id === d.employee_id);
         return {
           ...d,
           employeeName: emp
@@ -624,21 +629,21 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   // ================= APPLY FILTERS (Status + Search) =================
   const getFilteredData = () => {
     let filtered = [...allSalaryData];
-    
+
     // 🔥 Apply status filter locally
     if (statusFilter === "true") {
       filtered = filtered.filter(item => item.status === 1 || item.status === true);
     } else if (statusFilter === "false") {
       filtered = filtered.filter(item => item.status === 0 || item.status === false);
     }
-    
+
     // Apply search filter
     if (search) {
       filtered = filtered.filter(s =>
@@ -647,7 +652,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
           .includes(search.toLowerCase())
       );
     }
-    
+
     return filtered;
   };
 
@@ -657,10 +662,10 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const handleToggleStatus = async (id, currentStatus) => {
     try {
       const newStatus = currentStatus === 1 || currentStatus === true ? 0 : 1;
-      
+
       const res = await SalaryAPI.update(id, { status: newStatus });
       setSuccess(res.data?.message || "Status updated successfully");
-      
+
       // 🔥 Update local state
       setAllSalaryData(prevData =>
         prevData.map(item =>
@@ -669,7 +674,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
             : item
         )
       );
-      
+
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -677,24 +682,14 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-    const load = async () => {
-      try {
-        const resEmp = await EmployeeAPI.getAll();
-        let empData = resEmp.data?.data || [];
+    if (employees.length === 0) refreshEmployees();
+  }, []);
 
-        if (!isHR) {
-          empData = empData.filter(e => e.id === employeeId);
-        }
-
-        setEmployees(empData);
-        await fetchAllSalary(empData);
-      } catch (err) {
-        setError(parseBackendErrors(err));
-      }
-    };
-
-    load();
-  }, [isHR, employeeId]);
+  useEffect(() => {
+    if (employees.length > 0) {
+      fetchAllSalary();
+    }
+  }, [employees, isHR, employeeId]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -710,7 +705,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       }
 
       setMode(isHR ? "list" : "view");
-      await fetchAllSalary(employees);
+      await fetchAllSalary();
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -721,7 +716,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     try {
       const res = await SalaryAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      await fetchAllSalary(employees);
+      await fetchAllSalary();
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -755,17 +750,30 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
         return (
           <button
             onClick={() => handleToggleStatus(row.id, isActive)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
-              isActive 
-                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200" 
-                : "bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${isActive
+              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200"
+              : "bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200"
+              }`}
           >
             {isActive ? "✓ Active" : "✗ Inactive"}
           </button>
         );
       },
-    }] : []),
+    }] : [{
+      key: "status",
+      render: (row) => {
+        const isActive = row.status === 1 || row.status === true;
+        return (
+          <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+            isActive
+              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+              : "bg-rose-100 text-rose-700 border border-rose-200"
+          }`}>
+            {isActive ? "✓ Active" : "✗ Inactive"}
+          </span>
+        );
+      },
+    }]),
   ];
 
   const salaryFields = [
@@ -785,17 +793,17 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     "Deductions",
     "Gross",
     "Effective From",
-    ...(isHR ? ["Status"] : []),
+    "Status",
     "Action",
   ];
 
   // ================= LIST =================
   if (mode === "list") {
-    if (!isHR && salaryData.length > 0) {
-      setSelectedItem(salaryData[0]);
-      setMode("view");
-      return null;
-    }
+    // if (!isHR && salaryData.length > 0) {
+    //   setSelectedItem(salaryData[0]);
+    //   setMode("view");
+    //   return null;
+    // }
     const listContent = (
       <>
         {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
@@ -822,7 +830,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
             </div>
           )}
           
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
+          <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
             <SearchBar value={search} onChange={setSearch} placeholder="Search salary..." />
             {isHR && (
               <ActionButtons showAdd addText="+ Add" onAdd={() => {
@@ -832,66 +840,66 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
             )}
           </div>
         </div> */}
-<div className="flex flex-col gap-4 mb-4 w-full">
+        <div className="flex flex-col gap-4 mb-4 w-full">
 
-  {/* ROW 1: Title + Search */}
- <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+          {/* ROW 1: Title + Search */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-  {!asSubcomponent && <SectionTitle title="EMPLOYEE SALARY" />}
+            {!asSubcomponent && <SectionTitle title="EMPLOYEE SALARY" />}
 
-  <div className="w-full sm:w-auto sm:ml-auto">
-    <SearchBar
-      value={search}
-      onChange={setSearch}
-      placeholder="Search salary..."
-    />
-  </div>
+            <div className="w-full sm:w-auto sm:ml-auto">
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search salary..."
+              />
+            </div>
 
-</div>
+          </div>
 
-  {/* ROW 2: Tabs + Add */}
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-3">
+          {/* ROW 2: Tabs + Add */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-3">
 
-    {/* Tabs */}
-    {isHR && (
-      <div className="flex gap-3 flex-wrap">
-        {["all", "true", "false"].map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setStatusFilter(filter)}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 capitalize ${
-              statusFilter === filter 
-                ? "bg-[var(--primary)] text-white shadow-md" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {filter === "all" ? "All" : filter === "true" ? "Active" : "Inactive"}
-          </button>
-        ))}
-      </div>
-    )}
+            {/* Tabs */}
+            {isHR && (
+              <div className="flex gap-3 flex-wrap">
+                {["all", "true", "false"].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setStatusFilter(filter)}
+                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 capitalize ${statusFilter === filter
+                      ? "bg-[var(--primary)] text-white shadow-md"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                  >
+                    {filter === "all" ? "All" : filter === "true" ? "Active" : "Inactive"}
+                  </button>
+                ))}
+              </div>
+            )}
 
-    {/* Add Button */}
-    <div className="ml-auto">
-      {isHR && (
-        <ActionButtons
-          showAdd
-          addText="+ Add"
-          onAdd={() => {
-            setSelectedItem(null);
-            setMode("form");
-          }}
-        />
-      )}
-    </div>
+            {/* Add Button */}
+            <div className="ml-auto">
+              {isHR && (
+                <ActionButtons
+                  showAdd
+                  addText="+ Add"
+                  onAdd={() => {
+                    setSelectedItem(null);
+                    setMode("form");
+                  }}
+                />
+              )}
+            </div>
 
-  </div>
+          </div>
 
-</div>
+        </div>
         {/* Show record count */}
         <div className="mb-2 text-sm text-gray-500">
           Showing {salaryData.length} of {allSalaryData.length} records
         </div>
+        {/* {isHR && ( */}
 
         <Table header={<TableHeader columns={tableHeaders} />}>
           {salaryData.map((s, index) => (
@@ -904,15 +912,16 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
                 setSelectedItem(r);
                 setMode("view");
               }}
-              onEdit={(r) => {
+              onEdit={isHR ? (r) => {
                 setSelectedItem(r);
                 setMode("form");
-              }}
-              onDelete={(id) => handleDelete(id)}
+              } : undefined}
+              onDelete={isHR ? handleDelete : undefined}
             />
           ))}
         </Table>
-        {loading && <LoadingSpinner text="Loading Employee Salary Details..." />}
+        {/* )} */}
+        {localLoading && <LoadingSpinner text="Loading Employee Salary Details..." />}
       </>
     );
 
@@ -935,13 +944,13 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
         headerKeys={["employeeName"]}
       />
     );
-    if (asSubcomponent) {
-      return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{viewContent}</div>;
-    }
+    // if (asSubcomponent) {
+    //   return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{viewContent}</div>;
+    // }
     return (
-      <EntityPageLayout 
-        title="Salary Details" 
-        showBack={isHR} 
+      <EntityPageLayout
+        // title="Salary Details"
+        showBack
         onBack={() => setMode("list")}
       >
         {viewContent}
@@ -978,6 +987,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
           label: "Status",
           name: "status",
           type: "select",
+          defaultValue: selectedItem?.status === 1 || selectedItem?.status === true ? 1 : 0,
           options: [
             { label: "Active", value: 1 },
             { label: "Inactive", value: 0 },
@@ -992,9 +1002,9 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   }
 
   return (
-    <EntityPageLayout 
-      title="Employee Salary" 
-      showBack={isHR} 
+    <EntityPageLayout
+      title="Employee Salary"
+      showBack
       onBack={() => setMode(isHR ? "list" : "view")}
     >
       {formContent}

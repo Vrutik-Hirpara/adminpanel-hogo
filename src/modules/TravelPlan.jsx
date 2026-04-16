@@ -658,7 +658,7 @@
 
 import api from "../services/api";
 import { themes } from "../config/theme.config";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import PageContainer from "../layout/PageContainer";
 import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
@@ -673,10 +673,18 @@ import { parseBackendErrors } from "../utils/parseBackendErrors";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useUser } from "../hooks/useUser";
 export default function TravelPlan({ asSubcomponent }) {
-  const [selectedMonthYear, setSelectedMonthYear] = useState(null);
-
   const { setError, setSuccess } = useOutletContext();
+  const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees, 
+    regions, refreshRegions,
+    loading: globalLoading 
+  } = useData();
+
+  const [selectedMonthYear, setSelectedMonthYear] = useState(null);
   const [travelPlans, setTravelPlans] = useState([]);
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [mode, setMode] = useState("list");
@@ -690,14 +698,8 @@ export default function TravelPlan({ asSubcomponent }) {
   const [editDailyPlan, setEditDailyPlan] = useState(null);
   const [formData, setFormData] = useState({ place: "", notes: "" });
   const [availableMonths, setAvailableMonths] = useState([]);
-
-  // Employee filtering states
-  const [employees, setEmployees] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isHR, setIsHR] = useState(false);
-  const [regions, setRegions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Month index mapping
   const monthIndexMap = {
@@ -710,36 +712,21 @@ export default function TravelPlan({ asSubcomponent }) {
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Get current user from localStorage
+  // Initialize selectedEmployeeId
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-
-        // Check if user is HR/Admin (adjust role names based on your system)
-        const userRole = user.role || user.user_role || user.role_name;
-        const isHRUser = userRole === "HR" ||
-          userRole === "Admin" ||
-          userRole === "hr" ||
-          userRole === "admin" ||
-          userRole === "Administrator";
-
-        setIsHR(isHRUser);
-
-        if (isHRUser) {
-          fetchEmployees();
-        } else {
-          // For regular employees, set their employee_id directly
-          const empId = user.employee_id || user.id;
-          setSelectedEmployeeId(empId);
-        }
-      } catch (e) {
-        console.error("Error parsing user:", e);
+    if (isHR) {
+      if (employees.length > 0 && !selectedEmployeeId) {
+        setSelectedEmployeeId(employees[0].id);
       }
+    } else {
+      setSelectedEmployeeId(employeeId);
     }
-    fetchRegions();
+  }, [isHR, employees, employeeId]);
+
+  // Initial Context Load
+  useEffect(() => {
+    if (employees.length === 0) refreshEmployees();
+    if (regions.length === 0) refreshRegions();
   }, []);
 
   const convertToInputMonthFormat = (monthStr) => {
@@ -765,28 +752,12 @@ export default function TravelPlan({ asSubcomponent }) {
     const parts = monthStr.split(/[ -]+/);
     return parts.length > 1 ? parts[parts.length - 1] : "";
   };
-  // Fetch all employees for HR dropdown
-  const fetchEmployees = async () => {
-    try {
-      const res = await EmployeeAPI.getAll();
-      const data = res.data?.data || [];
-      setEmployees(data);
-      if (data.length > 0) {
-        setSelectedEmployeeId(data[0].id);
-      }
-    } catch (error) {
-      setError(parseBackendErrors(error));
-      console.error("Error fetching employees:", error);
-    }
-  };
-
   // Fetch travel plans based on selected employee
   const fetchTravelPlans = async () => {
     if (!selectedEmployeeId) return;
 
-    setLoading(true);
+    setLocalLoading(true);
     try {
-      // ✅ Use server-side filter
       const res = await TravelPlanAPI.getByEmployee(selectedEmployeeId);
       let data = res.data?.data || [];
       
@@ -835,18 +806,12 @@ export default function TravelPlan({ asSubcomponent }) {
       setError(parseBackendErrors(error));
       console.error("Error fetching travel plans:", error);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   const fetchRegions = async () => {
-    try {
-      const res = await RegionsAPI.getAll();
-      const data = res.data?.data || [];
-      setRegions(data);
-    } catch (err) {
-      console.error("Error fetching regions:", err);
-    }
+    refreshRegions();
   };
 
   // Fetch travel plans when employee changes
@@ -1451,18 +1416,12 @@ export default function TravelPlan({ asSubcomponent }) {
           </>
         )}
 
-        {/* Loading State */}
-        {/* {loading && (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: themes.primary }}></div>
-            <p className="mt-2 text-gray-500">Loading travel plans...</p>
-          </div>
-        )} */}
-        {loading && <LoadingSpinner text="Loading travel plans..." />}
+        {localLoading && <LoadingSpinner text="Loading travel plans..." />}
+        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
 
 
         {/* Month Navigation - Changes both table AND calendar */}
-        {!loading && availableMonths.length > 0 && (
+        {!localLoading && availableMonths.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {availableMonths.map((month) => {
               const displayMonth = extractMonthName(month);  // "May" for display
@@ -1498,14 +1457,14 @@ export default function TravelPlan({ asSubcomponent }) {
         )}
 
         {/* Show message if no travel plans */}
-        {!loading && travelPlans.length === 0 && (
+        {!localLoading && travelPlans.length === 0 && (
           <div className="text-center py-8 bg-[var(--surfaceLight)] rounded-lg mb-8">
             <p className="text-gray-500">No travel plans found for this employee</p>
           </div>
         )}
 
         {/* Travel Plans Table - Vertical/Report Format */}
-        {!loading && filteredPlans.length > 0 && (
+        {!localLoading && filteredPlans.length > 0 && (
           <div className="mb-8 space-y-6">
             {filteredPlans.map((plan, index) => (
               <div key={plan.id} className="rounded-lg border border-[var(--border-black-200)] overflow-hidden" style={{ backgroundColor: themes.textWhite }}>
@@ -1558,7 +1517,7 @@ export default function TravelPlan({ asSubcomponent }) {
         )}
 
         {/* Calendar View with Navigation Arrows */}
-        {!loading && calendarMonth && filteredPlans.length > 0 && (
+        {!localLoading && calendarMonth && filteredPlans.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg border border-[var(--border-black-200)] overflow-hidden">
             <div className="bg-[var(--surfaceLight)] px-6 py-4 border-b border-[var(--border-black-200)] flex justify-center items-center gap-4">
               <button

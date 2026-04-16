@@ -264,89 +264,62 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 
 export default function Users({ employeeFilterId, asSubcomponent }) {
-
-  // 🔥 role based values
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
 
   const [users, setUsers] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   // ================= FETCH USERS =================
   const fetchUsers = async () => {
-    setLoading(true); // 🔥 START
+    setLocalLoading(true);
     try {
-      let res;
-
-      if (isHR) {
-        // 👑 HR → all users
-        res = await api.get("users/");
-        const list = res.data?.data || res.data || [];
-
-        const formatted = list.map(u => ({
-          ...u,
-          status: u.is_active,
-        }));
-
-        setUsers(formatted);
-
-      } else {
-        // 🔒 Non-HR → only own user
-        res = await api.get("users/");
-        const list = res.data?.data || res.data || [];
-
-        const filtered = list.filter(
+      const res = await api.get("users/");
+      const list = res.data?.data || res.data || [];
+      
+      let data = list;
+      if (!isHR) {
+        data = list.filter(
           u => Number(u.employee_id || u.employee) === Number(employeeId)
         );
-
-        const formatted = filtered.map(u => ({
-          ...u,
-          status: u.is_active,
-        }));
-
-        setUsers(formatted);
       }
-
 
       if (employeeFilterId && isHR) {
-        setUsers(prev => prev.filter(u => Number(u.employee_id || u.employee) === Number(employeeFilterId)));
+        data = data.filter(u => Number(u.employee_id || u.employee) === Number(employeeFilterId));
       }
 
+      const formatted = data.map(u => ({
+        ...u,
+        status: u.is_active,
+      }));
+
+      setUsers(formatted);
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.log("USER FETCH ERROR:", err);
     } finally {
-      setLoading(false); // 🔥 END
-    }
-  };
-
-  // ================= FETCH EMPLOYEES =================
-  const fetchEmployees = async () => {
-    try {
-      const res = await EmployeeAPI.getAll();
-      let list = res.data?.data || [];
-
-      // 🔒 non-HR → only own employee
-      if (!isHR) {
-        list = list.filter(e => e.id === employeeId);
-      }
-
-      setEmployees(list);
-    } catch (err) {
-      setError(parseBackendErrors(err));
-      console.log("EMPLOYEE FETCH ERROR:", err);
+      setLocalLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUsers();
-    fetchEmployees();
-  }, [isHR, employeeId]);
+    if (employees.length === 0) refreshEmployees();
+  }, [isHR, employeeId, employeeFilterId]);
+
+  const dropdownEmployees = useMemo(() => {
+    if (isHR) return employees;
+    return employees.filter(e => e.id === employeeId);
+  }, [employees, isHR, employeeId]);
 
   // ================= SEARCH =================
   const filteredUsers = users.filter(u =>
@@ -460,7 +433,7 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3 self-end ml-auto">
+        <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
 
           {isHR && (
             <ActionButtons
@@ -487,7 +460,8 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             />
           ))}
         </Table>
-        {loading && <LoadingSpinner text="Loading User Details..." />}
+        {localLoading && <LoadingSpinner text="Loading User Details..." />}
+        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
       </>
     );
 
@@ -551,7 +525,7 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             name: "employee_id",
             type: "select",
             required: true,
-            options: employees.map(e => ({
+            options: dropdownEmployees.map(e => ({
               label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
               value: e.id,
             })),

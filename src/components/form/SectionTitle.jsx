@@ -13,10 +13,10 @@ export default function SectionTitle({ title }) {
         {title}
       </h2>
 
-      <div
+    {title &&  <div
         className="mt-2 h-[3px] w-10 rounded"
         style={{ backgroundColor: themes.primary }}
-      />
+      />}
     </div>
   );
 }

@@ -17,81 +17,65 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo, useCallback } from "react";
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
     const { employeeId, isHR } = useUser();
-    const [leads, setLeads] = useState([]);
+    const { 
+        leads, refreshLeads, 
+        employees, refreshEmployees,
+        loading: globalLoading 
+    } = useData();
+
     const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [employees, setEmployees] = useState([]);
-    // ================= FETCH =================
+    const [localLoading, setLocalLoading] = useState(false);
     // ================= FETCH =================
     const fetchExpenses = async () => {
+        setLocalLoading(true);
         try {
             let res;
-
             if (isHR) {
-                // HR can see all expenses
                 res = await ExpenseAPI.getAll();
             } else {
-                // Regular employee sees only their own expenses
                 res = await ExpenseAPI.getByEmployee(employeeId);
             }
-
             const data = res.data?.data || [];
-
             const formatted = data.map(e => ({
                 ...e,
                 status: Boolean(e.status),
             }));
-
             setExpenses(formatted);
         } catch (err) {
             setError(parseBackendErrors(err));
-        }
-    };
-
-    const fetchEmployees = async () => {
-        try {
-            const res = await EmployeeAPI.getAll();
-
-            let empList = res.data?.data || [];
-
-            // 🔒 NON HR → only self
-            if (!isHR) {
-                empList = empList.filter(emp => emp.id === employeeId);
-            }
-
-            setEmployees(empList);
-
-        } catch (err) {
-            setError(parseBackendErrors(err));
-        }
-    };
-
-    const fetchLeads = async () => {
-        setLoading(true); // 🔥 START 
-        try {
-            const res = await LeadsAPI.getAll();
-            const data = res.data?.data || res.data || [];
-            console.log("Fetched leads:", data); // 🔍 Debug log
-            setLeads(data);
-        } catch (err) {
-            setError(parseBackendErrors(err));
         } finally {
-            setLoading(false); // 🔥 END 
+            setLocalLoading(false);
         }
     };
 
     useEffect(() => {
         fetchExpenses();
-        fetchLeads();
-        fetchEmployees(); // 🔥 ADD THIS
+        if (leads.length === 0) refreshLeads();
+        if (employees.length === 0) refreshEmployees();
+    }, [isHR, employeeId, leads.length, employees.length]);
 
-    }, [isHR, employeeId]); // ← Add dependencies
+    // 🔥 FILTERED EXPENSES (Memoized)
+    const filteredExpenses = useMemo(() => {
+        return expenses.filter(exp =>
+            `${exp.expense_type} ${exp.amount} ${exp.lead_name}`
+                .toLowerCase()
+                .includes(search.toLowerCase())
+        );
+    }, [expenses, search]);
+
+    // 🔥 FILTERED EMPLOYEES for dropdown
+    const dropdownEmployees = useMemo(() => {
+        if (isHR) return employees;
+        return employees.filter(emp => emp.id === employeeId);
+    }, [employees, isHR, employeeId]);
     // ================= SAVE =================
     // ================= SAVE =================
     const onSubmit = async (data) => {
@@ -154,17 +138,11 @@ export default function Expenses() {
             fetchExpenses();
         }
     };
-    const filteredExpenses = expenses.filter(exp =>
-        `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
-            .toLowerCase()
-            .includes(search.toLowerCase())
-    );
+
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
-        { key: "vendor_name" },
         { key: "lead_name" },
         { key: "expense_type" },
-
         { key: "amount" },
         {
             key: "date",
@@ -194,9 +172,7 @@ export default function Expenses() {
 
 
     const expenseFields = [
-        { key: "vendor_name", label: "Vendor Name" },
         { key: "lead_name", label: "Lead Name" },
-
         { key: "expense_type", label: "Expense Type" },
         { key: "amount", label: "Amount" },
 
@@ -265,7 +241,7 @@ export default function Expenses() {
 
                 </div>
 
-                <Table header={<TableHeader columns={["Vendor", "Lead name", "Type", "Amount", "Date", "Status", "Action"]} />}>
+                <Table header={<TableHeader columns={["Lead name", "Type", "Amount", "Date", "Status", "Action"]} />}>
                     {filteredExpenses.map((exp, index) => (
                         <EntityTableRow
                             key={exp.id}
@@ -286,7 +262,8 @@ export default function Expenses() {
                         />
                     ))}
                 </Table>
-                {loading && <LoadingSpinner text="Loading Expense Details..." />}
+                {localLoading && <LoadingSpinner text="Loading Expense Details..." />}
+                {globalLoading.leads && <LoadingSpinner text="Refreshing Meta Data..." />}
             </PageContainer>
         );
     }
@@ -340,7 +317,7 @@ export default function Expenses() {
                                 label: "Employee",
                                 name: "employee_id",
                                 type: "select",
-                                options: employees.map(e => ({
+                                options: dropdownEmployees.map(e => ({
                                     label: `${e.first_name} ${e.last_name}`,
                                     value: e.id,
                                 })),
@@ -352,15 +329,13 @@ export default function Expenses() {
                                 label: "Employee",
                                 name: "employee_name",
                                 type: "text",
-                                value: employees[0]
-                                    ? `${employees[0].first_name} ${employees[0].last_name}`
+                                value: dropdownEmployees[0]
+                                    ? `${dropdownEmployees[0].first_name} ${dropdownEmployees[0].last_name}`
                                     : "",
                                 disabled: true, // 🔥 non-editable
                             },
                         ]),
-                    { label: "Vendor Name", name: "vendor_name", required: true },
-                    {
-                        label: "Lead Name", name: "lead_id", type: "select",
+                    { label: "Lead Name", name: "lead_id", type: "select",
                         options: leads.map(e => ({
                             label: `${e.business_name} `,
                             value: e.id,

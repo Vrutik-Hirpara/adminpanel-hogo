@@ -288,18 +288,22 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { useData } from "../context/DataContext";
+import { useMemo } from "react";
 
 export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, setTabActions }) {
   const { setError, setSuccess } = useOutletContext();
-
   const { employeeId, isHR } = useUser();
+  const { 
+    employees, refreshEmployees,
+    loading: globalLoading 
+  } = useData();
 
   const [documents, setDocuments] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   useEffect(() => {
     if (asSubcomponent && setTabActions) {
@@ -315,8 +319,8 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     }
   }, [asSubcomponent, setTabActions, mode, selectedItem]);
   // ================= FETCH =================
-  const fetchDocuments = async (empList) => {
-    setLoading(true); // 🔥 START 
+  const fetchDocuments = async () => {
+    setLocalLoading(true); // 🔥 START 
     try {
       const res = await EmployeeDocsAPI.getAll();
       let data = res.data?.data || [];
@@ -330,7 +334,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
       }
 
       const formatted = data.map(d => {
-        const emp = empList.find(e => e.id === d.employee_id);
+        const emp = employees.find(e => e.id === d.employee_id);
         return {
           ...d,
           employeeName: emp
@@ -348,31 +352,20 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false); // 🔥 END 
+      setLocalLoading(false); // 🔥 END 
     }
   };
 
   // ================= LOAD =================
   useEffect(() => {
-    const load = async () => {
-      try {
-        const resEmp = await EmployeeAPI.getAll();
-        let empData = resEmp.data?.data || [];
+    if (employees.length === 0) refreshEmployees();
+  }, []);
 
-        // 🔒 non-HR → only own employee in dropdown
-        if (!isHR) {
-          empData = empData.filter(e => e.id === employeeId);
-        }
-
-        setEmployees(empData);
-        await fetchDocuments(empData);
-      } catch (err) {
-        setError(parseBackendErrors(err));
-      }
-    };
-
-    load();
-  }, [isHR, employeeId]);
+  useEffect(() => {
+    if (employees.length > 0) {
+      fetchDocuments();
+    }
+  }, [employees, isHR, employeeId]);
 
   // ================= SEARCH =================
   const filteredDocuments = documents.filter(doc =>
@@ -382,14 +375,89 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
   );
 
   // ================= SAVE =================
+  // const onSubmit = async (data, methods) => {
+  //   try {
+  //     const { setError } = methods;
+
+  //     const isEdit = Boolean(selectedItem);
+  //     const empIdNum = Number(data.employee_id);
+
+  //     // 🔥 UNIQUE EMPLOYEE VALIDATION
+  //     const alreadyExists = documents.some(doc => {
+  //       if (selectedItem && doc.id === selectedItem.id) return false;
+  //       return Number(doc.employee_id) === empIdNum;
+  //     });
+
+  //     if (alreadyExists) {
+  //       setError(["Documents already exist for this employee!"]);
+  //       return;
+  //     }
+
+  //     // 🔥 REQUIRED FILE VALIDATION (ONLY ADD)
+  //     const requiredFiles = [
+  //       "photo",
+  //       "aadhar_front",
+  //       "aadhar_back",
+  //       "pan_card",
+  //       "driving_license_front",
+  //       "driving_license_back",
+  //     ];
+
+  //     if (!isEdit) {
+  //       let hasError = false;
+
+  //       for (let key of requiredFiles) {
+  //         if (!data[key] || data[key].length === 0) {
+  //           setError(key, {
+  //             type: "manual",
+  //             message: "This file is required",
+  //           });
+  //           hasError = true;
+  //         }
+  //       }
+
+  //       if (hasError) return;
+  //     }
+
+  //     const formData = new FormData();
+
+  //     Object.keys(data).forEach(key => {
+  //       const value = data[key];
+  //       if (value instanceof FileList) {
+  //         if (value.length > 0) formData.append(key, value[0]);
+  //       } else if (value !== "" && value !== null && value !== undefined) {
+  //         formData.append(key, value);
+  //       }
+  //     });
+
+  //     if (selectedItem) {
+  //       const res = await EmployeeDocsAPI.update(selectedItem.id, formData);
+  //       setSuccess(res.data?.message || "Saved successfully");
+  //     } else {
+  //       const res = await EmployeeDocsAPI.create(formData);
+  //       setSuccess(res.data?.message || "Saved successfully");
+  //     }
+
+  //     if (asSubcomponent && !isHR && formatted.length > 0) {
+  //       setSelectedItem(formatted[0]);
+  //       setMode("view");
+  //     }
+  //     setMode(isHR ? "list" : "view");
+  //     fetchDocuments(employees);
+
+  //   } catch (err) {
+  //     setError(parseBackendErrors(err));
+  //     console.error(err);
+  //   }
+  // };
   const onSubmit = async (data, methods) => {
+    setLocalLoading(true); // 🔥 START LOADING
     try {
       const { setError } = methods;
 
       const isEdit = Boolean(selectedItem);
       const empIdNum = Number(data.employee_id);
 
-      // 🔥 UNIQUE EMPLOYEE VALIDATION
       const alreadyExists = documents.some(doc => {
         if (selectedItem && doc.id === selectedItem.id) return false;
         return Number(doc.employee_id) === empIdNum;
@@ -398,32 +466,6 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
       if (alreadyExists) {
         setError(["Documents already exist for this employee!"]);
         return;
-      }
-
-      // 🔥 REQUIRED FILE VALIDATION (ONLY ADD)
-      const requiredFiles = [
-        "photo",
-        "aadhar_front",
-        "aadhar_back",
-        "pan_card",
-        "driving_license_front",
-        "driving_license_back",
-      ];
-
-      if (!isEdit) {
-        let hasError = false;
-
-        for (let key of requiredFiles) {
-          if (!data[key] || data[key].length === 0) {
-            setError(key, {
-              type: "manual",
-              message: "This file is required",
-            });
-            hasError = true;
-          }
-        }
-
-        if (hasError) return;
       }
 
       const formData = new FormData();
@@ -438,36 +480,41 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
       });
 
       if (selectedItem) {
-        const res = await EmployeeDocsAPI.update(selectedItem.id, formData);
-        setSuccess(res.data?.message || "Saved successfully");
+        await EmployeeDocsAPI.update(selectedItem.id, formData);
       } else {
-        const res = await EmployeeDocsAPI.create(formData);
-        setSuccess(res.data?.message || "Saved successfully");
+        await EmployeeDocsAPI.create(formData);
       }
 
-      if (asSubcomponent && !isHR && formatted.length > 0) {
-        setSelectedItem(formatted[0]);
-        setMode("view");
-      }
       setMode(isHR ? "list" : "view");
-      fetchDocuments(employees);
+      fetchDocuments();
 
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.error(err);
+    } finally {
+      setLocalLoading(false); // 🔥 END LOADING
     }
   };
-
+  // const handleDelete = async (id) => {
+  //   try {
+  //     const res = await EmployeeDocsAPI.delete(id);
+  //     setSuccess(res.data?.message || "Deleted successfully");
+  //     fetchDocuments(employees);
+  //   } catch (err) {
+  //     setError(parseBackendErrors(err));
+  //   }
+  // };
   const handleDelete = async (id) => {
+    setLocalLoading(true); // 🔥 START
     try {
       const res = await EmployeeDocsAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      fetchDocuments(employees);
+      fetchDocuments();
     } catch (err) {
       setError(parseBackendErrors(err));
+    } finally {
+      setLocalLoading(false); // 🔥 END
     }
   };
-
   const documentFields = [
     { key: "employeeName", label: "Employee" },
     { key: "pancard_number", label: "PAN Number" },
@@ -488,11 +535,11 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
   //       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
   //         <SectionTitle title="EMPLOYEE DOCUMENTS" />
 
-  //         <div className="flex flex-wrap gap-3 self-end ml-auto">
+  //         <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
   //           <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
   //           {/* <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} /> */}
   //           {/* )} */}
-  //           <div className="flex flex-wrap gap-3 self-end ml-auto">
+  //           <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
   //             {(filteredDocuments.length === 0) && (
   //               <ActionButtons showAdd addText="+ Add" onAdd={() => { setSelectedItem(null); setMode("form"); }} />
   //             )}
@@ -544,7 +591,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             />
           </div>
           <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <div className="text-gray-500 mb-4">No documents found</div>
+            {localLoading && <LoadingSpinner text="Loading Employee Document Details..." />}
 
           </div>
         </>
@@ -562,9 +609,9 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
         {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="EMPLOYEE DOCUMENTS" />
 
-          <div className="flex flex-wrap gap-3 self-end ml-auto">
+          <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
             <SearchBar value={search} onChange={setSearch} placeholder="Search documents..." />
-            <div className="flex flex-wrap gap-3 self-end ml-auto">
+            <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
               {isHR && (
                 <ActionButtons
                   showAdd
@@ -578,38 +625,38 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             </div>
           </div>
         </div> */}
-<div className="flex flex-col gap-4 mb-4 w-full">
+        <div className="flex flex-col gap-4 mb-4 w-full">
 
-  {/* ROW 1: Title + Search */}
-  <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
+          {/* ROW 1: Title + Search */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center w-full gap-3">
 
-    {!asSubcomponent && <SectionTitle title="EMPLOYEE DOCUMENTS" />}
+            {!asSubcomponent && <SectionTitle title="EMPLOYEE DOCUMENTS" />}
 
-    <div className="w-full sm:w-auto sm:ml-auto">
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search documents..."
-      />
-    </div>
+            <div className="w-full sm:w-auto sm:ml-auto">
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Search documents..."
+              />
+            </div>
 
-  </div>
+          </div>
 
-  {/* ROW 2: Add Button */}
-  <div className="flex justify-end w-full">
-    {isHR && (
-      <ActionButtons
-        showAdd
-        addText="+ Add"
-        onAdd={() => {
-          setSelectedItem(null);
-          setMode("form");
-        }}
-      />
-    )}
-  </div>
+          {/* ROW 2: Add Button */}
+          <div className="flex justify-end w-full">
+            {isHR && (
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedItem(null);
+                  setMode("form");
+                }}
+              />
+            )}
+          </div>
 
-</div>
+        </div>
         <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
           {filteredDocuments.map((doc, index) => (
             <EntityTableRow
@@ -629,8 +676,11 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             />
           ))}
         </Table>
-        {loading && <LoadingSpinner text="Loading Employee Document..." />}
-      </>
+        {localLoading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
+            <LoadingSpinner text="Loading Employee Document..." />
+          </div>
+        )}      </>
     );
 
     if (asSubcomponent) {
@@ -647,8 +697,8 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
         data={selectedItem}
         fields={documentFields}
         api={EmployeeDocsAPI}
-        onUpdated={() => fetchDocuments(employees)}
-        onDeleted={() => fetchDocuments(employees)}
+        onUpdated={() => fetchDocuments()}
+        onDeleted={() => fetchDocuments()}
         headerKeys={["employeeName"]}
       />
     );
