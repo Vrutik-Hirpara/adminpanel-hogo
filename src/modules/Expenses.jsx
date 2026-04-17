@@ -186,7 +186,6 @@ export default function Expenses() {
 
 
     const expenseFields = [
-
         { key: "lead_name", label: "Lead Name" },
         { key: "expense_type", label: "Expense Type" },
         { key: "amount", label: "Amount" },

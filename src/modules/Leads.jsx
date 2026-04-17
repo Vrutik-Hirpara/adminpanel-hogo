@@ -360,7 +360,6 @@ import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
-
 export default function Leads({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR, userData } = useUser();
@@ -703,7 +702,6 @@ export default function Leads({ asSubcomponent }) {
     );
 
     if (!confirmChange) return;
-
 
     try {
       const res = await LeadsAPI.update(row.id, {
@@ -1779,7 +1777,6 @@ export default function Leads({ asSubcomponent }) {
             { label: "Quality Feedback", name: "quality_feedback" },
             { label: "Demo", name: "demo", type: "checkbox" },
             { label: "PPF Installers", name: "ppf_installers", type: "checkbox" },
-
 
             { label: "Remarks", name: "remarks", type: "textarea" },
             {

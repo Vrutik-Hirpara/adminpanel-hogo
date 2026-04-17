@@ -1263,7 +1263,6 @@ import SalaryPayout from "./SalaryPayout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 
-
 export default function Employee() {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();

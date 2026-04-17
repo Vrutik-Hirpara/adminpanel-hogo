@@ -775,7 +775,6 @@ export default function TravelPlan({ asSubcomponent }) {
       setTravelPlans(data);
 
       const rawMonths = [...new Set(data.map(plan => plan.month))];
-
       // 🔥 Chronological Sort: Year ASC, then Month Index ASC
       const sortedMonths = rawMonths.sort((a, b) => {
         const yearA = parseInt(extractYear(a)) || 0;
@@ -789,7 +788,6 @@ export default function TravelPlan({ asSubcomponent }) {
 
       console.log("Sorted months for UI:", sortedMonths);
       setAvailableMonths(sortedMonths);
-
       const months = sortedMonths; // Use sorted array for follow-up logic
 
       // In fetchTravelPlans function, where you set selectedMonth and calendarMonth
@@ -1425,7 +1423,6 @@ export default function TravelPlan({ asSubcomponent }) {
                 </select>
               </div>
               <div className="">
-
               </div>
             </div>
 
