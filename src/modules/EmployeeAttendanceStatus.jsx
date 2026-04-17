@@ -4,22 +4,12 @@ import { EmployeeAttendanceAPI } from "../services";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import { themes } from "../config/theme.config";
 import { Clock, CheckCircle, PlayCircle, LogOut, RefreshCw, Calendar } from "lucide-react";
-import { useData } from "../context/DataContext";
-import { useUser } from "../hooks/useUser";
+
 
 const EmployeeAttendanceStatus = () => {
-  const { employeeId } = useUser();
-  const { 
-    todayAttendance: allTodayAttendance, 
-    refreshTodayAttendance,
-    loading: globalLoading 
-  } = useData();
+    const [attendance, setAttendance] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const attendance = Array.isArray(allTodayAttendance) 
-    ? allTodayAttendance.find(a => Number(a.employee_id) === Number(employeeId)) || null
-    : null;
-
-  const [localLoading, setLocalLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isHR, setIsHR] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -56,8 +46,26 @@ const EmployeeAttendanceStatus = () => {
 
   // Fetch today's attendance
   const fetchTodayAttendance = async () => {
-    if (!employeeId) return;
-    await refreshTodayAttendance();
+    if (!currentUser) return;
+    setLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const employeeId = currentUser.id; // Use id from user object
+      
+      // Get all attendance and filter for today
+      const res = await EmployeeAttendanceAPI.getAll();
+      const allAttendance = res.data?.data || [];
+      
+      const todayAttendance = allAttendance.find(
+        att => att.employee === employeeId && att.date === today
+      );
+      
+      setAttendance(todayAttendance || null);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -107,7 +115,7 @@ const EmployeeAttendanceStatus = () => {
 
   // Handle Check In (Start Time) - Same as main component
   const handleCheckIn = async () => {
-    setLocalLoading(true);
+    setLoading(true);
     try {
       const now = new Date();
       
@@ -160,7 +168,7 @@ const EmployeeAttendanceStatus = () => {
       return;
     }
 
-    setLocalLoading(true);
+    setLoading(true);
     try {
       const now = new Date();
       
@@ -204,7 +212,7 @@ const EmployeeAttendanceStatus = () => {
       const errorMsg = parseBackendErrors(error);
       setMessage({ text: errorMsg || "❌ Check Out Failed!", type: "error" });
     } finally {
-      setLocalLoading(false);
+      setLoading(false);
     }
   };
 
@@ -215,7 +223,7 @@ const EmployeeAttendanceStatus = () => {
     second: '2-digit'
   });
 
-  if ((globalLoading || localLoading) && !attendance) {
+  if (loading && !attendance) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="animate-pulse flex justify-center">
@@ -299,11 +307,11 @@ const EmployeeAttendanceStatus = () => {
                 </div>
                 <button
                   onClick={handleCheckOut}
-                  disabled={localLoading}
+                  disabled={loading}
                   className="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                 >
                   <LogOut className="w-4 h-4" />
-                  {localLoading ? "Processing..." : "Check Out"}
+                  {loading ? "Processing..." : "Check Out"}
                 </button>
               </div>
             ) : (
@@ -313,11 +321,12 @@ const EmployeeAttendanceStatus = () => {
                 </div>
                 <button
                   onClick={handleCheckIn}
-                  disabled={localLoading}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
-                >
+                  disabled={loading}
+                  className="mt-3 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
+                  style={{ backgroundColor: themes.primary }}
+                  >
                   <PlayCircle className="w-4 h-4" />
-                  {localLoading ? "Processing..." : `Check In (${formattedLiveTime})`}
+                  {loading ? "Processing..." : `Check In (${formattedLiveTime})`}
                 </button>
               </div>
             )}

@@ -976,12 +976,10 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
 
 export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { loading: globalLoading } = useData();
 
   const [salaryData, setSalaryData] = useState([]);
   const [selectedSalary, setSelectedSalary] = useState(null);
@@ -991,7 +989,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [tempMonth, setTempMonth] = useState(selectedMonth);
   const [tempYear, setTempYear] = useState(selectedYear);
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // Month options
   const months = [
     { value: 1, label: "January" },
@@ -1017,7 +1015,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
 
   // Fetch salary data
   const fetchSalaryData = async (monthParam, yearParam) => {
-    setLocalLoading(true); // 🔥 START 
+    setLoading(true); // 🔥 START 
     try {
       const month = monthParam ?? selectedMonth;
       const year = yearParam ?? selectedYear;
@@ -1044,7 +1042,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
       console.error("Failed to fetch salary data:", err);
       setSalaryData([]);
     } finally {
-      setLocalLoading(false); // 🔥 END 
+      setLoading(false); // 🔥 END 
     }
   };
 
@@ -1272,7 +1270,7 @@ export default function SalaryPayout({ employeeFilterId, asSubcomponent }) {
 
           </div>
         </div>
-        {localLoading ? (
+        {loading ? (
           <div className="py-12">
             <LoadingSpinner text="Loading salary data..." />
           </div>

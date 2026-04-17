@@ -703,51 +703,55 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo, useCallback } from "react";
 
 export default function Visits({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    leads, refreshLeads, 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
+  const [leads, setLeads] = useState([]);
 
   const [visits, setVisits] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   // ================= FETCH =================
-  const fetchVisits = async () => {
-    setLocalLoading(true);
+  const fetchData = async () => {
+    setLoading(true); // 🔥 START LOADING
     try {
-      const v = await VisitsAPI.getAll();
-      setVisits(v.data.data || []);
+      const [v, e, l] = await Promise.all([
+        VisitsAPI.getAll(),
+        EmployeeAPI.getAll(),
+        LeadsAPI.getAll(),
+      ]);
+      let visitsData = v.data.data || [];
+      // 🔒 FILTER FOR NON-HR
+      if (!isHR) {
+        visitsData = visitsData.filter(
+          visit => Number(visit.employee_id) === Number(employeeId)
+        );
+      }
+      setVisits(visitsData);
+      let empList = e.data.data || [];
+      // 🔒 NON HR → dropdown ma only self
+      if (!isHR) {
+        empList = empList.filter(emp => emp.id === employeeId);
+      }
+      setEmployees(empList);
+      setLeads(l.data.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVisits();
-    if (leads.length === 0) refreshLeads();
-    if (employees.length === 0) refreshEmployees();
-  }, [isHR, employeeId, leads.length, employees.length]);
+    fetchData();
+  }, [isHR, employeeId]);
 
-  // 🔥 FILTERED VISITS (Memoized)
-  const filteredVisits = useMemo(() => {
-    let data = [...visits];
-    if (!isHR) {
-      data = data.filter(
-        visit => Number(visit.employee_id) === Number(employeeId)
-      );
-    }
-    return data;
-  }, [visits, isHR, employeeId]);
+
 
   // ================= HELPER FUNCTION FOR DATE FORMATTING =================
   const formatDateForInput = (dateStr) => {
@@ -767,7 +771,6 @@ export default function Visits({ asSubcomponent }) {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      setLocalLoading(true);
 
       Object.keys(data).forEach((key) => {
         const value = data[key];
@@ -790,11 +793,10 @@ export default function Visits({ asSubcomponent }) {
       }
 
       setMode("list");
-      fetchVisits();
+  fetchData();
     } catch (err) {
       setError(parseBackendErrors(err));
-    } finally {
-      setLocalLoading(false);
+
     }
   };
 
@@ -947,17 +949,17 @@ export default function Visits({ asSubcomponent }) {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           {!asSubcomponent && <SectionTitle title="Visits" />}
           {/* {isHR && ( */}
-            <ActionButtons
-              showAdd
-              addText="+ Add"
-              onAdd={() => {
-                setSelectedVisit(null);
-                setMode("form");
-              }}
-            />
+          <ActionButtons
+            showAdd
+            addText="+ Add"
+            onAdd={() => {
+              setSelectedVisit(null);
+              setMode("form");
+            }}
+          />
           {/* )} */}
         </div>
-        {localLoading ? (
+        {loading ? (
           <div className="py-12">
             <LoadingSpinner text="Loading visits data..." />
           </div>
@@ -979,7 +981,7 @@ export default function Visits({ asSubcomponent }) {
               />
             }
           >
-            {filteredVisits.map((v, index) => (
+            {visits.map((v, index) => (
               <EntityTableRow
                 key={v.id}
                 row={v}

@@ -17,25 +17,20 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo, useCallback } from "react";
+
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
     const { employeeId, isHR } = useUser();
-    const { 
-        leads, refreshLeads, 
-        employees, refreshEmployees,
-        loading: globalLoading 
-    } = useData();
+    const [leads, setLeads] = useState([]);
+
 
     const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [mode, setMode] = useState("list");
     const [selectedItem, setSelectedItem] = useState(null);
-    const [localLoading, setLocalLoading] = useState(false);
-    // ================= FETCH =================
+    const [loading, setLoading] = useState(false);
+    const [employees, setEmployees] = useState([]);    // ================= FETCH =================
     const fetchExpenses = async () => {
-        setLocalLoading(true);
         try {
             let res;
             if (isHR) {
@@ -51,31 +46,45 @@ export default function Expenses() {
             setExpenses(formatted);
         } catch (err) {
             setError(parseBackendErrors(err));
+        }
+    };
+    const fetchEmployees = async () => {
+        try {
+            const res = await EmployeeAPI.getAll();
+            let empList = res.data?.data || [];
+            // 🔒 NON HR → only self
+            if (!isHR) {
+                empList = empList.filter(emp => emp.id === employeeId);
+            }
+            setEmployees(empList);
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
+    };
+    const fetchLeads = async () => {
+        setLoading(true); // 🔥 START 
+        try {
+            const res = await LeadsAPI.getAll();
+            const data = res.data?.data || res.data || [];
+            console.log("Fetched leads:", data); // 🔍 Debug log
+            setLeads(data);
+        } catch (err) {
+            setError(parseBackendErrors(err));
         } finally {
-            setLocalLoading(false);
+            setLoading(false); // 🔥 END 
         }
     };
 
     useEffect(() => {
         fetchExpenses();
-        if (leads.length === 0) refreshLeads();
-        if (employees.length === 0) refreshEmployees();
-    }, [isHR, employeeId, leads.length, employees.length]);
+        fetchLeads();
+        fetchEmployees();
+    }, [isHR, employeeId]); // ← Add dependencies
 
-    // 🔥 FILTERED EXPENSES (Memoized)
-    const filteredExpenses = useMemo(() => {
-        return expenses.filter(exp =>
-            `${exp.expense_type} ${exp.amount} ${exp.lead_name}`
-                .toLowerCase()
-                .includes(search.toLowerCase())
-        );
-    }, [expenses, search]);
 
-    // 🔥 FILTERED EMPLOYEES for dropdown
-    const dropdownEmployees = useMemo(() => {
-        if (isHR) return employees;
-        return employees.filter(emp => emp.id === employeeId);
-    }, [employees, isHR, employeeId]);
+
+
+  
     // ================= SAVE =================
     // ================= SAVE =================
     const onSubmit = async (data) => {
@@ -138,9 +147,14 @@ export default function Expenses() {
             fetchExpenses();
         }
     };
-
+    const filteredExpenses = expenses.filter(exp =>
+        `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
+            .toLowerCase()
+            .includes(search.toLowerCase())
+    );
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
+
         { key: "lead_name" },
         { key: "expense_type" },
         { key: "amount" },
@@ -262,8 +276,8 @@ export default function Expenses() {
                         />
                     ))}
                 </Table>
-                {localLoading && <LoadingSpinner text="Loading Expense Details..." />}
-                {globalLoading.leads && <LoadingSpinner text="Refreshing Meta Data..." />}
+                {loading && <LoadingSpinner text="Loading Expense Details..." />}
+
             </PageContainer>
         );
     }
@@ -317,7 +331,7 @@ export default function Expenses() {
                                 label: "Employee",
                                 name: "employee_id",
                                 type: "select",
-                                options: dropdownEmployees.map(e => ({
+                                options: employees.map(e => ({
                                     label: `${e.first_name} ${e.last_name}`,
                                     value: e.id,
                                 })),
@@ -329,13 +343,14 @@ export default function Expenses() {
                                 label: "Employee",
                                 name: "employee_name",
                                 type: "text",
-                                value: dropdownEmployees[0]
-                                    ? `${dropdownEmployees[0].first_name} ${dropdownEmployees[0].last_name}`
+                                value: employees[0]
+                                    ? `${employees[0].first_name} ${employees[0].last_name}`
                                     : "",
                                 disabled: true, // 🔥 non-editable
                             },
                         ]),
-                    { label: "Lead Name", name: "lead_id", type: "select",
+                    {
+                        label: "Lead Name", name: "lead_id", type: "select",
                         options: leads.map(e => ({
                             label: `${e.business_name} `,
                             value: e.id,

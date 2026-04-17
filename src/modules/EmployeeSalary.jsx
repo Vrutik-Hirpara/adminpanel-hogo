@@ -576,33 +576,30 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 
-import { SalaryAPI } from "../services";
+import { SalaryAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo } from "react";
 
 export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
+
 
   const [allSalaryData, setAllSalaryData] = useState([]); // 🔥 Store all data
+    const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // ================= FETCH ALL SALARY =================
-  const fetchAllSalary = async () => {
-    setLocalLoading(true);
+   const fetchAllSalary = async (empList) => {
+    setLoading(true);
     try {
       const res = await SalaryAPI.getAll();
       let data = res.data?.data || res.data || [];
@@ -616,7 +613,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       }
 
       const formatted = data.map((d) => {
-        const emp = employees.find((e) => e.id === d.employee_id);
+        const emp = empList.find((e) => e.id === d.employee_id);
         return {
           ...d,
           employeeName: emp
@@ -629,7 +626,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false);
+      setLoading(false);
     }
   };
 
@@ -682,14 +679,22 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-    if (employees.length === 0) refreshEmployees();
-  }, []);
+      const load = async () => {
+      try {
+        const resEmp = await EmployeeAPI.getAll();
+        let empData = resEmp.data?.data || [];
+      if (!isHR) {
+          empData = empData.filter(e => e.id === employeeId);
+        }
 
-  useEffect(() => {
-    if (employees.length > 0) {
-      fetchAllSalary();
-    }
-  }, [employees, isHR, employeeId]);
+  setEmployees(empData);
+        await fetchAllSalary(empData);
+      } catch (err) {
+        setError(parseBackendErrors(err));
+      }
+    };
+    load();
+  }, [isHR, employeeId]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -705,7 +710,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       }
 
       setMode(isHR ? "list" : "view");
-      await fetchAllSalary();
+      await fetchAllSalary(employees);
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -716,7 +721,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     try {
       const res = await SalaryAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      await fetchAllSalary();
+      await fetchAllSalary(employees);
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -921,7 +926,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
           ))}
         </Table>
         {/* )} */}
-        {localLoading && <LoadingSpinner text="Loading Employee Salary Details..." />}
+        {loading && <LoadingSpinner text="Loading Employee Salary Details..." />}
       </>
     );
 
@@ -962,7 +967,14 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const formContent = (
     <EntityForm
       title={selectedItem ? "Edit Salary" : "Create Salary"}
-      selectedItem={selectedItem}
+      selectedItem={
+        selectedItem
+          ? {
+              ...selectedItem,
+              status: selectedItem.status === 1 || selectedItem.status === true ? 1 : 0,
+            }
+          : null
+      }
       onSubmit={onSubmit}
       setMode={setMode}
       onCancel={() => setMode(isHR ? "list" : "view")}

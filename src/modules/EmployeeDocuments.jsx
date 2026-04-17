@@ -288,22 +288,19 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo } from "react";
 
 export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, setTabActions }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
+
 
   const [documents, setDocuments] = useState([]);
+    const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (asSubcomponent && setTabActions) {
@@ -319,8 +316,9 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     }
   }, [asSubcomponent, setTabActions, mode, selectedItem]);
   // ================= FETCH =================
-  const fetchDocuments = async () => {
-    setLocalLoading(true); // 🔥 START 
+   const fetchDocuments = async (empList) => {
+    const setLoadingSafe = typeof setLoading === "function" ? setLoading : null;
+    setLoadingSafe?.(true); // 🔥 START 
     try {
       const res = await EmployeeDocsAPI.getAll();
       let data = res.data?.data || [];
@@ -334,7 +332,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
       }
 
       const formatted = data.map(d => {
-        const emp = employees.find(e => e.id === d.employee_id);
+        const emp = empList.find(e => e.id === d.employee_id);
         return {
           ...d,
           employeeName: emp
@@ -352,20 +350,28 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false); // 🔥 END 
+      setLoadingSafe?.(false); // 🔥 END 
     }
   };
 
   // ================= LOAD =================
   useEffect(() => {
-    if (employees.length === 0) refreshEmployees();
-  }, []);
+       const load = async () => {
+      try {
+        const resEmp = await EmployeeAPI.getAll();
+        let empData = resEmp.data?.data || [];
 
-  useEffect(() => {
-    if (employees.length > 0) {
-      fetchDocuments();
-    }
-  }, [employees, isHR, employeeId]);
+   if (!isHR) {
+          empData = empData.filter(e => e.id === employeeId);
+        }
+          setEmployees(empData);
+        await fetchDocuments(empData);
+      } catch (err) {
+        setError(parseBackendErrors(err));
+      }
+    };
+    load();
+  }, [isHR, employeeId]);
 
   // ================= SEARCH =================
   const filteredDocuments = documents.filter(doc =>
@@ -451,10 +457,9 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
   //   }
   // };
   const onSubmit = async (data, methods) => {
-    setLocalLoading(true); // 🔥 START LOADING
+    const setLoadingSafe = typeof setLoading === "function" ? setLoading : null;
+    setLoadingSafe?.(true); // 🔥 START LOADING
     try {
-      const { setError } = methods;
-
       const isEdit = Boolean(selectedItem);
       const empIdNum = Number(data.employee_id);
 
@@ -479,19 +484,21 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
         }
       });
 
+      let res;
       if (selectedItem) {
-        await EmployeeDocsAPI.update(selectedItem.id, formData);
+        res = await EmployeeDocsAPI.update(selectedItem.id, formData);
       } else {
-        await EmployeeDocsAPI.create(formData);
+        res = await EmployeeDocsAPI.create(formData);
       }
+      setSuccess(res.data?.message || "Saved successfully");
 
       setMode(isHR ? "list" : "view");
-      fetchDocuments();
+      fetchDocuments(employees);
 
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false); // 🔥 END LOADING
+      setLoadingSafe?.(false); // 🔥 END LOADING
     }
   };
   // const handleDelete = async (id) => {
@@ -504,19 +511,20 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
   //   }
   // };
   const handleDelete = async (id) => {
-    setLocalLoading(true); // 🔥 START
+    const setLoadingSafe = typeof setLoading === "function" ? setLoading : null;
+    setLoadingSafe?.(true); // 🔥 START
     try {
       const res = await EmployeeDocsAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      fetchDocuments();
+      fetchDocuments(employees);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false); // 🔥 END
+      setLoadingSafe?.(false); // 🔥 END
     }
   };
   const documentFields = [
-    { key: "employeeName", label: "Employee" },
+    ...(isHR ? [{ key: "employeeName", label: "Employee" }] : []),
     { key: "pancard_number", label: "PAN Number" },
     { key: "aadhar_number", label: "Aadhar Number" },
     { key: "driving_license_number", label: "Driving License Number" },
@@ -591,7 +599,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             />
           </div>
           <div className="text-center py-12 bg-gray-50 rounded-lg">
-            {localLoading && <LoadingSpinner text="Loading Employee Document Details..." />}
+            {loading && <LoadingSpinner text="Loading Employee Document Details..." />}
 
           </div>
         </>
@@ -657,14 +665,17 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
           </div>
 
         </div>
-        <Table header={<TableHeader columns={["Employee", "PAN", "Aadhar", "DL", "Uploaded", "Action"]} />}>
+        <Table header={<TableHeader columns={[
+          ...(isHR ? ["Employee"] : []),
+          "PAN", "Aadhar", "DL", "Uploaded", "Action"
+        ]} />}>
           {filteredDocuments.map((doc, index) => (
             <EntityTableRow
               key={doc.id}
               row={doc}
               index={index}
               columns={[
-                { key: "employeeName" },
+                ...(isHR ? [{ key: "employeeName" }] : []),
                 { key: "pancard_number" },
                 { key: "aadhar_number" },
                 { key: "driving_license_number" },
@@ -676,7 +687,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             />
           ))}
         </Table>
-        {localLoading && (
+        {loading && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
             <LoadingSpinner text="Loading Employee Document..." />
           </div>
@@ -697,8 +708,8 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
         data={selectedItem}
         fields={documentFields}
         api={EmployeeDocsAPI}
-        onUpdated={() => fetchDocuments()}
-        onDeleted={() => fetchDocuments()}
+            onUpdated={() => fetchDocuments(employees)}
+        onDeleted={() => fetchDocuments(employees)}
         headerKeys={["employeeName"]}
       />
     );

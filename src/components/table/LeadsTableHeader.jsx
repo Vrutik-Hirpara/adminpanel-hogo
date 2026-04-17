@@ -14,6 +14,7 @@ export default function LeadsTableHeader() {
         <th className="px-3 py-3 text-center whitespace-nowrap">Contact</th>
         <th className="px-3 py-3 text-center whitespace-nowrap">Phone</th>
         <th className="px-3 py-3 text-center whitespace-nowrap">Interest</th>
+        <th className="px-3 py-3 text-center whitespace-nowrap">Week</th>
         {/* <th className="px-3 py-3 text-center whitespace-nowrap">Status</th> */}
         <th className="px-3 py-3 text-center whitespace-nowrap">Visit List</th>
                 <th className="px-3 py-3 text-center whitespace-nowrap">Leads Followup</th>

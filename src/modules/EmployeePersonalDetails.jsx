@@ -17,22 +17,18 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo } from "react";
 
 export default function EmployeePersonalDetails({ employeeFilterId, asSubcomponent, setTabActions }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
 
   const [details, setDetails] = useState([]);
+    const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (asSubcomponent && setTabActions) {
@@ -47,14 +43,26 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
       return () => setTabActions(null);
     }
   }, [asSubcomponent, setTabActions, mode, selectedItem]);
-
-  useEffect(() => {
-    if (employees.length === 0) refreshEmployees();
-  }, []);
+ const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const res = await EmployeeAPI.getAll();
+      let list = res.data?.data || [];
+     // 🔒 non HR → only own employee
+      if (!isHR) {
+        list = list.filter(e => e.id === employeeId);
+      }
+      setEmployees(list);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ================= FETCH DETAILS =================
   const fetchDetails = async () => {
-    setLocalLoading(true);
+    setLoading(true);
     try {
       const res = await EmployeePersonalAPI.getAll();
       let data = res.data?.data || [];
@@ -88,10 +96,12 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false);
+      setLoading(false);
     }
   };
-
+  useEffect(() => {
+    fetchEmployees();
+  }, [isHR, employeeId]);
 
   useEffect(() => {
     if (employees.length > 0) {
@@ -185,12 +195,11 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
     }
   };
 
-  // ================= TABLE =================
   const personalColumns = [
-    {
+    ...(isHR ? [{
       key: "employeeName",
       render: (row) => row.employeeName,
-    },
+    }] : []),
     { key: "father_name" },
     { key: "mother_name" },
     { key: "marital_status" },
@@ -198,7 +207,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
   ];
 
   const personalFields = [
-    { key: "employeeName", label: "Employee" },
+    ...(isHR ? [{ key: "employeeName", label: "Employee" }] : []),
     { key: "father_name", label: "Father Name" },
     { key: "mother_name", label: "Mother Name" },
     { key: "marital_status", label: "Marital Status" },
@@ -211,7 +220,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
   // ================= LIST =================
   if (mode === "list") {
     // For non-HR with 0 data, show message with add button (no table)
-    if (!isHR && filteredDetails.length === 0 && !localLoading) {
+    if (!isHR && filteredDetails.length === 0 && !loading) {
       const noDataContent = (
         <>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
@@ -229,7 +238,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
             <div className="text-gray-500 mb-4">No personal details found</div>
 
           </div>
-          {localLoading && <LoadingSpinner text="Loading Employee Personal Details..." />}
+          {loading && <LoadingSpinner text="Loading Employee Personal Details..." />}
         </>
       );
 
@@ -311,7 +320,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
           header={
             <TableHeader
               columns={[
-                "Employee",
+                ...(isHR ? ["Employee"] : []),
                 "Father Name",
                 "Mother Name",
                 "Marital Status",
@@ -340,7 +349,7 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
           ))}
         </Table>
         </>)}
-        {localLoading && <LoadingSpinner text="Loading Employee Personal Details..." />}
+        {loading && <LoadingSpinner text="Loading Employee Personal Details..." />}
       </>
     );
 

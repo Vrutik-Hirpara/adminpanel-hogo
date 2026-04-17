@@ -264,38 +264,51 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo, useCallback } from "react";
 
 export default function Users({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
 
   const [users, setUsers] = useState([]);
+    const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // ================= FETCH USERS =================
   const fetchUsers = async () => {
-    setLocalLoading(true);
+    setLoading(true); // 🔥 START
     try {
-      const res = await api.get("users/");
-      const list = res.data?.data || res.data || [];
-      
-      let data = list;
-      if (!isHR) {
-        data = list.filter(
+      let res;
+      if (isHR) {
+        // 👑 HR → all users
+        res = await api.get("users/");
+        const list = res.data?.data || res.data || [];
+        const formatted = list.map(u => ({
+          ...u,
+          status: u.is_active,
+        }));
+        setUsers(formatted);
+      } else {
+        // 🔒 Non-HR → only own user
+        res = await api.get("users/");
+        const list = res.data?.data || res.data || [];
+        const filtered = list.filter(
+
+
+    
           u => Number(u.employee_id || u.employee) === Number(employeeId)
         );
+          const formatted = filtered.map(u => ({
+          ...u,
+          status: u.is_active,
+        }));
+        setUsers(formatted);
       }
 
       if (employeeFilterId && isHR) {
-        data = data.filter(u => Number(u.employee_id || u.employee) === Number(employeeFilterId));
+        setUsers(prev => prev.filter(u => Number(u.employee_id || u.employee) === Number(employeeFilterId)));
       }
 
       const formatted = data.map(u => ({
@@ -305,21 +318,32 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
 
       setUsers(formatted);
     } catch (err) {
-      setError(parseBackendErrors(err));
+      // setError(parseBackendErrors(err));
     } finally {
-      setLocalLoading(false);
+      setLoading(false); // 🔥 END
+    }
+  };
+  const fetchEmployees = async () => {
+    try {
+      const res = await EmployeeAPI.getAll();
+      let list = res.data?.data || [];
+      // 🔒 non-HR → only own employee
+      if (!isHR) {
+        list = list.filter(e => e.id === employeeId);
+      }
+      setEmployees(list);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+      console.log("EMPLOYEE FETCH ERROR:", err);
     }
   };
 
   useEffect(() => {
     fetchUsers();
-    if (employees.length === 0) refreshEmployees();
-  }, [isHR, employeeId, employeeFilterId]);
+    fetchEmployees();
+  }, [isHR, employeeId]);
 
-  const dropdownEmployees = useMemo(() => {
-    if (isHR) return employees;
-    return employees.filter(e => e.id === employeeId);
-  }, [employees, isHR, employeeId]);
+
 
   // ================= SEARCH =================
   const filteredUsers = users.filter(u =>
@@ -460,8 +484,8 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             />
           ))}
         </Table>
-        {localLoading && <LoadingSpinner text="Loading User Details..." />}
-        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
+               {loading && <LoadingSpinner text="Loading User Details..." />}
+
       </>
     );
 
@@ -525,7 +549,7 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             name: "employee_id",
             type: "select",
             required: true,
-            options: dropdownEmployees.map(e => ({
+            options: employees.map(e => ({
               label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
               value: e.id,
             })),

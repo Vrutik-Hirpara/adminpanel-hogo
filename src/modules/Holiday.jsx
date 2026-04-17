@@ -14,17 +14,28 @@ import { themes } from "../config/theme.config";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
 
 export default function Holiday() {
   const { setError, setSuccess } = useOutletContext();
-  const { holidays, refreshHolidays, loading: globalLoading } = useData();
+  const [holidays, setHolidays] = useState([]);
 
   const [mode, setMode] = useState("list");
   const [selectedHoliday, setSelectedHoliday] = useState(null);
-  const [localLoading, setLocalLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+  // FETCH HOLIDAYS
+  const fetchHolidays = async () => {
+    setLoading(true); // 🔥 START LOADING
+    try {
+      const res = await HolidayAPI.getAll();
+      setHolidays(res.data?.data || []);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    } finally {
+      setLoading(false); // 🔥 STOP LOADING
+    }
+  };
   useEffect(() => {
-    if (holidays.length === 0) refreshHolidays();
+ fetchHolidays();
   }, []);
 
   // SUBMIT (CREATE / UPDATE)
@@ -43,7 +54,7 @@ export default function Holiday() {
         setSuccess(res.data?.message || "Saved successfully");
       }
 
-      setMode("list");
+      fetchHolidays();
       refreshHolidays();
     } catch (error) {
       setError(parseBackendErrors(error));
@@ -109,8 +120,7 @@ export default function Holiday() {
         </div>
 
 
-        {globalLoading.holidays ? (
-          <div className="py-12">
+  {loading ? (          <div className="py-12">
             <LoadingSpinner text="Loading holidays data..." />
           </div>
         ) : (
@@ -139,7 +149,7 @@ export default function Holiday() {
                   try {
                     const res = await HolidayAPI.delete(id);
                     setSuccess(res.data?.message || "Deleted successfully");
-                    refreshHolidays();
+                    fetchHolidays();
                   } catch (err) {
                     setError(parseBackendErrors(err));
                   }
@@ -163,8 +173,8 @@ export default function Holiday() {
           fields={holidayFields}
           api={HolidayAPI}
           headerKeys={["holiday_name"]}
-          onUpdated={refreshHolidays}
-          onDeleted={refreshHolidays}
+        onUpdated={fetchHolidays}
+          onDeleted={fetchHolidays}
         />
       </EntityPageLayout>
     );

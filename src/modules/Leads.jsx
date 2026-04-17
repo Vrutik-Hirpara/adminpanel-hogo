@@ -359,93 +359,154 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo, useCallback } from "react";
 
 export default function Leads({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR, userData } = useUser();
-  const { 
-    leads: allLeads, refreshLeads, 
-    employees, refreshEmployees, 
-    regions, refreshRegions,
-    loading: globalLoading 
-  } = useData();
+
 
   const [selectedVisits, setSelectedVisits] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [reportData, setReportData] = useState(null);
-  const [showReport, setShowReport] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [reportData, setReportData] = useState(null); // 👈 ADD THIS LINE
+  const [showReport, setShowReport] = useState(false); // 👈 ADD THIS LINE
+  const [showReportModal, setShowReportModal] = useState(false); // 👈 ADD THIS
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 👈 ADD THIS
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // 👈 ADD THIS
+
+
   const [statusFilter, setStatusFilter] = useState("all");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [leadFilter, setLeadFilter] = useState("created");
+
   const [selectedFollowups, setSelectedFollowups] = useState([]);
+  const [regions, setRegions] = useState([]);
+
   // ================= FETCH =================
   useEffect(() => {
-    if (allLeads.length === 0) refreshLeads();
-    if (employees.length === 0) refreshEmployees();
-    if (regions.length === 0) refreshRegions();
-  }, [allLeads.length, employees.length, regions.length, refreshLeads, refreshEmployees, refreshRegions]);
+    const loadData = async () => {
+      await fetchEmployees();
+      await fetchLeads();
+      await fetchRegions();
+    };
+    loadData();
+  }, [isHR, employeeId]);
 
-  // 🔥 FILTERED LEADS (Memoized for performance)
-  const filteredLeads = useMemo(() => {
-    let data = [...allLeads];
-
-    // Role-based filter
-    if (!isHR) {
-      data = data.filter(
-        (l) =>
-          Number(l.created_by) === Number(employeeId) ||
-          Number(l.assigned_to) === Number(employeeId)
-      );
+  const fetchLeads = async () => {
+    setLoading(true);
+    try {
+      const res = await LeadsAPI.getAll();
+      let data = res.data.data || [];
+      // 🔥 EMPLOYEE FILTER
+      if (!isHR) {
+        data = data.filter(
+          (l) =>
+            Number(l.created_by) === Number(employeeId) ||
+            Number(l.assigned_to) === Number(employeeId)
+        );
+      }
+      const enhancedData = data.map((lead) => ({
+        ...lead,
+        assigned_to_name: lead.assigned_to_name || "Unassigned",
+        created_by_name: lead.created_by_name || "Unknown",
+      }));
+      setLeads(enhancedData);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+    } finally {
+      setLoading(false);
     }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      data = data.filter((l) => l.lead_status === statusFilter);
-    }
-
-    // Lead filter (created vs assigned) - if applicable in UI
-    // if (leadFilter === "assigned") { ... }
-
-    return data.map((lead) => ({
-      ...lead,
-      assigned_to_name: lead.assigned_to_name || "Unassigned",
-      created_by_name: lead.created_by_name || "Unknown",
-    }));
-  }, [allLeads, isHR, employeeId, statusFilter]);
+  };
 
   const fetchFollowupsByLead = async (leadId) => {
-    setLocalLoading(true);
+
     try {
       const res = await api.get(`/lead_followups/?lead_id=${leadId}`);
-      let data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      let data = [];
+      if (Array.isArray(res.data)) {
+        data = res.data;
+      } else if (res.data?.data) {
+        data = res.data.data;
+      }
       setSelectedFollowups(data);
       setMode("followups");
     } catch (err) {
       console.error("Followup fetch error", err);
       setSelectedFollowups([]);
-    } finally {
-      setLocalLoading(false);
+
+    }
+  };
+  const fetchEmployees = async () => {
+    try {
+      const res = await EmployeeAPI.getAll();
+      let list = res.data.data || [];
+      console.log("All employees:", list);
+      // 🔒 non HR → only self
+      // if (!isHR) {
+      //   list = list.filter(e => e.id === employeeId);
+      // }
+      console.log("Filtered employees:", list);
+      setEmployees(list);
+    } catch (err) {
+      setError(parseBackendErrors(err));
+      console.error("Error fetching employees:", err);
     }
   };
 
-  const fetchVisitsByLead = async (leadId) => {
-    setLocalLoading(true);
+  const fetchRegions = async () => {
     try {
+      const res = await RegionsAPI.getAll();
+      const data = res.data?.data || [];
+      // Show all regions as requested by user
+      setRegions(data);
+    } catch (err) {
+      console.error("Error fetching regions:", err);
+    }
+  };
+  // const fetchVisitsByLead = async (leadId) => {
+  //   try {
+  //     const res = await VisitsAPI.getByLeadId(leadId);
+  //     const data = res.data.data || [];
+  //     setSelectedVisits(data);
+  //     setMode("visits");
+  //   } catch (err) {
+  //     console.log("Visit fetch error", err);
+  //     alert("Failed to load visits");
+  //   }
+  // };
+  const fetchVisitsByLead = async (leadId) => {
+    try {
+      console.log("🔍 Fetching visits for Lead ID:", leadId);
       const response = await VisitsAPI.getByLeadId(leadId);
-      let visits = Array.isArray(response) ? response : (response.data || response.results || []);
+      console.log("📦 Response type:", typeof response);
+      console.log("📦 Response:", response);
+      // Ensure we always have an array
+      let visits = [];
+      if (Array.isArray(response)) {
+        visits = response;
+      } else if (response && typeof response === 'object') {
+        // If it's an object, try to extract array from common patterns
+        if (Array.isArray(response.data)) {
+          visits = response.data;
+        } else if (Array.isArray(response.results)) {
+          visits = response.results;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          visits = response.data.data;
+        } else {
+          // If it's a single object, wrap it in array
+          console.warn("Response is not an array, wrapping:", response);
+          visits = [];
+        }
+      }
+      console.log("✅ Final visits array:", visits);
       setSelectedVisits(visits);
       setMode("visits");
     } catch (err) {
       setError(parseBackendErrors(err));
-      setSelectedVisits([]);
-    } finally {
-      setLocalLoading(false);
+      console.error("❌ Visit fetch error:", err);
+      setSelectedVisits([]); // Set empty array on error
     }
   };
   // const fetchVisitsByLead = async (leadId) => {
@@ -496,7 +557,6 @@ export default function Leads({ asSubcomponent }) {
   }
   // ================= SAVE =================
   const onSubmit = async (data) => {
-    setLocalLoading(true);
     try {
       const payload = {
         ...data,
@@ -522,11 +582,10 @@ export default function Leads({ asSubcomponent }) {
       }
 
       setMode("list");
-      refreshLeads(); // 🔥 Refresh global context
+      fetchLeads();
     } catch (err) {
       setError(parseBackendErrors(err));
-    } finally {
-      setLocalLoading(false);
+
     }
   };
   // const fetchMonthlyReport = async () => {
@@ -622,40 +681,37 @@ export default function Leads({ asSubcomponent }) {
     }
   };
   const handleDelete = async (id) => {
-    setLocalLoading(true);
     try {
       const res = await LeadsAPI.delete(id);
       setSuccess(res.data?.message || "Deleted successfully");
-      refreshLeads(); // 🔥 Refresh global context
+      fetchLeads();
     } catch (error) {
       setError(parseBackendErrors(error));
-    } finally {
-      setLocalLoading(false);
+
     }
   };
 
   // ================= ASSIGN CHANGE =================
   const handleAssignChange = async (row, employeeId) => {
     const emp = employees.find(e => e.id === Number(employeeId));
-    const empName = emp ? `${emp.first_name} ${emp.last_name}` : "Unassigned";
-
+    const empName = emp
+      ? `${emp.first_name} ${emp.last_name}`
+      : "Unassigned";
     const confirmChange = window.confirm(
       `Are you sure you want to assign this lead to "${empName}"?`
     );
 
     if (!confirmChange) return;
 
-    setLocalLoading(true);
     try {
       const res = await LeadsAPI.update(row.id, {
         assigned_to: employeeId ? Number(employeeId) : null,
       });
       setSuccess(res.data?.message || "Assigned successfully");
-      refreshLeads(); // 🔥 Refresh global context
+      fetchLeads();
     } catch (err) {
       setError(parseBackendErrors(err));
-    } finally {
-      setLocalLoading(false);
+
     }
   };
 
@@ -683,6 +739,8 @@ export default function Leads({ asSubcomponent }) {
         </span>
       ),
     },
+
+    { key: "week", className: "whitespace-nowrap min-w-[70px] text-center" },
 
 
     {
@@ -1144,6 +1202,22 @@ export default function Leads({ asSubcomponent }) {
   }
   // ================= LIST =================
   if (mode === "list") {
+    const getFilteredLeads = () => {
+      let filtered = [...leads];
+      if (!isHR) {
+        if (leadFilter === "created") {
+          filtered = filtered.filter(
+            (l) => Number(l.created_by) === Number(employeeId)
+          );
+        } else if (leadFilter === "assigned") {
+          filtered = filtered.filter(
+            (l) => Number(l.assigned_to) === Number(employeeId)
+          );
+        }
+      }
+      return filtered;
+    };
+    const filteredLeads = getFilteredLeads();
     return (
       <>
         <PageContainer>
@@ -1210,7 +1284,7 @@ export default function Leads({ asSubcomponent }) {
               />
             ))}
           </Table>
-          {globalLoading.leads && <LoadingSpinner text="Loading Leads Details..." />}
+          {loading && <LoadingSpinner text="Loading Leads Details..." />}
 
         </PageContainer>
         <ReportModal /> {/* 👈 ADD THIS */}
@@ -1349,7 +1423,7 @@ export default function Leads({ asSubcomponent }) {
 
                 </div>
               </div> */}
-            <LeadInfoHeader data={visitsArray} title="Lead Information" />
+              <LeadInfoHeader data={visitsArray} title="Lead Information" />
 
               <Table
                 header={
@@ -1553,8 +1627,8 @@ export default function Leads({ asSubcomponent }) {
           data={selectedItem}
           fields={leadFields}
           api={LeadsAPI}
-          onUpdated={refreshLeads}
-          onDeleted={refreshLeads}
+          onUpdated={fetchLeads}
+          onDeleted={fetchLeads}
           headerKeys={["business_name"]}
         />
       </EntityPageLayout>
@@ -1692,7 +1766,7 @@ export default function Leads({ asSubcomponent }) {
               type: "select",
               options: regions.map(r => ({ label: r.name, value: r.name })),
               required: true,
-              value: selectedItem?.region || "", 
+              value: selectedItem?.region || "",
 
             },
             { label: "Outlet Age", name: "outlet_age", type: "number" },
@@ -1703,7 +1777,6 @@ export default function Leads({ asSubcomponent }) {
             { label: "Quality Feedback", name: "quality_feedback" },
             { label: "Demo", name: "demo", type: "checkbox" },
             { label: "PPF Installers", name: "ppf_installers", type: "checkbox" },
-                        
 
             { label: "Remarks", name: "remarks", type: "textarea" },
             {

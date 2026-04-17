@@ -1261,53 +1261,64 @@ import LeaveRequests from "./LeaveRequests";
 import EmployeeAttendance from "./EmployeeAttendance";
 import SalaryPayout from "./SalaryPayout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo, useCallback } from "react";
 
 
 export default function Employee() {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees: allEmployees, refreshEmployees,
-    departments, refreshDepartments,
-    roles, refreshRoles,
-    branches, refreshBranches,
-    loading: globalLoading 
-  } = useData();
+
 
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [search, setSearch] = useState("");
+  const [branches, setBranches] = useState([]);
+
   const [activeTab, setActiveTab] = useState("profile");
-  const [localLoading, setLocalLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const [tabActions, setTabActions] = useState(null);
 
-  // PROCESS EMPLOYEES (Role-based processing of global data)
-  useEffect(() => {
-    let formatted = [];
-    if (isHR) {
-      formatted = allEmployees.map(e => ({
-        id: e.id,
-        employee_code: e.employee_code,
-        first_name: e.first_name,
-        last_name: e.last_name,
-        date_of_birth: e.date_of_birth,
-        email: e.email,
-        phone: e.phone,
-        role_name: e.role_name || e.role?.name || "-",
-        office_branch_name: e.office_branch_name || e.branch?.name || "-",
-        joining_date: e.joining_date,
-        employment_type: e.employment_type,
-        status: e.status === "Active",
-        raw: e,
-      }));
-    } else {
-      const e = allEmployees.find(emp => Number(emp.id) === Number(employeeId));
-      if (e) {
-        const branchName = e.office_branch?.name || e.branch?.name || e.office_branch_name || e.branch_name || "-";
-        formatted = [{
+
+  const fetchEmployees = async () => {
+    setLoading(true); // 🔥 START
+    try {
+      let res;
+      if (isHR) {
+        res = await EmployeeAPI.getAll();   // HR → all
+        const data = res.data?.data || [];
+        const formatted = data.map(e => ({
+
+
+          id: e.id,
+          employee_code: e.employee_code,
+          first_name: e.first_name,
+          last_name: e.last_name,
+          date_of_birth: e.date_of_birth,
+          email: e.email,
+          phone: e.phone,
+          role_name: e.role_name || e.role?.name || "-",
+          office_branch_name: e.office_branch_name || e.branch?.name || "-",
+          joining_date: e.joining_date,
+          employment_type: e.employment_type,
+          status: e.status === "Active",
+          raw: e,
+        }));
+        setEmployees(formatted);
+      } else {
+        // 🔒 Only logged user
+        res = await api.get(`/employee/${employeeId}/`);
+        const e = res.data.data;
+        // Log the response to debug if needed
+        console.log("Single employee response:", e);
+        // Get branch name from the response - handle different possible structures
+        const branchName = e.office_branch?.name ||
+          e.branch?.name ||
+          e.office_branch_name ||
+          e.branch_name || "-";
+        const formatted = [{
           id: e.id,
           employee_code: e.employee_code,
           first_name: e.first_name,
@@ -1322,31 +1333,21 @@ export default function Employee() {
           status: e.status === "Active",
           raw: e,
         }];
+        setEmployees(formatted);
+        if (formatted.length > 0) {
+          setSelectedEmployee(formatted[0].raw);
+          setMode("view");
+        }
       }
+    } catch (err) {
+      setError(parseBackendErrors(err));
+      console.log("EMPLOYEE FETCH ERROR:", err);
     }
-    setEmployees(formatted);
-    if (!isHR && formatted.length > 0 && mode === "list") {
-      setSelectedEmployee(formatted[0].raw);
-      setMode("view");
+    finally {
+      setLoading(false); // 🔥 END
+
+     };
     }
-  }, [allEmployees, isHR, employeeId]);
-
-  // Initial Context Load
-  useEffect(() => {
-    if (allEmployees.length === 0) refreshEmployees();
-    if (departments.length === 0) refreshDepartments();
-    if (roles.length === 0) refreshRoles();
-    if (branches.length === 0) refreshBranches();
-  }, []);
-
-  // Filtered employees for list view
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(emp =>
-      `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone} ${emp.role_name}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
-  }, [employees, search]);
 
   const handleGlobalEdit = () => {
     if (activeTab === "profile") {
@@ -1362,7 +1363,8 @@ export default function Employee() {
         try {
           const res = await EmployeeAPI.delete(selectedEmployee.id);
           setSuccess(res.data?.message || "Deleted successfully");
-          refreshEmployees();
+                    fetchEmployees();
+
           setMode("list");
         } catch (error) {
           setError(parseBackendErrors(error));
@@ -1375,7 +1377,24 @@ export default function Employee() {
     }
   };
 
-
+  // FETCH DEPARTMENTS & ROLES
+  const fetchMeta = async () => {
+    const deptRes = await DepartmentAPI.getAll();
+    const roleRes = await RolesAPI.getAll();
+    const branchRes = await BranchAPI.getAll();
+    setDepartments(deptRes.data?.data || []);
+    setRoles(roleRes.data?.data || []);
+    setBranches(branchRes.data?.data || []);
+  };
+  useEffect(() => {
+    fetchEmployees();
+    fetchMeta();
+  }, [isHR, employeeId]);
+  const filteredEmployees = employees.filter(emp =>
+    `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone} ${emp.role_name}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
 
   // STATUS TOGGLE
@@ -1396,6 +1415,8 @@ export default function Employee() {
       refreshEmployees();
     } catch (error) {
       setError(parseBackendErrors(error));
+            fetchEmployees();
+
     }
   };
 
@@ -1421,7 +1442,7 @@ export default function Employee() {
 
       setSuccess("Saved successfully");
       setMode("list");
-      refreshEmployees();
+      fetchEmployees();
     } catch (error) {
       setError(parseBackendErrors(error));
     }
@@ -1484,6 +1505,8 @@ export default function Employee() {
   // LIST
   if (mode === "list") {
     if (!isHR && employees.length > 0) {
+       setSelectedEmployee(employees[0].raw);
+      setMode("view");
       return null;
     }
 
@@ -1517,44 +1540,44 @@ export default function Employee() {
             )}
           </div>
         </div> */}
-<div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4 mb-4">
 
-  {/* LEFT: Title + Search */}
-  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
+          {/* LEFT: Title + Search */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
 
-    <div>
-      <SectionTitle title="Employees" />
-    </div>
+            <div>
+              <SectionTitle title="Employees" />
+            </div>
 
-    <div>
-      <input
-        type="text"
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="border px-3 py-2 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-    </div>
+            <div>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border px-3 py-2 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
 
-  </div>
+          </div>
 
-</div>
+        </div>
 
-{/* RIGHT: Add Button (SEPARATE — SAME AS USERS) */}
-<div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
+        {/* RIGHT: Add Button (SEPARATE — SAME AS USERS) */}
+        <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
 
-  {isHR && (
-    <ActionButtons
-      showAdd
-      addText="+ Add"
-      onAdd={() => {
-        setSelectedEmployee(null);
-        setMode("form");
-      }}
-    />
-  )}
+          {isHR && (
+            <ActionButtons
+              showAdd
+              addText="+ Add"
+              onAdd={() => {
+                setSelectedEmployee(null);
+                setMode("form");
+              }}
+            />
+          )}
 
-</div>
+        </div>
         <Table header={<TableHeader columns={["Code", "Branch", "Name", "DOB", "Phone", "Role", "Status", "Action"]} />}>
           {filteredEmployees.map((emp, index) => (
             <EntityTableRow
@@ -1580,7 +1603,7 @@ export default function Employee() {
                 try {
                   const res = await EmployeeAPI.delete(id);
                   setSuccess(res.data?.message || "Deleted successfully");
-                  refreshEmployees();
+                  fetchEmployees();
                 } catch (error) {
                   setError(parseBackendErrors(error));
                 }
@@ -1589,7 +1612,7 @@ export default function Employee() {
           ))}
 
         </Table>
-        {localLoading && <LoadingSpinner text="Loading Employee details..." />}
+        {loading && <LoadingSpinner text="Loading Employee details..." />}
 
       </PageContainer>
     );

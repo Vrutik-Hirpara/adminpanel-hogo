@@ -16,24 +16,23 @@ import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
-import { useData } from "../context/DataContext";
-import { useMemo } from "react";
 
 export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-  const { 
-    employees, refreshEmployees,
-    loading: globalLoading 
-  } = useData();
+
 
   const [data, setData] = useState([]);
+    const [employees, setEmployees] = useState([]);
+
   const [mode, setMode] = useState("list");
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
-  const [localLoading, setLocalLoading] = useState(false); 
+const [loading, setLoading] = useState(false); 
+
 const fetchData = async () => {
-  setLocalLoading(true); // 🔥 START 
+    setLoading(true); // 🔥 START 
+
   try {
     const res = await LeaveBalanceAPI.getAll();
     let list = res.data?.data || [];
@@ -53,66 +52,119 @@ const fetchData = async () => {
     setData(list);
   } catch (err) {
     setError(parseBackendErrors(err));
-  } finally {
-    setLocalLoading(false); // 🔥 END 
-  } 
+   }finally { setLoading(false); // 🔥 END 
+} 
 };
-
-useEffect(() => {
-  fetchData();
-  if (employees.length === 0) refreshEmployees();
-}, [employeeId, isHR]);
-
-  const onSubmit = async (form) => {
-    const total = Number(form.total_allocated || 0);
-    const used = Number(form.used_days || 0);
-
-    const payload = {
-      leave_type: form.leave_type,
-      employee_id: Number(form.employee_id),
-      total_allocated: total,
-      used_days: used,
-      remaining_days: total - used,   // 🔥 MISSING FIELD FIX
-    };
-
+  const fetchEmployees = async () => {
     try {
-      if (selected) {
-        const res = await LeaveBalanceAPI.update(selected.id, payload);
-        setSuccess(res.data?.message || "Saved successfully");
-      } else {
-        const res = await LeaveBalanceAPI.create(payload);
-        setSuccess(res.data?.message || "Saved successfully");
-      }
-
-      setMode("list");
-      fetchData();
-
+      const res = await api.get("employee/");
+      setEmployees(res.data?.data || []);
     } catch (err) {
       setError(parseBackendErrors(err));
-      console.log("API ERROR:", err.response?.data);
     }
   };
+useEffect(() => {
+  fetchData();
+  fetchEmployees();
+}, [employeeId, isHR]);
 
-const filteredData = useMemo(() => {
-  return data.filter(item => {
-    const emp = employees.find(e => e.id === item.employee_id);
-    const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
+//   const onSubmit = async (form) => {
+//     const used = Number(form.used_days || 0);
 
-    return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  });
-}, [data, employees, search]);
+//     // const payload = {
+//     //   leave_type: form.leave_type,
+//     //   employee_id: Number(form.employee_id),
+//     //   total_allocated: total,
+//     //   used_days: used,
+//     //   remaining_days: total - used,   // 🔥 MISSING FIELD FIX
+//     // };
+// const payload = {
+//   leave_type: form.leave_type,
+//   employee_id: Number(form.employee_id),
+
+//   cl: Number(form.cl ?? 0),
+//   sl: Number(form.sl ?? 0),
+//   pl: Number(form.pl ?? 0),
+//   ul: Number(form.ul ?? 0),
+//   compensatory_off: Number(form.compensatory_off ?? 0),
+//   public_holiday: Number(form.public_holiday ?? 0),
+//   maternity_leave: Number(form.maternity_leave ?? 0),
+//   paternity_leave: Number(form.paternity_leave ?? 0),
+
+//   total_allocated: total,
+//   used_days: used,
+// };
+//     try {
+//       if (selected) {
+//         const res = await LeaveBalanceAPI.update(selected.id, payload);
+//         setSuccess(res.data?.message || "Saved successfully");
+//       } else {
+//         const res = await LeaveBalanceAPI.create(payload);
+//         setSuccess(res.data?.message || "Saved successfully");
+//       }
+
+//       setMode("list");
+//       fetchData();
+
+//     } catch (err) {
+//       setError(parseBackendErrors(err));
+//       console.log("API ERROR:", err.response?.data);
+//     }
+//   };
+const onSubmit = async (form) => {
+  const payload = {
+    leave_type: form.leave_type,
+    employee_id: Number(form.employee_id),
+
+    cl: Number(form.cl ?? 0),
+    sl: Number(form.sl ?? 0),
+    pl: Number(form.pl ?? 0),
+    ul: Number(form.ul ?? 0),
+    compensatory_off: Number(form.compensatory_off ?? 0),
+    public_holiday: Number(form.public_holiday ?? 0),
+    maternity_leave: Number(form.maternity_leave ?? 0),
+    paternity_leave: Number(form.paternity_leave ?? 0),
+
+    used_days: Number(form.used_days ?? 0),
+  };
+
+  console.log("FINAL PAYLOAD:", payload); // debug
+
+  try {
+    if (selected) {
+      const res = await LeaveBalanceAPI.update(selected.id, payload);
+      setSuccess(res.data?.message || "Saved successfully");
+    } else {
+      const res = await LeaveBalanceAPI.create(payload);
+      setSuccess(res.data?.message || "Saved successfully");
+    }
+
+    setMode("list");
+    fetchData();
+
+  } catch (err) {
+    setError(parseBackendErrors(err));
+    console.log("API ERROR:", err.response?.data);
+  }
+};
+const filteredData = data.filter(item => {
+  const emp = employees.find(e => e.id === item.employee_id);
+  const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
+
+      return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
+    .toLowerCase()
+    .includes(search.toLowerCase());
+});
   const leaveColumns = [
-      {
-    key: "employee_id",
-    render: (row) => {
-      const emp = employees.find(e => e.id === row.employee_id);
-      return emp
-        ? `${emp.first_name} ${emp.last_name}`
-        : "—";
-    },
-  },
+    ...(isHR ? [{
+      key: "employee_id",
+      render: (row) => {
+        const emp = employees.find(e => e.id === row.employee_id);
+        return emp
+          ? `${emp.first_name} ${emp.last_name}`
+          : "—";
+      },
+    }] : []),
     { key: "leave_type" },
     { key: "total_allocated" },
     { key: "used_days" },
@@ -204,7 +256,7 @@ const filteredData = useMemo(() => {
   </div>
 
 </div>
-        <Table header={<TableHeader columns={["Employee","Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
+        <Table header={<TableHeader columns={[...(isHR ? ["Employee"] : []), "Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (
             <EntityTableRow
               key={l.id}
@@ -232,8 +284,8 @@ const filteredData = useMemo(() => {
           ))}
 
         </Table>
-        {localLoading && <LoadingSpinner text="Loading Leave Balance Details..." />}
-        {globalLoading.employees && <LoadingSpinner text="Refreshing Meta Data..." />}
+             {loading && <LoadingSpinner text="Loading Leave Balance Details..." />}
+
       </>
     );
 
@@ -267,35 +319,72 @@ const filteredData = useMemo(() => {
         selectedItem={selected}
         onSubmit={onSubmit}
         setMode={setMode}
-        fields={[
-          {
-            label: "Leave Type",
-            name: "leave_type",
-            type: "select",
-            required: true,
-            options: [
-              { label: "Casual Leave", value: "casual leave" },
-              { label: "Sick Leave", value: "sick leave" },
-              { label: "Paid Leave", value: "paid leave" },
-              { label: "Unpaid Leave", value: "unpaid leave" },
-            ]
+        // fields={[
+        //   {
+        //     label: "Leave Type",
+        //     name: "leave_type",
+        //     type: "select",
+        //     required: true,
+        //     options: [
+        //       { label: "Casual Leave", value: "casual leave" },
+        //       { label: "Sick Leave", value: "sick leave" },
+        //       { label: "Paid Leave", value: "paid leave" },
+        //       { label: "Unpaid Leave", value: "unpaid leave" },
+        //     ]
 
-            ,
-          },
-          { label: "Total Allocated", name: "total_allocated", type: "number",required: true },
-          { label: "Used Days", name: "used_days", type: "number",required: true },
-          {
-            label: "Employee",
-            name: "employee_id",
-            type: "select",
-            options: employees.map(e => ({
-              label: `${e.first_name} ${e.last_name}`,
-              value: e.id,
-            })),
-            disabled: !!employeeFilterId,
-            defaultValue: employeeFilterId || "",
-          },
-        ]}
+        //     ,
+        //   },
+        //   { label: "Total Allocated", name: "total_allocated", type: "number",required: true },
+        //   { label: "Used Days", name: "used_days", type: "number",required: true },
+        //   {
+        //     label: "Employee",
+        //     name: "employee_id",
+        //     type: "select",
+        //     options: employees.map(e => ({
+        //       label: `${e.first_name} ${e.last_name}`,
+        //       value: e.id,
+        //     })),
+        //     disabled: !!employeeFilterId,
+        //     defaultValue: employeeFilterId || "",
+        //   },
+        // ]}
+        fields={[
+  {
+    label: "Leave Type",
+    name: "leave_type",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Casual Leave", value: "casual leave" },
+      { label: "Sick Leave", value: "sick leave" },
+      { label: "Paid Leave", value: "paid leave" },
+      { label: "Unpaid Leave", value: "unpaid leave" },
+    ],
+  },
+
+
+  // 🔥 ADD THESE
+  { label: "CL", name: "cl", type: "number", defaultValue: 0 },
+  { label: "SL", name: "sl", type: "number", defaultValue: 0 },
+  { label: "PL", name: "pl", type: "number", defaultValue: 0 },
+  { label: "UL", name: "ul", type: "number", defaultValue: 0 },
+  { label: "Comp Off", name: "compensatory_off", type: "number", defaultValue: 0 },
+  { label: "Public Holiday", name: "public_holiday", type: "number", defaultValue: 0 },
+  { label: "Maternity Leave", name: "maternity_leave", type: "number", defaultValue: 0 },
+  { label: "Paternity Leave", name: "paternity_leave", type: "number", defaultValue: 0 },
+
+  {
+    label: "Employee",
+    name: "employee_id",
+    type: "select",
+    options: employees.map(e => ({
+      label: `${e.first_name} ${e.last_name}`,
+      value: e.id,
+    })),
+    disabled: !!employeeFilterId,
+    defaultValue: employeeFilterId || "",
+  },
+]}
       />
     </EntityPageLayout>
   );
