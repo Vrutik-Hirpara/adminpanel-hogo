@@ -19,7 +19,7 @@ export default function FormInput({
       <label className="text-sm font-medium" style={{ color: themes.backgroundDark }}>
         {label}
       </label>
-      <input
+      {/* <input
         type={type}
         autoComplete={autoComplete}
         step={step || "any"}
@@ -39,9 +39,32 @@ export default function FormInput({
           color: themes.textPrimary,
           backgroundColor: themes.textWhite,
         }}
-      />
+      /> */}
 
+<input
+  type={type}
+  autoComplete={autoComplete}
+  step={step || "any"}
+  min={min || "0"}
+  {...register(name, rules)}
+  readOnly={readOnly}
+  className={
+    type === "file"
+      ? `w-full text-sm rounded px-3 py-2
+         file:text-[var(--file-text)]
+         file:bg-[var(--file-bg)]
+         file:px-2 file:py-1 file:rounded file:border-0 file:mr-4 file:cursor-pointer`
+      : "w-full px-4 py-2 rounded outline-none"
+  }
+  style={{
+    "--file-text": themes.textWhite,
+    "--file-bg": themes.primary,
 
+    border: `1px solid ${error ? "#ef4444" : themes.backgroundGray}`,
+    color: themes.textPrimary,
+    backgroundColor: themes.textWhite,
+  }}
+/>
 
 
       {error?.message && (

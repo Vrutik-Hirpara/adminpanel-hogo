@@ -242,7 +242,7 @@
 // // 🔥 role hook
 // import { useUser } from "../hooks/useUser";
 // import { useOutletContext } from "react-router-dom";
-// import { parseBackendErrors } from "../utils/parseBackendErrors";
+// import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 // import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
@@ -580,7 +580,7 @@ import { SalaryAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
@@ -589,7 +589,7 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
 
   const [allSalaryData, setAllSalaryData] = useState([]); // 🔥 Store all data
-    const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -598,11 +598,12 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const [loading, setLoading] = useState(false);
 
   // ================= FETCH ALL SALARY =================
-   const fetchAllSalary = async (empList) => {
+  const fetchAllSalary = async (empList) => {
     setLoading(true);
     try {
       const res = await SalaryAPI.getAll();
-      let data = res.data?.data || res.data || [];
+      const parsed = parseBackendResponse(res);
+      let data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
 
       if (!isHR) {
         data = data.filter(s => Number(s.employee_id) === Number(employeeId));
@@ -656,12 +657,13 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const salaryData = getFilteredData();
 
   // ================= TOGGLE STATUS =================
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 1 || currentStatus === true ? 0 : 1;
+const handleToggleStatus = async (id, currentStatus) => {
+  try {
+    const newStatus = currentStatus === 1 || currentStatus === true ? 0 : 1;
 
-      const res = await SalaryAPI.update(id, { status: newStatus });
-      setSuccess(res.data?.message || "Status updated successfully");
+    const res = await SalaryAPI.update(id, { status: newStatus });
+    const parsed = parseBackendResponse(res);
+    setSuccess(parsed.message || "Status updated successfully");
 
       // 🔥 Update local state
       setAllSalaryData(prevData =>
@@ -679,15 +681,16 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-      const load = async () => {
+    const load = async () => {
       try {
         const resEmp = await EmployeeAPI.getAll();
-        let empData = resEmp.data?.data || [];
-      if (!isHR) {
+        const parsedEmp = parseBackendResponse(resEmp);
+        let empData = parsedEmp.success && parsedEmp.data ? (Array.isArray(parsedEmp.data) ? parsedEmp.data : []) : [];
+        if (!isHR) {
           empData = empData.filter(e => e.id === employeeId);
         }
 
-  setEmployees(empData);
+        setEmployees(empData);
         await fetchAllSalary(empData);
       } catch (err) {
         setError(parseBackendErrors(err));
@@ -701,13 +704,14 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
     try {
       data.employee_id = Number(data.employee_id);
 
+      let res;
       if (selectedItem) {
-        const res = await SalaryAPI.update(selectedItem.id, data);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await SalaryAPI.update(selectedItem.id, data);
       } else {
-        const res = await SalaryAPI.create(data);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await SalaryAPI.create(data);
       }
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Saved successfully");
 
       setMode(isHR ? "list" : "view");
       await fetchAllSalary(employees);
@@ -717,11 +721,12 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   };
 
   // ================= DELETE =================
-  const handleDelete = async (id) => {
-    try {
-      const res = await SalaryAPI.delete(id);
-      setSuccess(res.data?.message || "Deleted successfully");
-      await fetchAllSalary(employees);
+const handleDelete = async (id) => {
+  try {
+    const res = await SalaryAPI.delete(id);
+    const parsed = parseBackendResponse(res);
+    setSuccess(parsed.message || "Deleted successfully");
+    await fetchAllSalary(employees);
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -769,11 +774,10 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       render: (row) => {
         const isActive = row.status === 1 || row.status === true;
         return (
-          <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-            isActive
-              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-              : "bg-rose-100 text-rose-700 border border-rose-200"
-          }`}>
+          <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${isActive
+            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+            : "bg-rose-100 text-rose-700 border border-rose-200"
+            }`}>
             {isActive ? "✓ Active" : "✗ Inactive"}
           </span>
         );
@@ -970,9 +974,9 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
       selectedItem={
         selectedItem
           ? {
-              ...selectedItem,
-              status: selectedItem.status === 1 || selectedItem.status === true ? 1 : 0,
-            }
+            ...selectedItem,
+            status: selectedItem.status === 1 || selectedItem.status === true ? 1 : 0,
+          }
           : null
       }
       onSubmit={onSubmit}

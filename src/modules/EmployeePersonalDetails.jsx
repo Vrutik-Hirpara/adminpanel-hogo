@@ -15,15 +15,16 @@ import SearchBar from "../components/table/SearchBar";
 // ✅ NEW
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function EmployeePersonalDetails({ employeeFilterId, asSubcomponent, setTabActions }) {
   const { setError, setSuccess } = useOutletContext();
   const { employeeId, isHR } = useUser();
-
+const [formError, setFormError] = useState(null);
+const [savedFormData, setSavedFormData] = useState(null);
   const [details, setDetails] = useState([]);
-    const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -43,12 +44,32 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
       return () => setTabActions(null);
     }
   }, [asSubcomponent, setTabActions, mode, selectedItem]);
- const fetchEmployees = async () => {
+  //  const fetchEmployees = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await EmployeeAPI.getAll();
+  //       let list = res.data?.data || [];
+  //      // 🔒 non HR → only own employee
+  //       if (!isHR) {
+  //         list = list.filter(e => e.id === employeeId);
+  //       }
+  //       setEmployees(list);
+  //     } catch (err) {
+  //       setError(parseBackendErrors(err));
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  // ================= FETCH DETAILS =================
+
+  const fetchEmployees = async () => {
     setLoading(true);
     try {
       const res = await EmployeeAPI.getAll();
-      let list = res.data?.data || [];
-     // 🔒 non HR → only own employee
+      const parsed = parseBackendResponse(res);
+      let list = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+      // 🔒 non HR → only own employee
       if (!isHR) {
         list = list.filter(e => e.id === employeeId);
       }
@@ -59,13 +80,12 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
       setLoading(false);
     }
   };
-
-  // ================= FETCH DETAILS =================
   const fetchDetails = async () => {
     setLoading(true);
     try {
       const res = await EmployeePersonalAPI.getAll();
-      let data = res.data?.data || [];
+      const parsed = parseBackendResponse(res);
+      let data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
 
       // 🔒 non HR → only own details
       if (!isHR) {
@@ -117,72 +137,143 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
   );
 
   // ================= SAVE =================
-  const onSubmit = async (data) => {
-    try {
-      const payload = {
-        ...data,
-        employee_id: Number(data.employee_id),
-        marital_status: data.marital_status?.toLowerCase(),
-      };
+  // const onSubmit = async (data) => {
+  //   try {
+  //     const payload = {
+  //       ...data,
+  //       employee_id: Number(data.employee_id),
+  //       marital_status: data.marital_status?.toLowerCase(),
+  //     };
 
-      // 🔥 FIXED UNIQUE CHECK
-      let exists = false;
+  //     // 🔥 FIXED UNIQUE CHECK
+  //     let exists = false;
 
-      if (selectedItem) {
-        exists = details.find(
-          d => d.employee_id === payload.employee_id && d.id !== selectedItem.id
-        );
-      } else {
-        exists = details.find(d => d.employee_id === payload.employee_id);
-      }
+  //     if (selectedItem) {
+  //       exists = details.find(
+  //         d => d.employee_id === payload.employee_id && d.id !== selectedItem.id
+  //       );
+  //     } else {
+  //       exists = details.find(d => d.employee_id === payload.employee_id);
+  //     }
 
-      if (exists) {
-        setError(["This employee already has personal details!"]);
+  //     if (exists) {
+  //       setError(["This employee already has personal details!"]);
+  //       return;
+  //     }
+
+  //     if (selectedItem) {
+  //       const changedFields = {};
+  //       Object.keys(payload).forEach(key => {
+  //         if (payload[key] !== selectedItem[key]) {
+  //           changedFields[key] = payload[key];
+  //         }
+  //       });
+
+  //       if (Object.keys(changedFields).length === 0) {
+  //         setSuccess("No changes to save");
+  //         setMode(isHR ? "list" : "view");
+  //         return;
+  //       }
+
+  //       const res = await EmployeePersonalAPI.update(selectedItem.id, changedFields);
+  //       const parsed = parseBackendResponse(res);
+  //       setSuccess(parsed.message || "Saved successfully");
+  //     } else {
+  //       const res = await EmployeePersonalAPI.create(payload);
+  //       const parsed = parseBackendResponse(res);
+  //       setSuccess(parsed.message || "Saved successfully");
+  //     }
+
+  //     setMode(isHR ? "list" : "view");
+  //     await fetchDetails();
+
+  //   } catch (err) {
+  //     if (err.response?.data?.errors) {
+  //       const errorMessages = Object.values(err.response.data.errors).flat();
+  //       setError(errorMessages);
+  //     } else if (err.response?.data?.error) {
+  //       setError([err.response.data.error]);
+  //     } else {
+  //       setError(parseBackendErrors(err));
+  //     }
+  //     console.error("SAVE ERROR:", err.response?.data || err.message);
+  //   }
+  // };
+const onSubmit = async (data, methods) => {
+  try {
+    const payload = {
+      ...data,
+      employee_id: Number(data.employee_id),
+      marital_status: data.marital_status?.toLowerCase(),
+    };
+
+    // 🔥 FIXED UNIQUE CHECK
+    let exists = false;
+
+    if (selectedItem) {
+      exists = details.find(
+        d => d.employee_id === payload.employee_id && d.id !== selectedItem.id
+      );
+    } else {
+      exists = details.find(d => d.employee_id === payload.employee_id);
+    }
+
+    if (exists) {
+      setError(["This employee already has personal details!"]);
+      return;
+    }
+
+    if (selectedItem) {
+      const changedFields = {};
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== selectedItem[key]) {
+          changedFields[key] = payload[key];
+        }
+      });
+
+      if (Object.keys(changedFields).length === 0) {
+        setSuccess("No changes to save");
+        setMode(isHR ? "list" : "view");
         return;
       }
 
-      if (selectedItem) {
-        const changedFields = {};
-        Object.keys(payload).forEach(key => {
-          if (payload[key] !== selectedItem[key]) {
-            changedFields[key] = payload[key];
-          }
-        });
-
-        if (Object.keys(changedFields).length === 0) {
-          setSuccess("No changes to save");
-          setMode(isHR ? "list" : "view");
-          return;
-        }
-
-        const res = await EmployeePersonalAPI.update(selectedItem.id, changedFields);
-        setSuccess(res.data?.message || "Saved successfully");
-      } else {
-        const res = await EmployeePersonalAPI.create(payload);
-        setSuccess(res.data?.message || "Saved successfully");
-      }
-
-      setMode(isHR ? "list" : "view");
-      await fetchDetails();
-
-    } catch (err) {
-      if (err.response?.data?.errors) {
-        const errorMessages = Object.values(err.response.data.errors).flat();
-        setError(errorMessages);
-      } else if (err.response?.data?.error) {
-        setError([err.response.data.error]);
-      } else {
-        setError(parseBackendErrors(err));
-      }
-      console.error("SAVE ERROR:", err.response?.data || err.message);
+      const res = await EmployeePersonalAPI.update(selectedItem.id, changedFields);
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Saved successfully");
+    } else {
+      const res = await EmployeePersonalAPI.create(payload);
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Saved successfully");
     }
-  };
 
+    // Clear saved data on success
+    setSavedFormData(null);
+    setFormError(null);
+    setMode(isHR ? "list" : "view");
+    await fetchDetails();
+
+  } catch (err) {
+    // ✅ PRESERVE FORM DATA ON ERROR
+    setSavedFormData(data);
+    setFormError(true);
+    
+    if (err.response?.data?.errors) {
+      const errorMessages = Object.values(err.response.data.errors).flat();
+      setError(errorMessages);
+    } else if (err.response?.data?.error) {
+      setError([err.response.data.error]);
+    } else {
+      setError(parseBackendErrors(err));
+    }
+    console.error("SAVE ERROR:", err.response?.data || err.message);
+  }
+};
   // ================= DELETE =================
   const handleDelete = async (id) => {
     try {
       const res = await EmployeePersonalAPI.delete(id);
-      setSuccess(res.data?.message || "Deleted successfully");
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Deleted successfully");
       await fetchDetails();
 
       // After delete, if no details left for non-HR, go to form
@@ -314,41 +405,41 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
           )}
 
         </div>
-         {isHR && (
+        {isHR && (
           <>
-        <Table
-          header={
-            <TableHeader
-              columns={[
-                ...(isHR ? ["Employee"] : []),
-                "Father Name",
-                "Mother Name",
-                "Marital Status",
-                "Emergency Contact",
-                "Action",
-              ]}
-            />
-          }
-        >
-          {filteredDetails.map((d, index) => (
-            <EntityTableRow
-              key={d.id}
-              row={d}
-              index={index}
-              columns={personalColumns}
-              onView={(r) => {
-                setSelectedItem(r);
-                setMode("view");
-              }}
-              onEdit={(r) => {
-                setSelectedItem(r);
-                setMode("form");
-              }}
-              onDelete={() => handleDelete(d.id)}
-            />
-          ))}
-        </Table>
-        </>)}
+            <Table
+              header={
+                <TableHeader
+                  columns={[
+                    ...(isHR ? ["Employee"] : []),
+                    "Father Name",
+                    "Mother Name",
+                    "Marital Status",
+                    "Emergency Contact",
+                    "Action",
+                  ]}
+                />
+              }
+            >
+              {filteredDetails.map((d, index) => (
+                <EntityTableRow
+                  key={d.id}
+                  row={d}
+                  index={index}
+                  columns={personalColumns}
+                  onView={(r) => {
+                    setSelectedItem(r);
+                    setMode("view");
+                  }}
+                  onEdit={(r) => {
+                    setSelectedItem(r);
+                    setMode("form");
+                  }}
+                  onDelete={() => handleDelete(d.id)}
+                />
+              ))}
+            </Table>
+          </>)}
         {loading && <LoadingSpinner text="Loading Employee Personal Details..." />}
       </>
     );
@@ -388,25 +479,81 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
   }
 
   // ================= FORM =================
+  // const formContent = (
+  //   <EntityForm
+  //     title={selectedItem ? "Edit Personal Details" : "Create Personal Details"}
+  //     selectedItem={
+  //       selectedItem
+  //         ? {
+  //           ...selectedItem,
+  //           marital_status:
+  //             selectedItem.marital_status?.toLowerCase() === "married"
+  //               ? "married"
+  //               : selectedItem.marital_status?.toLowerCase() === "single"
+  //                 ? "single"
+  //                 : "",
+  //         }
+  //         : null
+  //     }
+  //     onSubmit={onSubmit}
+  //     setMode={setMode}
+  //     onCancel={() => setMode(isHR ? "list" : "view")}
+  //     fields={[
+  //       {
+  //         label: "Employee",
+  //         name: "employee_id",
+  //         type: "select",
+  //         options: employees.map(e => ({
+  //           label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+  //           value: e.id,
+  //         })),
+  //         required: true,
+  //         disabled: !!employeeFilterId,
+  //         defaultValue: employeeFilterId || "",
+  //       },
+  //       { label: "Father Name", name: "father_name" },
+  //       { label: "Mother Name", name: "mother_name" },
+  //       {
+  //         label: "Marital Status",
+  //         name: "marital_status",
+  //         type: "select",
+  //         required: true,
+  //         options: [
+  //           { label: "Single", value: "single" },
+  //           { label: "Married", value: "married" },
+  //         ],
+  //       },
+  //       { label: "Spouse Name", name: "spouse_name" },
+  //       { label: "Address", name: "address", type: "textarea" },
+  //       { label: "Emergency Contact Name", name: "emergency_contact_name" },
+  //       { label: "Emergency Contact Phone", name: "emergency_contact_phone" },
+  //     ]}
+  //   />
+  // );
   const formContent = (
     <EntityForm
+      key={formError ? "error-" + Date.now() : selectedItem?.id || "new"}
       title={selectedItem ? "Edit Personal Details" : "Create Personal Details"}
       selectedItem={
-        selectedItem
+        savedFormData ? savedFormData : (selectedItem
           ? {
-            ...selectedItem,
-            marital_status:
-              selectedItem.marital_status?.toLowerCase() === "married"
-                ? "married"
-                : selectedItem.marital_status?.toLowerCase() === "single"
-                  ? "single"
-                  : "",
-          }
-          : null
+              ...selectedItem,
+              marital_status:
+                selectedItem.marital_status?.toLowerCase() === "married"
+                  ? "married"
+                  : selectedItem.marital_status?.toLowerCase() === "single"
+                    ? "single"
+                    : "",
+            }
+          : null)
       }
       onSubmit={onSubmit}
       setMode={setMode}
-      onCancel={() => setMode(isHR ? "list" : "view")}
+      onCancel={() => {
+        setSavedFormData(null);
+        setFormError(null);
+        setMode(isHR ? "list" : "view");
+      }}
       fields={[
         {
           label: "Employee",
@@ -439,7 +586,6 @@ export default function EmployeePersonalDetails({ employeeFilterId, asSubcompone
       ]}
     />
   );
-
   if (asSubcomponent) {
     return <div className="w-full bg-white rounded-lg p-5 shadow-sm">{formContent}</div>;
   }

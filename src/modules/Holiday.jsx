@@ -12,7 +12,7 @@ import { HolidayAPI } from "../services";
 import { formatDate } from "../utils/dateFormatter";
 import { themes } from "../config/theme.config";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Holiday() {
@@ -21,46 +21,71 @@ export default function Holiday() {
 
   const [mode, setMode] = useState("list");
   const [selectedHoliday, setSelectedHoliday] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // FETCH HOLIDAYS
   const fetchHolidays = async () => {
-    setLoading(true); // 🔥 START LOADING
+    setLoading(true);
     try {
       const res = await HolidayAPI.getAll();
-      setHolidays(res.data?.data || []);
+      const parsed = parseBackendResponse(res);
+      const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+      setHolidays(data);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
-      setLoading(false); // 🔥 STOP LOADING
+      setLoading(false);
     }
   };
   useEffect(() => {
- fetchHolidays();
+    fetchHolidays();
   }, []);
 
   // SUBMIT (CREATE / UPDATE)
-  const onSubmit = async (data) => {
-    try {
-      const payload = {
-        ...data,
-        is_paid: Boolean(data.is_paid),
-      };
+  // const onSubmit = async (data) => {
+  //   try {
+  //     const payload = {
+  //       ...data,
+  //       is_paid: Boolean(data.is_paid),
+  //     };
 
-      if (selectedHoliday) {
-        const res = await HolidayAPI.update(selectedHoliday.id, payload);
-        setSuccess(res.data?.message || "Saved successfully");
-      } else {
-        const res = await HolidayAPI.create(payload);
-        setSuccess(res.data?.message || "Saved successfully");
-      }
+  //     if (selectedHoliday) {
+  //       const res = await HolidayAPI.update(selectedHoliday.id, payload);
+  //       setSuccess(res.data?.message || "Saved successfully");
+  //     } else {
+  //       const res = await HolidayAPI.create(payload);
+  //       setSuccess(res.data?.message || "Saved successfully");
+  //     }
 
-      fetchHolidays();
-      refreshHolidays();
-    } catch (error) {
-      setError(parseBackendErrors(error));
-      console.error("Holiday Save Error:", error.response?.data);
+  //     fetchHolidays();
+  //     refreshHolidays();
+  //   } catch (error) {
+  //     setError(parseBackendErrors(error));
+  //     console.error("Holiday Save Error:", error.response?.data);
+  //   }
+  // };
+ const onSubmit = async (data) => {
+  try {
+    const payload = {
+      ...data,
+      is_paid: Boolean(data.is_paid),
+    };
+
+    let res;
+    if (selectedHoliday) {
+      res = await HolidayAPI.update(selectedHoliday.id, payload);
+    } else {
+      res = await HolidayAPI.create(payload);
     }
-  };
+    const parsed = parseBackendResponse(res);
+    setSuccess(parsed.message || "Saved successfully");
+
+    fetchHolidays();
+    setMode("list"); // ✅ ADD THIS LINE - Close form after save
+  } catch (error) {
+    setError(parseBackendErrors(error));
+    console.error("Holiday Save Error:", error.response?.data);
+  }
+};
   const holidayColumns = [
     { key: "holiday_name" },
     {
@@ -120,9 +145,9 @@ export default function Holiday() {
         </div>
 
 
-  {loading ? (          <div className="py-12">
-            <LoadingSpinner text="Loading holidays data..." />
-          </div>
+        {loading ? (<div className="py-12">
+          <LoadingSpinner text="Loading holidays data..." />
+        </div>
         ) : (
           <Table
             header={
@@ -148,7 +173,8 @@ export default function Holiday() {
                 onDelete={async (id) => {
                   try {
                     const res = await HolidayAPI.delete(id);
-                    setSuccess(res.data?.message || "Deleted successfully");
+                    const parsed = parseBackendResponse(res);
+                    setSuccess(parsed.message || "Deleted successfully");
                     fetchHolidays();
                   } catch (err) {
                     setError(parseBackendErrors(err));
@@ -173,7 +199,7 @@ export default function Holiday() {
           fields={holidayFields}
           api={HolidayAPI}
           headerKeys={["holiday_name"]}
-        onUpdated={fetchHolidays}
+          onUpdated={fetchHolidays}
           onDeleted={fetchHolidays}
         />
       </EntityPageLayout>

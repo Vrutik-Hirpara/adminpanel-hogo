@@ -669,7 +669,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityTableRow from "../components/table/EntityTableRow";
 import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import LoadingSpinner from "../components/common/LoadingSpinner";

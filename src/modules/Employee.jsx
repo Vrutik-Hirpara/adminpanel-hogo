@@ -1250,7 +1250,7 @@ import EntityViewCard from "../components/view/EntityViewCard";
 import axios from "axios";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 
 import EmployeeDocuments from "./EmployeeDocuments";
 import EmployeePersonalDetails from "./EmployeePersonalDetails";
@@ -1288,7 +1288,8 @@ export default function Employee() {
       let res;
       if (isHR) {
         res = await EmployeeAPI.getAll();   // HR → all
-        const data = res.data?.data || [];
+        const parsed = parseBackendResponse(res);  // ✅ ADD THIS
+        const data = parsed.success ? (parsed.data || []) : [];  // ✅ CHANGE
         const formatted = data.map(e => ({
 
 
@@ -1310,7 +1311,9 @@ export default function Employee() {
       } else {
         // 🔒 Only logged user
         res = await api.get(`/employee/${employeeId}/`);
-        const e = res.data.data;
+        const parsed = parseBackendResponse(res);  // ✅ ADD THIS
+        const e = parsed.success ? parsed.data : null;  // ✅ CHANGE
+        if (!e) throw new Error("No employee data");
         // Log the response to debug if needed
         console.log("Single employee response:", e);
         // Get branch name from the response - handle different possible structures
@@ -1346,9 +1349,11 @@ export default function Employee() {
     finally {
       setLoading(false); // 🔥 END
 
-     };
-    }
-
+    };
+  }
+  const refreshEmployees = () => {
+    fetchEmployees();
+  };
   const handleGlobalEdit = () => {
     if (activeTab === "profile") {
       setMode("form");
@@ -1362,8 +1367,9 @@ export default function Employee() {
       if (window.confirm("Delete this employee?")) {
         try {
           const res = await EmployeeAPI.delete(selectedEmployee.id);
-          setSuccess(res.data?.message || "Deleted successfully");
-                    fetchEmployees();
+          const parsed = parseBackendResponse(res);  // ✅ ADD THIS
+          setSuccess(parsed.message || "Deleted successfully");  // ✅ CHANGE
+          fetchEmployees();
 
           setMode("list");
         } catch (error) {
@@ -1382,9 +1388,13 @@ export default function Employee() {
     const deptRes = await DepartmentAPI.getAll();
     const roleRes = await RolesAPI.getAll();
     const branchRes = await BranchAPI.getAll();
-    setDepartments(deptRes.data?.data || []);
-    setRoles(roleRes.data?.data || []);
-    setBranches(branchRes.data?.data || []);
+    const parsedDept = parseBackendResponse(deptRes);  // ✅ ADD
+    const parsedRole = parseBackendResponse(roleRes);  // ✅ ADD
+    const parsedBranch = parseBackendResponse(branchRes);  // ✅ ADD
+
+    setDepartments(parsedDept.success ? (parsedDept.data || []) : []);
+    setRoles(parsedRole.success ? (parsedRole.data || []) : []);
+    setBranches(parsedBranch.success ? (parsedBranch.data || []) : []);
   };
   useEffect(() => {
     fetchEmployees();
@@ -1411,11 +1421,17 @@ export default function Employee() {
 
     try {
       const res = await EmployeeAPI.update(emp.id, { status: newStatus ? "Active" : "Inactive" });
-      setSuccess(res.data?.message || "Status updated successfully");
+      const parsed = parseBackendResponse(res);
+
+      setSuccess(
+        parsed.success
+          ? parsed.message
+          : res?.data?.message || "Status updated successfully"
+      );
       refreshEmployees();
     } catch (error) {
       setError(parseBackendErrors(error));
-            fetchEmployees();
+      fetchEmployees();
 
     }
   };
@@ -1432,15 +1448,23 @@ export default function Employee() {
           : null,
         status: data.status,
       };
-
+      let res;
       if (selectedEmployee) {
         delete payload.password;
-        await EmployeeAPI.update(selectedEmployee.id, payload);
+        res = await EmployeeAPI.update(selectedEmployee.id, payload);  // ✅ CHANGE
       } else {
-        await EmployeeAPI.create(payload);
+        res = await EmployeeAPI.create(payload);  // ✅ CHANGE
       }
 
-      setSuccess("Saved successfully");
+      const parsed = parseBackendResponse(res);
+
+      // ✅ Force success if API didn't throw error
+      if (parsed.success) {
+        setSuccess(parsed.message || "Saved successfully");
+      } else {
+        // 🔥 fallback: still treat as success if API returned message
+        setSuccess(res?.data?.message || "Saved successfully");
+      }
       setMode("list");
       fetchEmployees();
     } catch (error) {
@@ -1505,7 +1529,7 @@ export default function Employee() {
   // LIST
   if (mode === "list") {
     if (!isHR && employees.length > 0) {
-       setSelectedEmployee(employees[0].raw);
+      setSelectedEmployee(employees[0].raw);
       setMode("view");
       return null;
     }
@@ -1602,7 +1626,11 @@ export default function Employee() {
               onDelete={async (id) => {
                 try {
                   const res = await EmployeeAPI.delete(id);
-                  setSuccess(res.data?.message || "Deleted successfully");
+                  const parsed = parseBackendResponse(res);
+                  setSuccess(parsed.success
+                    ? parsed.message
+                    : res?.data?.message || "Deleted successfully"
+                  );
                   fetchEmployees();
                 } catch (error) {
                   setError(parseBackendErrors(error));

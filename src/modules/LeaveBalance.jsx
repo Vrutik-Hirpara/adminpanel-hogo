@@ -14,7 +14,7 @@ import api from "../services/api";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
@@ -113,7 +113,7 @@ useEffect(() => {
 //   };
 const onSubmit = async (form) => {
   const payload = {
-    leave_type: form.leave_type,
+    // leave_type: form.leave_type,
     employee_id: Number(form.employee_id),
 
     cl: Number(form.cl ?? 0),
@@ -151,7 +151,7 @@ const filteredData = data.filter(item => {
   const emp = employees.find(e => e.id === item.employee_id);
   const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
 
-      return `${empName} ${item.leave_type} ${item.total_allocated} ${item.used_days}`
+      return `${empName}  ${item.total_allocated} ${item.used_days}`
     .toLowerCase()
     .includes(search.toLowerCase());
 });
@@ -165,7 +165,7 @@ const filteredData = data.filter(item => {
           : "—";
       },
     }] : []),
-    { key: "leave_type" },
+    // { key: "leave_type" },
     { key: "total_allocated" },
     { key: "used_days" },
     {
@@ -180,7 +180,7 @@ const filteredData = data.filter(item => {
   ];
   // 🔥 VIEW FIELDS
   const leaveFields = [
-    { key: "leave_type", label: "Leave Type" },
+    // { key: "leave_type", label: "Leave Type" },
     { key: "total_allocated", label: "Total Allocated Days" },
     { key: "used_days", label: "Used Days" },
     {
@@ -256,7 +256,7 @@ const filteredData = data.filter(item => {
   </div>
 
 </div>
-        <Table header={<TableHeader columns={[...(isHR ? ["Employee"] : []), "Leave Type", "Allocated", "Used", "Remaining", "Action"]} />}>
+        <Table header={<TableHeader columns={[...(isHR ? ["Employee"] : []), "Allocated", "Used", "Remaining", "Action"]} />}>
           {data.map((l, index) => (
             <EntityTableRow
               key={l.id}
@@ -349,31 +349,11 @@ const filteredData = data.filter(item => {
         //   },
         // ]}
         fields={[
-  {
-    label: "Leave Type",
-    name: "leave_type",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Casual Leave", value: "casual leave" },
-      { label: "Sick Leave", value: "sick leave" },
-      { label: "Paid Leave", value: "paid leave" },
-      { label: "Unpaid Leave", value: "unpaid leave" },
-    ],
-  },
+
 
 
   // 🔥 ADD THESE
-  { label: "CL", name: "cl", type: "number", defaultValue: 0 },
-  { label: "SL", name: "sl", type: "number", defaultValue: 0 },
-  { label: "PL", name: "pl", type: "number", defaultValue: 0 },
-  { label: "UL", name: "ul", type: "number", defaultValue: 0 },
-  { label: "Comp Off", name: "compensatory_off", type: "number", defaultValue: 0 },
-  { label: "Public Holiday", name: "public_holiday", type: "number", defaultValue: 0 },
-  { label: "Maternity Leave", name: "maternity_leave", type: "number", defaultValue: 0 },
-  { label: "Paternity Leave", name: "paternity_leave", type: "number", defaultValue: 0 },
-
-  {
+    {
     label: "Employee",
     name: "employee_id",
     type: "select",
@@ -384,6 +364,16 @@ const filteredData = data.filter(item => {
     disabled: !!employeeFilterId,
     defaultValue: employeeFilterId || "",
   },
+  { label: "CL", name: "cl", type: "number", defaultValue: 0 },
+  { label: "SL", name: "sl", type: "number", defaultValue: 0 },
+  { label: "PL", name: "pl", type: "number", defaultValue: 0 },
+  { label: "UL", name: "ul", type: "number", defaultValue: 0 },
+  { label: "Comp Off", name: "compensatory_off", type: "number", defaultValue: 0 },
+  { label: "Public Holiday", name: "public_holiday", type: "number", defaultValue: 0 },
+  { label: "Maternity Leave", name: "maternity_leave", type: "number", defaultValue: 0 },
+  { label: "Paternity Leave", name: "paternity_leave", type: "number", defaultValue: 0 },
+
+
 ]}
       />
     </EntityPageLayout>

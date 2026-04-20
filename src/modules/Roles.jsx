@@ -8,7 +8,7 @@ import TableHeader from "../components/table/TableHeader";
 import { RolesAPI } from "../services";
 
 import { themes } from "../config/theme.config";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";

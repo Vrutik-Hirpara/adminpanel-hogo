@@ -587,7 +587,7 @@
 
 // import { EmployeeAttendanceAPI, EmployeeAPI } from "../services";
 // import { useOutletContext } from "react-router-dom";
-// import { parseBackendErrors } from "../utils/parseBackendErrors";
+// import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 
 // // Helper function to get date range for last 1 week
 // const getLastWeekRange = () => {
@@ -729,6 +729,7 @@
 //     } catch (error) {
 //       setError(parseBackendErrors(error));
 //       console.error("Error fetching employees:", error);
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -746,7 +747,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { EmployeeAttendanceAPI, EmployeeAPI } from "../services";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
@@ -775,11 +776,11 @@ const getCurrentMonth = () => {
 };
 
 export default function EmployeeAttendance({ employeeFilterId, asSubcomponent }) {
-    const { setError, setSuccess } = useOutletContext();
+  const { setError, setSuccess } = useOutletContext();
 
 
   const [attendance, setAttendance] = useState([]);
-    const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -889,80 +890,100 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
   //     setLoading(false);
   //   }
   // };
-// ================= FETCH DATA WITH FILTERS =================
-const fetchAttendance = async (
-  date = null,
-  month = null,
-  year = null,
-  monthTabValue = "current",
-  setLoadingFn = null
-) => {
-  if (isRoleLoading || !roleName) return;
+  // ================= FETCH DATA WITH FILTERS =================
+  const fetchAttendance = async (
+    date = null,
+    month = null,
+    year = null,
+    monthTabValue = "current",
+    setLoadingFn = null
+  ) => {
+    if (isRoleLoading || !roleName) return;
 
-  setLoadingFn?.(true);
-  try {
-    let response;
+    setLoadingFn?.(true);
+    try {
+      let response;
 
-    if (roleName === "hr") {
-      if (date) {
-        response = await EmployeeAttendanceAPI.getByDate(date);
-      } else if (month && year) {
-        response = await EmployeeAttendanceAPI.getByMonth(month, year);
-      } else {
-        // 🆕 Default to current month for HR
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth() + 1;
-        const currentYear = currentDate.getFullYear();
-        
-        console.log(`HR defaulting to current month: ${currentMonth}/${currentYear}`);
-        response = await EmployeeAttendanceAPI.getByMonth(currentMonth, currentYear);
+      if (roleName === "hr") {
+        if (date) {
+          response = await EmployeeAttendanceAPI.getByDate(date);
+        } else if (month && year) {
+          response = await EmployeeAttendanceAPI.getByMonth(month, year);
+        } else {
+          // 🆕 Default to current month for HR
+          const currentDate = new Date();
+          const currentMonth = currentDate.getMonth() + 1;
+          const currentYear = currentDate.getFullYear();
+
+          console.log(`HR defaulting to current month: ${currentMonth}/${currentYear}`);
+          response = await EmployeeAttendanceAPI.getByMonth(currentMonth, currentYear);
+        }
+      } else if (roleName === "employee") {
+        if (monthTabValue === "previous") {
+          response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
+        } else {
+          const currentMonth = getCurrentMonth();
+          response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
+        }
       }
-    } else if (roleName === "employee") {
-      if (monthTabValue === "previous") {
-        response = await EmployeeAttendanceAPI.getPreviousMonthByEmployee(loggedInEmployeeId);
-      } else {
-        const currentMonth = getCurrentMonth();
-        response = await EmployeeAttendanceAPI.getByEmployeeAndMonth(loggedInEmployeeId, currentMonth);
+
+      console.log("API Response:", response);
+
+      // let attendanceData = [];
+
+      // if (response?.data?.data && Array.isArray(response.data.data)) {
+      //   attendanceData = response.data.data;
+      // } else if (response?.data?.data && !Array.isArray(response.data.data)) {
+      //   attendanceData = [response.data.data];
+      // } else if (response?.data && Array.isArray(response.data)) {
+      //   attendanceData = response.data;
+      // }
+      const parsed = parseBackendResponse(response);
+      let attendanceData = [];
+      if (parsed.success && parsed.data) {
+        attendanceData = Array.isArray(parsed.data) ? parsed.data : [parsed.data];
       }
+      if (employeeFilterId) {
+        attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
+      }
+
+      console.log("Extracted attendance data:", attendanceData);
+      setAttendance(attendanceData);
+
+    } catch (error) {
+      setError(parseBackendErrors(error));
+      console.error("Error fetching attendance:", error);
+      setAttendance([]);
+    } finally {
+      setLoadingFn?.(false);
     }
-
-    console.log("API Response:", response);
-
-    let attendanceData = [];
-
-    if (response?.data?.data && Array.isArray(response.data.data)) {
-      attendanceData = response.data.data;
-    } else if (response?.data?.data && !Array.isArray(response.data.data)) {
-      attendanceData = [response.data.data];
-    } else if (response?.data && Array.isArray(response.data)) {
-      attendanceData = response.data;
-    }
-
-    if (employeeFilterId) {
-      attendanceData = attendanceData.filter(d => Number(d.employee || d.employee_id) === Number(employeeFilterId));
-    }
-
-    console.log("Extracted attendance data:", attendanceData);
-    setAttendance(attendanceData);
-
-  } catch (error) {
-    setError(parseBackendErrors(error));
-    console.error("Error fetching attendance:", error);
-    setAttendance([]);
-  } finally {
-    setLoadingFn?.(false);
-  }
-};
+  };
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const res = await EmployeeAPI.getAll();
+  //     let employeesData = [];
+  //     if (res?.data?.data) {
+  //       employeesData = Array.isArray(res.data.data) ? res.data.data : [];
+  //     } else if (res?.data) {
+  //       employeesData = Array.isArray(res.data) ? res.data : [];
+  //     } else if (Array.isArray(res)) {
+  //       employeesData = res;
+  //     }
+  //     setEmployees(employeesData);
+  //   } catch (error) {
+  //     setError(parseBackendErrors(error));
+  //     console.error("Error fetching employees:", error);
+  //     setEmployees([]);
+  //   }
+  // };
+  // REPLACE the entire fetchEmployees function with:
   const fetchEmployees = async () => {
     try {
       const res = await EmployeeAPI.getAll();
+      const parsed = parseBackendResponse(res);
       let employeesData = [];
-      if (res?.data?.data) {
-        employeesData = Array.isArray(res.data.data) ? res.data.data : [];
-      } else if (res?.data) {
-        employeesData = Array.isArray(res.data) ? res.data : [];
-      } else if (Array.isArray(res)) {
-        employeesData = res;
+      if (parsed.success && parsed.data) {
+        employeesData = Array.isArray(parsed.data) ? parsed.data : [];
       }
       setEmployees(employeesData);
     } catch (error) {
@@ -971,7 +992,6 @@ const fetchAttendance = async (
       setEmployees([]);
     }
   };
-
   useEffect(() => {
     if (!isRoleLoading && roleName) {
       fetchAttendance(null, null, null, monthTab, setLoading);
@@ -1099,13 +1119,14 @@ const fetchAttendance = async (
     console.log("Formatted payload:", payload);
 
     try {
+      let res;
       if (selectedItem) {
-        const res = await EmployeeAttendanceAPI.update(selectedItem.id, payload);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await EmployeeAttendanceAPI.update(selectedItem.id, payload);
       } else {
-        const res = await EmployeeAttendanceAPI.create(payload);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await EmployeeAttendanceAPI.create(payload);
       }
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Saved successfully");
 
       setMode("list");
       fetchAttendance(null, null, null, monthTab, setLoading);
@@ -1283,8 +1304,9 @@ const fetchAttendance = async (
         delete payload.full_leave;
         delete payload.half_leave;
 
-        await EmployeeAttendanceAPI.update(selectedItem.id, payload);
-        setSuccess(`Start time recorded successfully at ${displayTime}!`);
+        const res = await EmployeeAttendanceAPI.update(selectedItem.id, payload);
+        const parsed = parseBackendResponse(res);
+        setSuccess(parsed.message || `Start time recorded successfully at ${displayTime}!`);
       } else {
         const today = `${year}-${month}-${day}`;
         payload = {
@@ -1295,8 +1317,9 @@ const fetchAttendance = async (
           status: true
         };
 
-        await EmployeeAttendanceAPI.create(payload);
-        setSuccess(`Attendance started successfully at ${displayTime}!`);
+        const res = await EmployeeAttendanceAPI.create(payload);
+        const parsed = parseBackendResponse(res);
+        setSuccess(parsed.message || `Attendance started successfully at ${displayTime}!`);
       }
 
       setMode("list");
@@ -1355,8 +1378,9 @@ const fetchAttendance = async (
 
       console.log("Sending payload with end_time:", payload);
 
-      await EmployeeAttendanceAPI.update(selectedItem.id, payload);
-      setSuccess(`End time recorded successfully at ${displayTime}!`);
+      const res = await EmployeeAttendanceAPI.update(selectedItem.id, payload);
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || `End time recorded successfully at ${displayTime}!`);
       setMode("list");
       fetchAttendance(null, null, null, monthTab, setLoading);
     } catch (error) {
@@ -1546,16 +1570,16 @@ const fetchAttendance = async (
             )}
 
             {/* Add button for both HR and Employee */}
-          <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
-            <ActionButtons
-              showAdd
-              addText="+ Add"
-              onAdd={() => {
-                setSelectedItem(null);
-                setMode("form");
-              }}
-            />
-          </div>
+            <div className="flex flex-wrap gap-3 self-end ml-auto mb-2">
+              <ActionButtons
+                showAdd
+                addText="+ Add"
+                onAdd={() => {
+                  setSelectedItem(null);
+                  setMode("form");
+                }}
+              />
+            </div>
           </>
         )}
 
@@ -1765,7 +1789,7 @@ const fetchAttendance = async (
             />
           )}
 
-          
+
         </div>
 
         <FilterBar />
@@ -1803,7 +1827,8 @@ const fetchAttendance = async (
                   onDelete={roleName === "hr" ? async (id) => {
                     try {
                       const res = await EmployeeAttendanceAPI.delete(id);
-                      setSuccess(res.data?.message || "Deleted successfully");
+                      const parsed = parseBackendResponse(res);
+                      setSuccess(parsed.message || "Deleted successfully");
                       fetchAttendance(null, null, null, monthTab, setLoading);
                     } catch (err) {
                       setError(parseBackendErrors(err));
@@ -1865,8 +1890,8 @@ const fetchAttendance = async (
           data={formattedData}
           fields={attendanceFields}
           api={EmployeeAttendanceAPI}
-        onUpdated={() => fetchAttendance(null, null, null, monthTab, setLoading)}
-        onDeleted={() => fetchAttendance(null, null, null, monthTab, setLoading)}
+          onUpdated={() => fetchAttendance(null, null, null, monthTab, setLoading)}
+          onDeleted={() => fetchAttendance(null, null, null, monthTab, setLoading)}
           headerKeys={["employee"]}
         />
       </EntityPageLayout>

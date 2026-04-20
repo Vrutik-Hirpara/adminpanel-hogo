@@ -287,7 +287,7 @@ import { themes } from "../config/theme.config";
 import { LeaveRequestsAPI, EmployeeAPI } from "../services";
 import SearchBar from "../components/table/SearchBar";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
@@ -512,6 +512,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
           { label: "CL", value: "CL" },
           { label: "PL", value: "PL" },
           { label: "SL", value: "SL" },
+          
         ],
       },
       { label: "Start Date", name: "start_date", type: "date", required: true },
@@ -548,6 +549,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
     }
 
     // 🔥 Employee field - always show, but disable for non-HR
+    if(isHR){
     baseFields.unshift({
       label: "Employee",
       name: "employee_id",
@@ -561,6 +563,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
       value: !isHR ? employeeId : (employeeFilterId || ""),
     });
 
+  }
     return baseFields;
   };
 
@@ -680,6 +683,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
         onSubmit={onSubmit}
         setMode={setMode}
         fields={getFormFields()}
+        
       />
     </EntityPageLayout>
   );

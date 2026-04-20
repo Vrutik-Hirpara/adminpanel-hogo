@@ -18,7 +18,7 @@ import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityViewCard from "../components/view/EntityViewCard";
 import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function OfficeBranch() {

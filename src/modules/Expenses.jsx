@@ -15,7 +15,7 @@ import SearchBar from "../components/table/SearchBar";
 import { ExpenseAPI, LeadsAPI, EmployeeAPI } from "../services";
 import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 export default function Expenses() {
@@ -30,50 +30,86 @@ export default function Expenses() {
     const [selectedItem, setSelectedItem] = useState(null);
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]);    // ================= FETCH =================
+    // const fetchExpenses = async () => {
+    //     try {
+    //         let res;
+    //         if (isHR) {
+    //             res = await ExpenseAPI.getAll();
+    //         } else {
+    //             res = await ExpenseAPI.getByEmployee(employeeId);
+    //         }
+    //         const data = res.data?.data || [];
+    //         const formatted = data.map(e => ({
+    //             ...e,
+    //             status: Boolean(e.status),
+    //         }));
+    //         setExpenses(formatted);
+    //     } catch (err) {
+    //         setError(parseBackendErrors(err));
+    //     }
+    // };
+    
+    
     const fetchExpenses = async () => {
-        try {
-            let res;
-            if (isHR) {
-                res = await ExpenseAPI.getAll();
-            } else {
-                res = await ExpenseAPI.getByEmployee(employeeId);
-            }
-            const data = res.data?.data || [];
-            const formatted = data.map(e => ({
-                ...e,
-                status: Boolean(e.status),
-            }));
-            setExpenses(formatted);
-        } catch (err) {
-            setError(parseBackendErrors(err));
+    try {
+        let res;
+        if (isHR) {
+            res = await ExpenseAPI.getAll();
+        } else {
+            res = await ExpenseAPI.getByEmployee(employeeId);
         }
-    };
+        const parsed = parseBackendResponse(res);
+        const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+        const formatted = data.map(e => ({
+            ...e,
+            status: Boolean(e.status),
+        }));
+        setExpenses(formatted);
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    }
+};
+    // const fetchEmployees = async () => {
+    //     try {
+    //         const res = await EmployeeAPI.getAll();
+    //         let empList = res.data?.data || [];
+    //         // 🔒 NON HR → only self
+    //         if (!isHR) {
+    //             empList = empList.filter(emp => emp.id === employeeId);
+    //         }
+    //         setEmployees(empList);
+    //     } catch (err) {
+    //         setError(parseBackendErrors(err));
+    //     }
+    // };
     const fetchEmployees = async () => {
-        try {
-            const res = await EmployeeAPI.getAll();
-            let empList = res.data?.data || [];
-            // 🔒 NON HR → only self
-            if (!isHR) {
-                empList = empList.filter(emp => emp.id === employeeId);
-            }
-            setEmployees(empList);
-        } catch (err) {
-            setError(parseBackendErrors(err));
+    try {
+        const res = await EmployeeAPI.getAll();
+        const parsed = parseBackendResponse(res);
+        let empList = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+        // 🔒 NON HR → only self
+        if (!isHR) {
+            empList = empList.filter(emp => emp.id === employeeId);
         }
-    };
+        setEmployees(empList);
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    }
+};
     const fetchLeads = async () => {
-        setLoading(true); // 🔥 START 
-        try {
-            const res = await LeadsAPI.getAll();
-            const data = res.data?.data || res.data || [];
-            console.log("Fetched leads:", data); // 🔍 Debug log
-            setLeads(data);
-        } catch (err) {
-            setError(parseBackendErrors(err));
-        } finally {
-            setLoading(false); // 🔥 END 
-        }
-    };
+    setLoading(true);
+    try {
+        const res = await LeadsAPI.getAll();
+        const parsed = parseBackendResponse(res);
+        const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+        console.log("Fetched leads:", data);
+        setLeads(data);
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
         fetchExpenses();
@@ -107,14 +143,15 @@ export default function Expenses() {
         }
 
         try {
-            if (selectedItem) {
-                const res = await ExpenseAPI.update(selectedItem.id, formData);
-                setSuccess(res.data?.message || "Saved successfully");
-            } else {
-                console.log("Creating expense with data:", Object.fromEntries(formData.entries())); // 🔍 Debug log
-                const res = await ExpenseAPI.create(formData);
-                setSuccess(res.data?.message || "Saved successfully");
-            }
+          let res;
+if (selectedItem) {
+    res = await ExpenseAPI.update(selectedItem.id, formData);
+} else {
+    console.log("Creating expense with data:", Object.fromEntries(formData.entries()));
+    res = await ExpenseAPI.create(formData);
+}
+const parsed = parseBackendResponse(res);
+setSuccess(parsed.message || "Saved successfully");
 
             setMode("list");
             fetchExpenses();
@@ -123,30 +160,32 @@ export default function Expenses() {
         }
     };
 
-    const handleDelete = async (id) => {
-        try {
-            const res = await ExpenseAPI.delete(id);
-            setSuccess(res.data?.message || "Deleted successfully");
-            fetchExpenses();
-        } catch (err) {
-            setError(parseBackendErrors(err));
-        }
-    };
+ const handleDelete = async (id) => {
+    try {
+        const res = await ExpenseAPI.delete(id);
+        const parsed = parseBackendResponse(res);
+        setSuccess(parsed.message || "Deleted successfully");
+        fetchExpenses();
+    } catch (err) {
+        setError(parseBackendErrors(err));
+    }
+};
     const handleStatusToggle = async (exp) => {
-        const newStatus = !exp.status;
+    const newStatus = !exp.status;
 
-        setExpenses(prev =>
-            prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e)
-        );
+    setExpenses(prev =>
+        prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e)
+    );
 
-        try {
-            const res = await ExpenseAPI.update(exp.id, { status: newStatus });
-            setSuccess(res.data?.message || "Status updated successfully");
-        } catch (err) {
-            setError(parseBackendErrors(err));
-            fetchExpenses();
-        }
-    };
+    try {
+        const res = await ExpenseAPI.update(exp.id, { status: newStatus });
+        const parsed = parseBackendResponse(res);
+        setSuccess(parsed.message || "Status updated successfully");
+    } catch (err) {
+        setError(parseBackendErrors(err));
+        fetchExpenses();
+    }
+};
     const filteredExpenses = expenses.filter(exp =>
         `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
             .toLowerCase()

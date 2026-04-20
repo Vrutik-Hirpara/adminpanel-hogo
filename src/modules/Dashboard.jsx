@@ -533,6 +533,8 @@ import { useEffect, useState } from "react";
 import Card from "../components/Card";
 import { dashboardModules } from "../config/dashboardModules";
 import { useUser } from "../hooks/useUser";
+import { parseBackendResponse } from "../utils/parseBackendErrors"; // 👈 IMPORT YOUR FUNCTION
+
 import {
   Calendar,
   ChevronRight,
@@ -597,21 +599,21 @@ export default function Dashboard() {
             };
           }
 
-          const response = res.value?.data;
-
+          // const response = res.value?.data;
+          const parsedResponse = parseBackendResponse(res.value);
           let count = 0;
 
           // ✅ SPECIAL CASE: TODAY FOLLOWUPS
           if (module.title === "Today's Followups") {
-            count = response?.count || 0;
+            count = parsedResponse?.count || 0;
           }
 
           // ✅ NORMAL APIs (array)
-          else if (Array.isArray(response?.data)) {
+          if (Array.isArray(parsedResponse?.data)) {
 
             // 🔥 SPECIAL FILTER FOR LEADS ONLY
             if (module.title === "Leads") {
-              const filtered = response.data.filter(
+              const filtered = parsedResponse.data.filter(
                 (item) =>
                   item.lead_status === "Lead" ||
                   item.lead_status === "Prospect"
@@ -619,13 +621,13 @@ export default function Dashboard() {
 
               count = filtered.length;
             } else {
-              count = response.data.length;
+              count = parsedResponse.data.length;
             }
           }
 
           // ✅ object type response
-          else if (typeof response?.data === "object" && response.data !== null) {
-            count = Object.keys(response.data).length;
+          else if (typeof parsedResponse?.data === "object" && parsedResponse.data !== null) {
+            count = Object.keys(parsedResponse.data).length;
           }
 
           return {
@@ -657,11 +659,11 @@ export default function Dashboard() {
     };
 
     fetchAllStats();
-  }, [employeeId, isHR]);
+  }, [employeeId, isHR, leadId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br rounded-xl from-gray-50 to-gray-100 p-6 md:p-8">
-<div className="mb-8">
+      <div className="mb-8">
         <EmployeeAttendanceStatus />
       </div>
       {/* ================= HEADER ================= */}

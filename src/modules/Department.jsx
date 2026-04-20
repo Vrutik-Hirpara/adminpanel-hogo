@@ -5,7 +5,7 @@ import Table from "../components/table/Table";
 import TableHeader from "../components/table/TableHeader";
 import { themes } from "../config/theme.config";
 import { DepartmentAPI } from "../services";
-import { parseBackendErrors } from "../utils/parseBackendErrors";
+import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 
 import ActionButtons from "../components/form/ActionButton";
 import SectionTitle from "../components/form/SectionTitle";
@@ -30,7 +30,9 @@ export default function Department() {
     setLoading(true); // 🔥 START
     try {
       const res = await DepartmentAPI.getAll();
-      const data = res.data?.data || [];
+      // const data = res.data?.data || [];
+      const parsed = parseBackendResponse(res);
+      const data = parsed.success ? (parsed.data || []) : [];
       const formatted = data.map(d => ({
         ...d,
         status: d.status === "Active"
@@ -42,6 +44,9 @@ export default function Department() {
       setLoading(false); // 🔥 END
     }
   };
+  const refreshDepartments = () => {
+  fetchDepartments();
+};
   useEffect(() => { fetchDepartments(); }, []);
 
   // 🔥 SAME TOGGLE SYSTEM AS ROLES
@@ -74,8 +79,9 @@ export default function Department() {
         ...dept,
         status: newStatus ? "Active" : "Inactive"
       });
+      const parsed = parseBackendResponse(res);
 
-      setSuccess(res.data?.message || "Status updated");
+setSuccess(parsed.message || "Status updated");
     } catch (error) {
       setError(parseBackendErrors(error));
       setDepartments(prev =>
@@ -122,8 +128,8 @@ export default function Department() {
       } else {
         res = await DepartmentAPI.create(payload);
       }
-
-      setSuccess(res.data?.message || "Saved successfully");
+      const parsed = parseBackendResponse(res);
+setSuccess(parsed.message || "Saved successfully");
 
       setMode("list");
       refreshDepartments();
@@ -200,8 +206,9 @@ export default function Department() {
               // onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
               onDelete={async (id) => {
                 try {
-                  const res = await DepartmentAPI.delete(id);
-                  setSuccess(res.data?.message || "Deleted successfully");
+                      const res = await DepartmentAPI.delete(id);  // ✅ Add this line
+                  const parsed = parseBackendResponse(res);
+                  setSuccess(parsed.message || "Deleted successfully");
                   fetchDepartments();
                 } catch (error) {
                   setError(parseBackendErrors(error));
@@ -212,7 +219,7 @@ export default function Department() {
 
 
         </Table>
-          {loading && <LoadingSpinner text="Loading Department Details..." />}
+        {loading && <LoadingSpinner text="Loading Department Details..." />}
 
       </PageContainer>
     );
