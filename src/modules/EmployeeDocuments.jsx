@@ -469,7 +469,36 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     try {
       const isEdit = Boolean(selectedItem);
       const empIdNum = Number(data.employee_id);
+// 🔥 FORMAT VALIDATION
+const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const aadharRegex = /^[0-9]{12}$/;
+const dlRegex = /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/;
 
+// PAN uppercase fix
+if (data.pancard_number) {
+  data.pancard_number = data.pancard_number.toUpperCase();
+
+  if (!panRegex.test(data.pancard_number)) {
+    setError(["Invalid PAN format (ABCDE1234F)"]);
+    return;
+  }
+}
+
+// Aadhaar validation
+if (data.aadhar_number) {
+  if (!aadharRegex.test(data.aadhar_number)) {
+    setError(["Aadhar must be exactly 12 digits"]);
+    return;
+  }
+}
+
+// Driving License validation
+if (data.driving_license_number) {
+  if (!dlRegex.test(data.driving_license_number)) {
+    setError(["Invalid Driving License format"]);
+    return;
+  }
+}
       const alreadyExists = documents.some(doc => {
         if (selectedItem && doc.id === selectedItem.id) return false;
         return Number(doc.employee_id) === empIdNum;
@@ -607,7 +636,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
               onAdd={() => { setSelectedItem(null); setMode("form"); }}
             />
           </div>
-       
+
         </>
       );
 
@@ -693,9 +722,9 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             />
           ))}
         </Table>
-                {loading && <LoadingSpinner text="Loading Employee Document Details..." />}
+        {loading && <LoadingSpinner text="Loading Employee Document Details..." />}
 
-         </>
+      </>
     );
 
     if (asSubcomponent) {
@@ -751,6 +780,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
         { label: "PAN Number", name: "pancard_number" },
         { label: "Aadhar Number", name: "aadhar_number" },
         { label: "Driving License Number", name: "driving_license_number" },
+ 
 
         { label: "Photo", name: "photo", type: "file", required: !selectedItem, previewKey: "photo" },
         { label: "Aadhar Front", name: "aadhar_front", type: "file", required: !selectedItem, previewKey: "aadhar_front" },

@@ -1310,7 +1310,7 @@ export default function Employee() {
         setEmployees(formatted);
       } else {
         // 🔒 Only logged user
-        res = await api.get(`/employee/${employeeId}/`);
+        res = await EmployeeAPI.getById(employeeId);
         const parsed = parseBackendResponse(res);  // ✅ ADD THIS
         const e = parsed.success ? parsed.data : null;  // ✅ CHANGE
         if (!e) throw new Error("No employee data");
@@ -1716,7 +1716,9 @@ export default function Employee() {
                     <div key={f.key}>
                       <p className="text-xs text-gray-500 mb-1">{f.label}</p>
                       <div className="p-2 border rounded text-gray-800 font-medium bg-gray-50">
-                        {selectedEmployee[f.key] || "—"}
+                        {["date_of_birth", "joining_date"].includes(f.key)
+                          ? formatDate(selectedEmployee[f.key])
+                          : selectedEmployee[f.key] || "—"}
                       </div>
                     </div>
                   ))}
@@ -1750,6 +1752,8 @@ export default function Employee() {
           selectedEmployee
             ? {
               ...selectedEmployee,
+              date_of_birth: selectedEmployee.date_of_birth?.split("T")[0],
+              joining_date: selectedEmployee.joining_date?.split("T")[0],
               status:
                 selectedEmployee.status === true ||
                   selectedEmployee.status === "Active"
@@ -1791,10 +1795,12 @@ export default function Employee() {
           },
 
           {
-            label: "Date of Birth",
-            name: "date_of_birth",
-            type: "date",
-            required: true
+            "label": "Date of Birth",
+            "name": "date_of_birth",
+            "type": "date",
+            "required": true,
+            "dateFormat": "DD/MM/YYYY",
+            "placeholder": "dd/mm/yyyy"
           },
 
           { label: "Email", name: "email", type: "email", required: true },
