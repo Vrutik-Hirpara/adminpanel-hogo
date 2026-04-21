@@ -961,7 +961,7 @@ export default function TravelPlan({ asSubcomponent }) {
           "July", "August", "September", "October", "November", "December"
         ];
         const monthName = monthNames[parseInt(monthNum) - 1];
-        formattedMonth = `${monthName} - ${year}`;
+        formattedMonth = `${monthName}-${year}`;
       }
 
       // Add employee_id to the payload
