@@ -9,7 +9,7 @@ import SectionTitle from "../components/form/SectionTitle";
 import EntityPageLayout from "../layout/EntityPageLayout";
 import EntityForm from "../components/form/EntityForm";
 import EntityViewCard from "../components/view/EntityViewCard";
-import { LeaveBalanceAPI } from "../services";
+import { LeaveBalanceAPI, EmployeeAPI } from "../services";
 import api from "../services/api";
 import { themes } from "../config/theme.config";
 import SearchBar from "../components/table/SearchBar";
@@ -30,13 +30,18 @@ export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true); // 🔥 START 
+  // const fetchData = async () => {
+  //   setLoading(true); // 🔥 START 
 
+  //   try {
+  //     const res = await LeaveBalanceAPI.getAll();
+  //     let list = res.data?.data || [];
+  const fetchData = async () => {
+    setLoading(true);
     try {
       const res = await LeaveBalanceAPI.getAll();
-      let list = res.data?.data || [];
-
+      const parsed = parseBackendResponse(res);
+      let list = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
       // 🔒 NON-HR → only own leave balance
       if (!isHR) {
         list = list.filter(
@@ -56,14 +61,31 @@ export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
       setLoading(false); // 🔥 END 
     }
   };
+  // const fetchEmployees = async () => {
+  //   try {
+  //     const res = await EmployeeAPI.getAll();
+  //     setEmployees(res.data?.data || []);
+  //   } catch (err) {
+  //     setError(parseBackendErrors(err));
+  //   }
+  // };
   const fetchEmployees = async () => {
     try {
-const res = await EmployeeAPI.getAll();
-      setEmployees(res.data?.data || []);
+      const res = await EmployeeAPI.getAll();
+      const parsed = parseBackendResponse(res);
+      let empList = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+
+      // 🔒 NON HR → only self
+      if (!isHR) {
+        empList = empList.filter(emp => emp.id === employeeId);
+      }
+
+      setEmployees(empList);
     } catch (err) {
       setError(parseBackendErrors(err));
     }
   };
+
   useEffect(() => {
     fetchData();
     fetchEmployees();
@@ -132,13 +154,14 @@ const res = await EmployeeAPI.getAll();
     console.log("FINAL PAYLOAD:", payload); // debug
 
     try {
+      let res;
       if (selected) {
-        const res = await LeaveBalanceAPI.update(selected.id, payload);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await LeaveBalanceAPI.update(selected.id, payload);
       } else {
-        const res = await LeaveBalanceAPI.create(payload);
-        setSuccess(res.data?.message || "Saved successfully");
+        res = await LeaveBalanceAPI.create(payload);
       }
+      const parsed = parseBackendResponse(res);
+      setSuccess(parsed.message || "Saved successfully");
 
       setMode("list");
       fetchData();
@@ -275,7 +298,8 @@ const res = await EmployeeAPI.getAll();
               onDelete={async (id) => {
                 try {
                   const res = await LeaveBalanceAPI.delete(id);
-                  setSuccess(res.data?.message || "Deleted successfully");
+                  const parsed = parseBackendResponse(res);
+                  setSuccess(parsed.message || "Deleted successfully");
                   fetchData();
                 } catch (err) {
                   setError(parseBackendErrors(err));
