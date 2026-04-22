@@ -6,10 +6,11 @@ export default function FormActions({
   submitLabel = "Save",
   hideCancel = false,
   hideSubmit = false,
+  submitting = false, // 👈 ADD
 }) {
   return (
     <div className="flex justify-end gap-3 mt-8">
-      
+
       {/* Cancel Button (optional) */}
       {!hideCancel && (
         <button
@@ -29,10 +30,16 @@ export default function FormActions({
       {!hideSubmit && (
         <button
           type="submit"
-          className="px-6 py-2 rounded  cursor-pointer"
-          style={{ backgroundColor: themes.primary, color: themes.textWhite  }}
+          disabled={submitting} // ✅ disable
+
+          className={`px-6 py-2 rounded transition ${submitting
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer hover:opacity-90"
+            }`} style={{ backgroundColor: themes.primary, color: themes.textWhite }}
         >
-          {submitLabel}
+          {/* {submitLabel} */}
+          {submitting ? "Submitting..." : submitLabel} {/* 👈 CHANGE */}
+
         </button>
       )}
     </div>

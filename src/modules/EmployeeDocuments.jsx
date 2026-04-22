@@ -468,37 +468,38 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
     setLoadingSafe?.(true); // 🔥 START LOADING
     try {
       const isEdit = Boolean(selectedItem);
-      const empIdNum = Number(data.employee_id);
-// 🔥 FORMAT VALIDATION
-const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-const aadharRegex = /^[0-9]{12}$/;
-const dlRegex = /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/;
+      const empIdNum = isHR
+        ? Number(data.employee_id)
+        : Number(employeeId);// 🔥 FORMAT VALIDATION
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      const aadharRegex = /^[0-9]{12}$/;
+      const dlRegex = /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/;
 
-// PAN uppercase fix
-if (data.pancard_number) {
-  data.pancard_number = data.pancard_number.toUpperCase();
+      // PAN uppercase fix
+      if (data.pancard_number) {
+        data.pancard_number = data.pancard_number.toUpperCase();
 
-  if (!panRegex.test(data.pancard_number)) {
-    setError(["Invalid PAN format (ABCDE1234F)"]);
-    return;
-  }
-}
+        if (!panRegex.test(data.pancard_number)) {
+          setError(["Invalid PAN format (ABCDE1234F)"]);
+          return;
+        }
+      }
 
-// Aadhaar validation
-if (data.aadhar_number) {
-  if (!aadharRegex.test(data.aadhar_number)) {
-    setError(["Aadhar must be exactly 12 digits"]);
-    return;
-  }
-}
+      // Aadhaar validation
+      if (data.aadhar_number) {
+        if (!aadharRegex.test(data.aadhar_number)) {
+          setError(["Aadhar must be exactly 12 digits"]);
+          return;
+        }
+      }
 
-// Driving License validation
-if (data.driving_license_number) {
-  if (!dlRegex.test(data.driving_license_number)) {
-    setError(["Invalid Driving License format"]);
-    return;
-  }
-}
+      // Driving License validation
+      if (data.driving_license_number) {
+        if (!dlRegex.test(data.driving_license_number)) {
+          setError(["Invalid Driving License format"]);
+          return;
+        }
+      }
       const alreadyExists = documents.some(doc => {
         if (selectedItem && doc.id === selectedItem.id) return false;
         return Number(doc.employee_id) === empIdNum;
@@ -519,6 +520,10 @@ if (data.driving_license_number) {
           formData.append(key, value);
         }
       });
+      formData.append(
+        "employee_id",
+        isHR ? data.employee_id : employeeId
+      );
 
       let res;
       if (selectedItem) {
@@ -765,22 +770,37 @@ if (data.driving_license_number) {
       setMode={setMode}
       onCancel={() => setMode(isHR ? "list" : "view")}
       fields={[
-        {
-          label: "Employee",
-          name: "employee_id",
-          type: "select",
-          required: true,
-          options: employees.map(e => ({
-            label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
-            value: e.id,
-          })),
-          // disabled: !!employeeFilterId,
-          defaultValue: employeeFilterId || "",
-        },
+        // {
+        //   label: "Employee",
+        //   name: "employee_id",
+        //   type: "select",
+        //   required: true,
+        //   options: employees.map(e => ({
+        //     label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+        //     value: e.id,
+        //   })),
+        //   // disabled: !!employeeFilterId,
+        //   defaultValue: employeeFilterId || "",
+        // },
+        ...(isHR
+          ? [
+            {
+              label: "Employee",
+              name: "employee_id",
+              type: "select",
+              required: true,
+              options: employees.map(e => ({
+                label: `${e.employee_code} - ${e.first_name} ${e.last_name}`,
+                value: e.id,
+              })),
+              defaultValue: employeeFilterId || "",
+            },
+          ]
+          : []),
         { label: "PAN Number", name: "pancard_number" },
         { label: "Aadhar Number", name: "aadhar_number" },
         { label: "Driving License Number", name: "driving_license_number" },
- 
+
 
         { label: "Photo", name: "photo", type: "file", required: !selectedItem, previewKey: "photo" },
         { label: "Aadhar Front", name: "aadhar_front", type: "file", required: !selectedItem, previewKey: "aadhar_front" },

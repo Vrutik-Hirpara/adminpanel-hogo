@@ -499,7 +499,7 @@
 //   );
 // }
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // add useState
 import FormWrapper from "../form/FormWrapper";
 import FormContainer from "../form/FormContainer";
 import FormInput from "../form/FormInput";
@@ -518,8 +518,19 @@ export default function EntityForm({
   setMode,
   onCancel,
 }) {
+  const [submitting, setSubmitting] = useState(false);
+
   return (
-    <FormWrapper onSubmit={onSubmit}>
+    <FormWrapper
+      onSubmit={async (data, methods) => {
+        setSubmitting(true);
+        try {
+          await onSubmit(data, methods);
+        } finally {
+          setSubmitting(false);
+        }
+      }}
+    >
       {(methods) => {
         const {
           register,
@@ -689,7 +700,11 @@ export default function EntityForm({
             </div>
 
             {/* ACTION BUTTONS */}
-            <FormActions onCancel={onCancel ? onCancel : () => setMode("list")} />
+            {/* <FormActions onCancel={onCancel ? onCancel : () => setMode("list")} /> */}
+            <FormActions
+              onCancel={onCancel ? onCancel : () => setMode("list")}
+              submitting={submitting}
+            />
           </FormContainer>
         );
       }}

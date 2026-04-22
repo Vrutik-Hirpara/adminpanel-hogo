@@ -203,7 +203,10 @@ const onSubmit = async (data, methods) => {
   try {
     const payload = {
       ...data,
-      employee_id: Number(data.employee_id),
+      // employee_id: Number(data.employee_id),
+      employee_id: isHR
+  ? Number(data.employee_id)
+  : Number(employeeId),
       marital_status: data.marital_status?.toLowerCase(),
     };
 
@@ -231,11 +234,11 @@ const onSubmit = async (data, methods) => {
         }
       });
 
-      if (Object.keys(changedFields).length === 0) {
-        setSuccess("No changes to save");
-        setMode(isHR ? "list" : "view");
-        return;
-      }
+      // if (Object.keys(changedFields).length === 0) {
+      //   setSuccess("No changes to save");
+      //   setMode(isHR ? "list" : "view");
+      //   return;
+      // }
 
       const res = await EmployeePersonalAPI.update(selectedItem.id, changedFields);
       const parsed = parseBackendResponse(res);
@@ -291,6 +294,7 @@ const onSubmit = async (data, methods) => {
       key: "employeeName",
       render: (row) => row.employeeName,
     }] : []),
+    
     { key: "father_name" },
     { key: "mother_name" },
     { key: "marital_status" },
@@ -555,6 +559,8 @@ const onSubmit = async (data, methods) => {
         setMode(isHR ? "list" : "view");
       }}
       fields={[
+       ...(isHR
+    ? [
         {
           label: "Employee",
           name: "employee_id",
@@ -567,6 +573,8 @@ const onSubmit = async (data, methods) => {
           disabled: !!employeeFilterId,
           defaultValue: employeeFilterId || "",
         },
+      ]
+    : []),
         { label: "Father Name", name: "father_name" },
         { label: "Mother Name", name: "mother_name" },
         {

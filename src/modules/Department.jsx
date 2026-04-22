@@ -45,8 +45,8 @@ export default function Department() {
     }
   };
   const refreshDepartments = () => {
-  fetchDepartments();
-};
+    fetchDepartments();
+  };
   useEffect(() => { fetchDepartments(); }, []);
 
   // 🔥 SAME TOGGLE SYSTEM AS ROLES
@@ -81,7 +81,7 @@ export default function Department() {
       });
       const parsed = parseBackendResponse(res);
 
-setSuccess(parsed.message || "Status updated");
+      setSuccess(parsed.message || "Status updated");
     } catch (error) {
       setError(parseBackendErrors(error));
       setDepartments(prev =>
@@ -129,7 +129,7 @@ setSuccess(parsed.message || "Status updated");
         res = await DepartmentAPI.create(payload);
       }
       const parsed = parseBackendResponse(res);
-setSuccess(parsed.message || "Saved successfully");
+      setSuccess(parsed.message || "Saved successfully");
 
       setMode("list");
       refreshDepartments();
@@ -206,7 +206,7 @@ setSuccess(parsed.message || "Saved successfully");
               // onDelete={(id) => DepartmentAPI.delete(id).then(fetchDepartments)}
               onDelete={async (id) => {
                 try {
-                      const res = await DepartmentAPI.delete(id);  // ✅ Add this line
+                  const res = await DepartmentAPI.delete(id);  // ✅ Add this line
                   const parsed = parseBackendResponse(res);
                   setSuccess(parsed.message || "Deleted successfully");
                   fetchDepartments();

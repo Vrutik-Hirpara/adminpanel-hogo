@@ -459,6 +459,7 @@ export default function Leads({ asSubcomponent }) {
     try {
       const res = await RegionsAPI.getAll();
       const data = res.data?.data || [];
+      console.log(data, "dat")
       // Show all regions as requested by user
       setRegions(data);
     } catch (err) {
@@ -560,6 +561,7 @@ export default function Leads({ asSubcomponent }) {
     try {
       const payload = {
         ...data,
+        region: data.region ? Number(data.region) : null,
         assigned_to: data.assigned_to ? Number(data.assigned_to) : null,
         cars_per_month: data.cars_per_month ? Number(data.cars_per_month) : 0,
         dealer_landing_cost: data.dealer_landing_cost ? Number(data.dealer_landing_cost) : 0,
@@ -572,6 +574,7 @@ export default function Leads({ asSubcomponent }) {
       if (selectedItem) {
         delete payload.created_by;
         delete payload.created_by_name;
+
 
         const res = await LeadsAPI.update(selectedItem.id, payload);
         setSuccess(res.data?.message || "Saved successfully");
@@ -851,14 +854,14 @@ export default function Leads({ asSubcomponent }) {
     // Update the assigned_to_name column render function
     {
       key: "assigned_to_name",
-      className: "whitespace-nowrap min-w-[100px] flex justify-center items-center p-[10px]",
+      className: "whitespace-nowrap min-w-[100px] text-center  p-[10px]",
       render: (row) => {
         if (isHR) {
           return (
             <select
               value={row.assigned_to || ""}
               onChange={(e) => handleAssignChange(row, e.target.value)}
-              className="w-full rounded px-2 py-1 text-sm"
+              className="w-full rounded px-2 py-1 text-md border border-black"
             >
               <option value="">Unassigned</option>
               {employees.map((emp) => (
@@ -1043,6 +1046,7 @@ export default function Leads({ asSubcomponent }) {
   //     </div>
   //   );
   // };
+  // console.log(selectedItem,"selecteditem")
   const ReportModal = () => {
     if (!showReportModal) return null;
 
@@ -1762,12 +1766,14 @@ export default function Leads({ asSubcomponent }) {
             },
             {
               label: "Region",
-              name: "region",
+              name: "region", // ✅ BEST (clear naming)
               type: "select",
-              options: regions.map(r => ({ label: r.name, value: r.name })),
+              options: regions.map(r => ({
+                label: r.name,
+                value: r.id,
+              })),
               required: true,
-              value: selectedItem?.region || "",
-
+              value: selectedItem?.region?.id || "",
             },
             { label: "Outlet Age", name: "outlet_age", type: "number" },
 
