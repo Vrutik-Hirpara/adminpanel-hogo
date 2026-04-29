@@ -175,7 +175,7 @@ export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
     const emp = employees.find(e => e.id === item.employee_id);
     const empName = emp ? `${emp.first_name} ${emp.last_name}` : "";
 
-    return `${empName}  ${item.total_allocated} ${item.used_days}`
+    return `${empName}  ${item.total_allocated} ${item.used_days}  ${item.remaining_days}`
       .toLowerCase()
       .includes(search.toLowerCase());
   });
@@ -281,7 +281,8 @@ export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
 
         </div>
         <Table header={<TableHeader columns={[...(isHR ? ["Employee"] : []), "Allocated", "Used", "Remaining", "Action"]} />}>
-          {data.map((l, index) => (
+          {/* {data.map((l, index) => ( */}
+          {filteredData.map((l, index) => (
             <EntityTableRow
               key={l.id}
               row={l}

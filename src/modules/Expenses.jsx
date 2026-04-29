@@ -48,27 +48,27 @@ export default function Expenses() {
     //         setError(parseBackendErrors(err));
     //     }
     // };
-    
-    
+
+
     const fetchExpenses = async () => {
-    try {
-        let res;
-        if (isHR) {
-            res = await ExpenseAPI.getAll();
-        } else {
-            res = await ExpenseAPI.getByEmployee(employeeId);
+        try {
+            let res;
+            if (isHR) {
+                res = await ExpenseAPI.getAll();
+            } else {
+                res = await ExpenseAPI.getByEmployee(employeeId);
+            }
+            const parsed = parseBackendResponse(res);
+            const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+            const formatted = data.map(e => ({
+                ...e,
+                status: Boolean(e.status),
+            }));
+            setExpenses(formatted);
+        } catch (err) {
+            setError(parseBackendErrors(err));
         }
-        const parsed = parseBackendResponse(res);
-        const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
-        const formatted = data.map(e => ({
-            ...e,
-            status: Boolean(e.status),
-        }));
-        setExpenses(formatted);
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    }
-};
+    };
     // const fetchEmployees = async () => {
     //     try {
     //         const res = await EmployeeAPI.getAll();
@@ -83,33 +83,36 @@ export default function Expenses() {
     //     }
     // };
     const fetchEmployees = async () => {
-    try {
-        const res = await EmployeeAPI.getAll();
-        const parsed = parseBackendResponse(res);
-        let empList = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
-        // 🔒 NON HR → only self
-        if (!isHR) {
-            empList = empList.filter(emp => emp.id === employeeId);
+        try {
+            const res = await EmployeeAPI.getAll();
+            const parsed = parseBackendResponse(res);
+            let empList = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+            // 🔒 NON HR → only self
+            if (!isHR) {
+                empList = empList.filter(emp => emp.id === employeeId);
+            }
+            setEmployees(empList);
+        } catch (err) {
+            setError(parseBackendErrors(err));
         }
-        setEmployees(empList);
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    }
-};
+    };
     const fetchLeads = async () => {
-    setLoading(true);
-    try {
-        const res = await LeadsAPI.getAll();
-        const parsed = parseBackendResponse(res);
-        const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
-        console.log("Fetched leads:", data);
-        setLeads(data);
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    } finally {
-        setLoading(false);
-    }
-};
+        setLoading(true);
+        try {
+            // const res = await LeadsAPI.getAll();
+            const res = isHR
+  ? await LeadsAPI.getAll()
+  : await LeadsAPI.getByAssignedUser(employeeId);
+            const parsed = parseBackendResponse(res);
+            const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+            console.log("Fetched leads:", data);
+            setLeads(data);
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchExpenses();
@@ -120,7 +123,7 @@ export default function Expenses() {
 
 
 
-  
+
     // ================= SAVE =================
     // ================= SAVE =================
     const onSubmit = async (data) => {
@@ -143,15 +146,15 @@ export default function Expenses() {
         }
 
         try {
-          let res;
-if (selectedItem) {
-    res = await ExpenseAPI.update(selectedItem.id, formData);
-} else {
-    console.log("Creating expense with data:", Object.fromEntries(formData.entries()));
-    res = await ExpenseAPI.create(formData);
-}
-const parsed = parseBackendResponse(res);
-setSuccess(parsed.message || "Saved successfully");
+            let res;
+            if (selectedItem) {
+                res = await ExpenseAPI.update(selectedItem.id, formData);
+            } else {
+                console.log("Creating expense with data:", Object.fromEntries(formData.entries()));
+                res = await ExpenseAPI.create(formData);
+            }
+            const parsed = parseBackendResponse(res);
+            setSuccess(parsed.message || "Saved successfully");
 
             setMode("list");
             fetchExpenses();
@@ -160,32 +163,32 @@ setSuccess(parsed.message || "Saved successfully");
         }
     };
 
- const handleDelete = async (id) => {
-    try {
-        const res = await ExpenseAPI.delete(id);
-        const parsed = parseBackendResponse(res);
-        setSuccess(parsed.message || "Deleted successfully");
-        fetchExpenses();
-    } catch (err) {
-        setError(parseBackendErrors(err));
-    }
-};
+    const handleDelete = async (id) => {
+        try {
+            const res = await ExpenseAPI.delete(id);
+            const parsed = parseBackendResponse(res);
+            setSuccess(parsed.message || "Deleted successfully");
+            fetchExpenses();
+        } catch (err) {
+            setError(parseBackendErrors(err));
+        }
+    };
     const handleStatusToggle = async (exp) => {
-    const newStatus = !exp.status;
+        const newStatus = !exp.status;
 
-    setExpenses(prev =>
-        prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e)
-    );
+        setExpenses(prev =>
+            prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e)
+        );
 
-    try {
-        const res = await ExpenseAPI.update(exp.id, { status: newStatus });
-        const parsed = parseBackendResponse(res);
-        setSuccess(parsed.message || "Status updated successfully");
-    } catch (err) {
-        setError(parseBackendErrors(err));
-        fetchExpenses();
-    }
-};
+        try {
+            const res = await ExpenseAPI.update(exp.id, { status: newStatus });
+            const parsed = parseBackendResponse(res);
+            setSuccess(parsed.message || "Status updated successfully");
+        } catch (err) {
+            setError(parseBackendErrors(err));
+            fetchExpenses();
+        }
+    };
     const filteredExpenses = expenses.filter(exp =>
         `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
             .toLowerCase()
@@ -386,6 +389,7 @@ setSuccess(parsed.message || "Saved successfully");
                                     ? `${employees[0].first_name} ${employees[0].last_name}`
                                     : "",
                                 disabled: true, // 🔥 non-editable
+                                readOnly: true,
                             },
                         ]),
                     {
@@ -400,17 +404,29 @@ setSuccess(parsed.message || "Saved successfully");
 
                     { label: "Amount", name: "amount", type: "number", required: true },
 
-                    {
-                        label: "Status",
-                        name: "status",
-                        type: "select",
-                        required: true,
-                        options: [
-                            { label: "Approved", value: "true" },
-                            { label: "Pending", value: "false" },
-                        ],
-                    },
+                    // {
+                    //     label: "Status",
+                    //     name: "status",
+                    //     type: "select",
+                    //     required: true,
+                    //     options: [
+                    //         { label: "Approved", value: "true" },
+                    //         { label: "Pending", value: "false" },
+                    //     ],
+                    // },
 
+                    ...(isHR
+  ? [{
+      label: "Status",
+      name: "status",
+      type: "select",
+      required: true,
+      options: [
+        { label: "Approved", value: "true" },
+        { label: "Pending", value: "false" },
+      ],
+    }]
+  : []),
                     { label: "Date", name: "date", type: "date", required: true },
 
                     { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional

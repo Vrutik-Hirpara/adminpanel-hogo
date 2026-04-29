@@ -285,20 +285,23 @@ export default function LeadFollowups() {
 
 
   const [followups, setFollowups] = useState([]);
-    const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [leads, setLeads] = useState([]);
   const [mode, setMode] = useState("list");
   const [selectedItem, setSelectedItem] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  
+
   const fetchData = async () => {
     setLoading(true); // 🔥 START 
     try {
-        const [f, e, l] = await Promise.all([
+      const [f, e, l] = await Promise.all([
         LeadFollowupsAPI.getAll(),
         EmployeeAPI.getAll(),
-        LeadsAPI.getAll(),
+        isHR
+          ? LeadsAPI.getAll()
+          : LeadsAPI.getByAssignedUser(employeeId),
+        // LeadsAPI.getAll(),
       ]);
       let followupData = f.data.data || [];
       // 🔒 FILTER FOR NON-HR
@@ -315,7 +318,7 @@ export default function LeadFollowups() {
       }
       setEmployees(empList);
       setLeads(l.data.data || []);
-     
+
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
@@ -324,7 +327,7 @@ export default function LeadFollowups() {
   };
 
   useEffect(() => {
-   fetchData();
+    fetchData();
   }, [isHR, employeeId]);
 
 
@@ -335,7 +338,8 @@ export default function LeadFollowups() {
   const onSubmit = async (data) => {
     const payload = {
       ...data,
-      employee_id: Number(data.employee_id),
+      // 🔒 Non-HR: force their own employeeId
+      employee_id: !isHR ? Number(employeeId) : Number(data.employee_id),
       lead_id: data.lead_id ? Number(data.lead_id) : null,
       status: data.status === "Active",
     };
@@ -381,7 +385,7 @@ export default function LeadFollowups() {
 
   // ================= TABLE COLUMNS =================
   const columns = [
-    { key: "employee_name" },
+    ...(isHR ? [{ key: "employee_name" }] : []),
     { key: "lead_name" },
 
     {
@@ -441,15 +445,16 @@ export default function LeadFollowups() {
       <PageContainer>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           <SectionTitle title="Lead Followups" />
-          {/* {isHR && ( */}
-            <ActionButtons showAdd addText="+ Add" onAdd={() => {
-              setSelectedItem(null);   // ⭐ RESET
-              setMode("form");
-            }} />
-          {/* )} */}
+          <ActionButtons showAdd addText="+ Add" onAdd={() => {
+            setSelectedItem(null);
+            setMode("form");
+          }} />
         </div>
 
-        <Table header={<TableHeader columns={["Employee", "bussiness name", "Followup Date", "Next Followup", "Notes", "Status", "Action"]} />}>
+        <Table header={<TableHeader columns={[
+          ...(isHR ? ["Employee"] : []),
+          "Business Name", "Followup Date", "Next Followup", "Notes", "Status", "Action"
+        ]} />}>
           {followups.map((r, index) => (
             <EntityTableRow
               key={r.id}
@@ -470,7 +475,7 @@ export default function LeadFollowups() {
             />
           ))}
         </Table>
-               {loading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
+        {loading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
 
       </PageContainer>
     );
@@ -517,7 +522,7 @@ export default function LeadFollowups() {
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[
-          {
+          ...(isHR ? [{
             label: "Employee",
             name: "employee_id",
             type: "select",
@@ -525,9 +530,9 @@ export default function LeadFollowups() {
               label: `${e.first_name} ${e.last_name}`,
               value: e.id,
             })),
-          },
+          }] : []),
           {
-            label: "Bussiness name",
+            label: "Business Name",
             name: "lead_id",
             type: "select",
             options: leads.map(l => ({

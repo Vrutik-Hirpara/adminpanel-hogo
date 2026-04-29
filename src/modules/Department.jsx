@@ -18,9 +18,9 @@ import EntityForm from "../components/form/EntityForm";
 import { useOutletContext } from "react-router-dom";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 export default function Department() {
+  
   const { setError, setSuccess } = useOutletContext();
   const [departments, setDepartments] = useState([]);
-
   const [mode, setMode] = useState("list");
   const [selectedDept, setSelectedDept] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -49,26 +49,6 @@ export default function Department() {
   };
   useEffect(() => { fetchDepartments(); }, []);
 
-  // 🔥 SAME TOGGLE SYSTEM AS ROLES
-  // const handleStatusToggle = async (dept) => {
-  //   const newStatus = !dept.status;
-
-  //   setDepartments(prev =>
-  //     prev.map(d => d.id === dept.id ? { ...d, status: newStatus } : d)
-  //   );
-
-  //   try {
-  //     await DepartmentAPI.update(dept.id, {
-  //       ...dept,
-  //       status: newStatus ? "Active" : "Inactive" // boolean → string for API
-  //     });
-  //   } catch (error) {
-  //     // revert if API fails
-  //     setDepartments(prev =>
-  //       prev.map(d => d.id === dept.id ? { ...d, status: !newStatus } : d)
-  //     );
-  //   }
-  // };
   const handleStatusToggle = async (dept) => {
     const newStatus = !dept.status;
     setDepartments(prev =>
@@ -89,26 +69,7 @@ export default function Department() {
       );
     }
   };
-  // const onSubmit = async (data) => {
-  //   const payload = {
-  //     ...data,
-  //     status:
-  //       typeof data.status === "boolean"
-  //         ? data.status
-  //           ? "Active"
-  //           : "Inactive"
-  //         : data.status,
-  //   };
 
-  //   if (selectedDept) {
-  //     await DepartmentAPI.update(selectedDept.id, payload);
-  //   } else {
-  //     await DepartmentAPI.create(payload);
-  //   }
-
-  //   setMode("list");
-  //   fetchDepartments();
-  // };
   const onSubmit = async (data) => {
     const payload = {
       ...data,

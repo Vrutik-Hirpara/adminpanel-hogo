@@ -61,6 +61,9 @@ export const LeadsAPI = {
   getByCreatedUser: (userId) => {
     return api.get(`leads/?created_by=${userId}`);
   },
+  getByAssignedUser: (userId) => {
+    return api.get(`leads/?assigned_to=${userId}`);
+  },
 };
 /* ================= VISITS CUSTOM ================= */
 // export const VisitsAPI = {

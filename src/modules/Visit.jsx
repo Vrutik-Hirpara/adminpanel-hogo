@@ -723,7 +723,10 @@ export default function Visits({ asSubcomponent }) {
       const [v, e, l] = await Promise.all([
         VisitsAPI.getAll(),
         EmployeeAPI.getAll(),
-        LeadsAPI.getAll(),
+        isHR
+          ? LeadsAPI.getAll()
+          : LeadsAPI.getByAssignedUser(employeeId)
+        // LeadsAPI.getAll(),
       ]);
       let visitsData = v.data.data || [];
       // 🔒 FILTER FOR NON-HR
@@ -733,13 +736,16 @@ export default function Visits({ asSubcomponent }) {
         );
       }
       setVisits(visitsData);
+      console.log(visitsData)
       let empList = e.data.data || [];
       // 🔒 NON HR → dropdown ma only self
       if (!isHR) {
         empList = empList.filter(emp => emp.id === employeeId);
       }
       setEmployees(empList);
-      setLeads(l.data.data || []);
+      // setLeads(l.data.data || []);
+      let leadsData = l.data.data || [];
+setLeads(leadsData);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
@@ -772,8 +778,13 @@ export default function Visits({ asSubcomponent }) {
     try {
       const formData = new FormData();
 
-      Object.keys(data).forEach((key) => {
-        const value = data[key];
+      // 🔒 Non-HR: always inject their own employeeId
+      const finalData = !isHR
+        ? { ...data, employee_id: employeeId }
+        : data;
+
+      Object.keys(finalData).forEach((key) => {
+        const value = finalData[key];
 
         if (value instanceof FileList) {
           if (value.length > 0) {
@@ -793,10 +804,9 @@ export default function Visits({ asSubcomponent }) {
       }
 
       setMode("list");
-  fetchData();
+      fetchData();
     } catch (err) {
       setError(parseBackendErrors(err));
-
     }
   };
 
@@ -880,7 +890,7 @@ export default function Visits({ asSubcomponent }) {
   };
   // ================= TABLE COLUMNS =================
   const visitColumns = [
-    { key: "employee_name" },
+    ...(isHR ? [{ key: "employee_name" }] : []),
     { key: "lead_name" },
     // {
     //   key: "time",
@@ -948,7 +958,6 @@ export default function Visits({ asSubcomponent }) {
       <PageContainer>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 w-full">
           {!asSubcomponent && <SectionTitle title="Visits" />}
-          {/* {isHR && ( */}
           <ActionButtons
             showAdd
             addText="+ Add"
@@ -957,7 +966,6 @@ export default function Visits({ asSubcomponent }) {
               setMode("form");
             }}
           />
-          {/* )} */}
         </div>
         {loading ? (
           <div className="py-12">
@@ -968,8 +976,8 @@ export default function Visits({ asSubcomponent }) {
             header={
               <TableHeader
                 columns={[
-                  "Employee Name",
-                  "Bussiness Name",
+                  ...(isHR ? ["Employee Name"] : []),
+                  "Business Name",
                   <div className="flex flex-col leading-tight text-center">
                     <span>Check-In /</span>
                     <span>Check-Out</span>
@@ -1035,7 +1043,7 @@ export default function Visits({ asSubcomponent }) {
         onSubmit={onSubmit}
         setMode={setMode}
         fields={[
-          {
+          ...(isHR ? [{
             label: "Employee",
             name: "employee_id",
             type: "select",
@@ -1044,7 +1052,7 @@ export default function Visits({ asSubcomponent }) {
               value: e.id,
             })),
             required: true,
-          },
+          }] : []),
           {
             label: "Lead",
             name: "lead_id",
