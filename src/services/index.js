@@ -58,11 +58,13 @@ export const LeadsAPI = {
     const url = appendQueryParams("leads/", params);
     return api.get(url);
   },
-  getByCreatedUser: (userId) => {
-    return api.get(`leads/?created_by=${userId}`);
+  getByCreatedUser: (userId, params = {}) => {
+    const url = appendQueryParams("leads/", { ...params, created_by: userId });
+    return api.get(url);
   },
-  getByAssignedUser: (userId) => {
-    return api.get(`leads/?assigned_to=${userId}`);
+  getByAssignedUser: (userId, params = {}) => {
+    const url = appendQueryParams("leads/", { ...params, assigned_to: userId });
+    return api.get(url);
   },
 };
 /* ================= VISITS CUSTOM ================= */
@@ -171,5 +173,8 @@ export const SalaryPaymentAPI = {
 
 export const ExpenseAPI = {
   ...createCRUD("expenses"),
-  getByEmployee: (employeeId) => api.get(`/expenses/?employee_id=${employeeId}`),
+  getByEmployee: (employeeId, params = {}) => {
+    const url = appendQueryParams("expenses/", { ...params, employee_id: employeeId });
+    return api.get(url);
+  },
 };

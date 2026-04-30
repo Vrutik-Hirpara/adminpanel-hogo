@@ -17,6 +17,7 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Pagination from "../components/common/Pagination";
 
 export default function Expenses() {
     const { setError, setSuccess } = useOutletContext();
@@ -30,6 +31,12 @@ export default function Expenses() {
     const [selectedItem, setSelectedItem] = useState(null);
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]);    // ================= FETCH =================
+    
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0
+    });
     // const fetchExpenses = async () => {
     //     try {
     //         let res;
@@ -51,15 +58,31 @@ export default function Expenses() {
 
 
     const fetchExpenses = async () => {
+        setLoading(true);
         try {
             let res;
             if (isHR) {
-                res = await ExpenseAPI.getAll();
+                res = await ExpenseAPI.getAll({ 
+                    page: pagination.currentPage,
+                    search: search || undefined
+                });
             } else {
-                res = await ExpenseAPI.getByEmployee(employeeId);
+                res = await ExpenseAPI.getByEmployee(employeeId, { 
+                    page: pagination.currentPage,
+                    search: search || undefined
+                });
             }
             const parsed = parseBackendResponse(res);
             const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+            
+            // Handle pagination data if available
+            if (res.data && res.data.total_pages) {
+                setPagination(prev => ({
+                    ...prev,
+                    totalPages: res.data.total_pages,
+                    totalCount: res.data.count || data.length
+                }));
+            }
             const formatted = data.map(e => ({
                 ...e,
                 status: Boolean(e.status),
@@ -67,6 +90,8 @@ export default function Expenses() {
             setExpenses(formatted);
         } catch (err) {
             setError(parseBackendErrors(err));
+        } finally {
+            setLoading(false);
         }
     };
     // const fetchEmployees = async () => {
@@ -101,8 +126,8 @@ export default function Expenses() {
         try {
             // const res = await LeadsAPI.getAll();
             const res = isHR
-  ? await LeadsAPI.getAll()
-  : await LeadsAPI.getByAssignedUser(employeeId);
+                ? await LeadsAPI.getAll()
+                : await LeadsAPI.getByAssignedUser(employeeId);
             const parsed = parseBackendResponse(res);
             const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
             console.log("Fetched leads:", data);
@@ -118,7 +143,7 @@ export default function Expenses() {
         fetchExpenses();
         fetchLeads();
         fetchEmployees();
-    }, [isHR, employeeId]); // ← Add dependencies
+    }, [isHR, employeeId, pagination.currentPage, search]); // ← Add dependencies
 
 
 
@@ -169,6 +194,7 @@ export default function Expenses() {
             const parsed = parseBackendResponse(res);
             setSuccess(parsed.message || "Deleted successfully");
             fetchExpenses();
+            fetchLeads();
         } catch (err) {
             setError(parseBackendErrors(err));
         }
@@ -189,11 +215,7 @@ export default function Expenses() {
             fetchExpenses();
         }
     };
-    const filteredExpenses = expenses.filter(exp =>
-        `${exp.vendor_name} ${exp.expense_type} ${exp.amount} ${exp.lead_name}`
-            .toLowerCase()
-            .includes(search.toLowerCase())
-    );
+    const filteredExpenses = expenses;
     // ================= TABLE COLUMNS =================
     const expenseColumns = [
 
@@ -267,11 +289,14 @@ export default function Expenses() {
                     <SectionTitle title="Expenses" />
 
                     <div className="flex flex-wrap gap-3 self-end">
-                        {/* <SearchBar
+                        <SearchBar
                             value={search}
-                            onChange={setSearch}
+                            onChange={(val) => {
+                                setSearch(val);
+                                setPagination(prev => ({ ...prev, currentPage: 1 }));
+                            }}
                             placeholder="Search expenses..."
-                        /> */}
+                        />
                         {/* {(isHR) && (
                             <ActionButtons
                                 showAdd
@@ -302,7 +327,7 @@ export default function Expenses() {
                         <EntityTableRow
                             key={exp.id}
                             row={exp}
-                            index={index}
+                            rowNumber={(Number(pagination.currentPage) - 1) * 10 + index + 1}
                             columns={expenseColumns}
                             onView={(r) => { setSelectedItem(r); setMode("view"); }}
                             // onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
@@ -318,6 +343,13 @@ export default function Expenses() {
                         />
                     ))}
                 </Table>
+                
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+                />
+
                 {loading && <LoadingSpinner text="Loading Expense Details..." />}
 
             </PageContainer>
@@ -416,17 +448,17 @@ export default function Expenses() {
                     // },
 
                     ...(isHR
-  ? [{
-      label: "Status",
-      name: "status",
-      type: "select",
-      required: true,
-      options: [
-        { label: "Approved", value: "true" },
-        { label: "Pending", value: "false" },
-      ],
-    }]
-  : []),
+                        ? [{
+                            label: "Status",
+                            name: "status",
+                            type: "select",
+                            required: true,
+                            options: [
+                                { label: "Approved", value: "true" },
+                                { label: "Pending", value: "false" },
+                            ],
+                        }]
+                        : []),
                     { label: "Date", name: "date", type: "date", required: true },
 
                     { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional

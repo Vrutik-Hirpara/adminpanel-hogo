@@ -359,6 +359,7 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Pagination from "../components/common/Pagination";
 
 export default function Leads({ asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
@@ -377,6 +378,13 @@ export default function Leads({ asSubcomponent }) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // 👈 ADD THIS
 
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  });
+
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [leadFilter, setLeadFilter] = useState("created");
@@ -392,27 +400,34 @@ export default function Leads({ asSubcomponent }) {
       await fetchRegions();
     };
     loadData();
-  }, [isHR, employeeId]);
+  }, [isHR, employeeId, pagination.currentPage, leadFilter]);
 
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const res = await LeadsAPI.getAll();
-      let data = res.data.data || [];
-      // 🔥 EMPLOYEE FILTER
-      if (!isHR) {
-        data = data.filter(
-          (l) =>
-            Number(l.created_by) === Number(employeeId) ||
-            Number(l.assigned_to) === Number(employeeId)
-        );
+      let res;
+      if (isHR) {
+        res = await LeadsAPI.getAll({ page: pagination.currentPage });
+      } else {
+        if (leadFilter === "created") {
+          res = await LeadsAPI.getByCreatedUser(employeeId, { page: pagination.currentPage });
+        } else {
+          res = await LeadsAPI.getByAssignedUser(employeeId, { page: pagination.currentPage });
+        }
       }
-      const enhancedData = data.map((lead) => ({
-        ...lead,
-        assigned_to_name: lead.assigned_to_name || "Unassigned",
-        created_by_name: lead.created_by_name || "Unknown",
-      }));
-      setLeads(enhancedData);
+      const parsed = parseBackendResponse(res);
+      const data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+      
+      // Update pagination state
+      if (res.data && res.data.total_pages) {
+        setPagination(prev => ({
+          ...prev,
+          totalPages: res.data.total_pages,
+          totalCount: res.data.count || data.length
+        }));
+      }
+
+      setLeads(data);
     } catch (err) {
       setError(parseBackendErrors(err));
     } finally {
@@ -444,9 +459,9 @@ export default function Leads({ asSubcomponent }) {
       let list = res.data.data || [];
       console.log("All employees:", list);
       // 🔒 non HR → only self
-      // if (!isHR) {
-      //   list = list.filter(e => e.id === employeeId);
-      // }
+      if (!isHR) {
+        list = list.filter(e => e.id === employeeId);
+      }
       console.log("Filtered employees:", list);
       setEmployees(list);
     } catch (err) {
@@ -1206,22 +1221,7 @@ export default function Leads({ asSubcomponent }) {
   }
   // ================= LIST =================
   if (mode === "list") {
-    const getFilteredLeads = () => {
-      let filtered = [...leads];
-      if (!isHR) {
-        if (leadFilter === "created") {
-          filtered = filtered.filter(
-            (l) => Number(l.created_by) === Number(employeeId)
-          );
-        } else if (leadFilter === "assigned") {
-          filtered = filtered.filter(
-            (l) => Number(l.assigned_to) === Number(employeeId)
-          );
-        }
-      }
-      return filtered;
-    };
-    const filteredLeads = getFilteredLeads();
+    const filteredLeads = leads;
     return (
       <>
         <PageContainer>
@@ -1274,7 +1274,7 @@ export default function Leads({ asSubcomponent }) {
               <EntityTableRow
                 key={l.id}
                 row={l}
-                index={index}
+                rowNumber={(Number(pagination.currentPage) - 1) * 10 + index + 1}
                 columns={leadColumns}
                 onView={(r) => {
                   setSelectedItem(r);
@@ -1288,6 +1288,13 @@ export default function Leads({ asSubcomponent }) {
               />
             ))}
           </Table>
+          
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+          />
+
           {loading && <LoadingSpinner text="Loading Leads Details..." />}
 
         </PageContainer>

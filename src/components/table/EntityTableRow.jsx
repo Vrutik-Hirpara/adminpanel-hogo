@@ -137,7 +137,7 @@ import { themes } from "../../config/theme.config";
 
 export default function EntityTableRow({
   row,
-  index,
+  rowNumber,
   columns,
   onView,
   onEdit,
@@ -150,7 +150,7 @@ export default function EntityTableRow({
     <tr className="border-t" style={{ borderColor: themes.backgroundGray }}>
       {/* SERIAL */}
       <td className="px-2 py-3 text-center w-[5%] font-medium whitespace-nowrap">
-        {index + 1}
+        {rowNumber}
       </td>
 
       {/* DYNAMIC COLUMNS */}

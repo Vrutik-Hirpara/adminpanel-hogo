@@ -60,7 +60,7 @@ const withFormCheck = (data) => {
 };
 
 export const createCRUD = (endpoint) => ({
-  getAll: () => api.get(`${endpoint}/`),
+  getAll: (params = {}) => api.get(`${endpoint}/`, { params }),
 
   getById: (id) => api.get(`${endpoint}/${id}/`),
 

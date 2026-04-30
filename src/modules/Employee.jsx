@@ -1261,6 +1261,7 @@ import LeaveRequests from "./LeaveRequests";
 import EmployeeAttendance from "./EmployeeAttendance";
 import SalaryPayout from "./SalaryPayout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Pagination from "../components/common/Pagination";
 
 
 export default function Employee() {
@@ -1279,6 +1280,12 @@ export default function Employee() {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  });
+
   const [tabActions, setTabActions] = useState(null);
 
 
@@ -1287,9 +1294,19 @@ export default function Employee() {
     try {
       let res;
       if (isHR) {
-        res = await EmployeeAPI.getAll();   // HR → all
+        res = await EmployeeAPI.getAll({ page: pagination.currentPage });   // HR → all
         const parsed = parseBackendResponse(res);  // ✅ ADD THIS
         const data = parsed.success ? (parsed.data || []) : [];  // ✅ CHANGE
+        
+        // Handle pagination data if available
+        if (res.data && res.data.total_pages) {
+          setPagination(prev => ({
+            ...prev,
+            totalPages: res.data.total_pages,
+            totalCount: res.data.count || data.length
+          }));
+        }
+
         const formatted = data.map(e => ({
 
 
@@ -1399,7 +1416,7 @@ export default function Employee() {
   useEffect(() => {
     fetchEmployees();
     fetchMeta();
-  }, [isHR, employeeId]);
+  }, [isHR, employeeId, pagination.currentPage]);
   const filteredEmployees = employees.filter(emp =>
     `${emp.employee_code} ${emp.first_name} ${emp.last_name} ${emp.email} ${emp.phone} ${emp.role_name}`
       .toLowerCase()
@@ -1607,7 +1624,7 @@ export default function Employee() {
             <EntityTableRow
               key={emp.id}
               row={emp}
-              index={index}
+              rowNumber={(Number(pagination.currentPage) - 1) * 10 + index + 1}
               columns={employeeColumns}
               onView={(r) => { setSelectedEmployee(r.raw); setMode("view"); }}
               onEdit={(r) => {
@@ -1640,8 +1657,11 @@ export default function Employee() {
           ))}
 
         </Table>
-        {loading && <LoadingSpinner text="Loading Employee details..." />}
-
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+        />
       </PageContainer>
     );
   }

@@ -278,6 +278,7 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Pagination from "../components/common/Pagination";
 
 export default function LeadFollowups() {
   const { setError, setSuccess } = useOutletContext();
@@ -291,33 +292,48 @@ export default function LeadFollowups() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  });
+
 
   const fetchData = async () => {
-    setLoading(true); // 🔥 START 
+    setLoading(true);
     try {
-      const [f, e, l] = await Promise.all([
-        LeadFollowupsAPI.getAll(),
+      let followupRes;
+      if (isHR) {
+        followupRes = await LeadFollowupsAPI.getAll({ page: pagination.currentPage });
+      } else {
+        followupRes = await LeadFollowupsAPI.getAll({ 
+          page: pagination.currentPage,
+          employee_id: employeeId 
+        });
+      }
+
+      const [e, l] = await Promise.all([
         EmployeeAPI.getAll(),
         isHR
           ? LeadsAPI.getAll()
           : LeadsAPI.getByAssignedUser(employeeId),
-        // LeadsAPI.getAll(),
       ]);
-      let followupData = f.data.data || [];
-      // 🔒 FILTER FOR NON-HR
-      if (!isHR) {
-        followupData = followupData.filter(
-          item => Number(item.employee_id) === Number(employeeId)
-        );
+
+      const fParsed = parseBackendResponse(followupRes);
+      const fData = fParsed.success && fParsed.data ? (Array.isArray(fParsed.data) ? fParsed.data : []) : [];
+
+      // Update pagination state
+      if (followupRes.data && followupRes.data.total_pages) {
+        setPagination(prev => ({
+          ...prev,
+          totalPages: followupRes.data.total_pages,
+          totalCount: followupRes.data.count || fData.length
+        }));
       }
-      setFollowups(followupData);
-      let empList = e.data.data || [];
-      // 🔒 NON HR → dropdown ma only self
-      if (!isHR) {
-        empList = empList.filter(emp => emp.id === employeeId);
-      }
-      setEmployees(empList);
-      setLeads(l.data.data || []);
+
+      setFollowups(fData);
+      setEmployees(parseBackendResponse(e).data || []);
+      setLeads(parseBackendResponse(l).data || []);
 
     } catch (err) {
       setError(parseBackendErrors(err));
@@ -328,7 +344,7 @@ export default function LeadFollowups() {
 
   useEffect(() => {
     fetchData();
-  }, [isHR, employeeId]);
+  }, [isHR, employeeId, pagination.currentPage]);
 
 
 
@@ -459,7 +475,7 @@ export default function LeadFollowups() {
             <EntityTableRow
               key={r.id}
               row={r}
-              index={index}
+              rowNumber={(Number(pagination.currentPage) - 1) * 10 + index + 1}
               columns={columns}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
               onEdit={(r) => { setSelectedItem(r); setMode("form"); }}
@@ -475,6 +491,13 @@ export default function LeadFollowups() {
             />
           ))}
         </Table>
+        
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+        />
+
         {loading && <LoadingSpinner text="Loading Lead Folloups Details..." />}
 
       </PageContainer>

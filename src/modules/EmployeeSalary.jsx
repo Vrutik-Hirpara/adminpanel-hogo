@@ -582,6 +582,7 @@ import { useUser } from "../hooks/useUser";
 import { useOutletContext } from "react-router-dom";
 import { parseBackendErrors, parseBackendResponse } from "../utils/parseBackendErrors";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import Pagination from "../components/common/Pagination";
 
 export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const { setError, setSuccess } = useOutletContext();
@@ -597,18 +598,38 @@ export default function EmployeeSalary({ employeeFilterId, asSubcomponent }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0
+  });
+
   // ================= FETCH ALL SALARY =================
-  const fetchAllSalary = async (empList) => {
+  const fetchSalaryData = async (empList = employees) => {
     setLoading(true);
     try {
-      const res = await SalaryAPI.getAll();
+      const res = await SalaryAPI.getAll({ 
+        page: pagination.currentPage,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        employee_id: !isHR ? employeeId : undefined
+      });
       const parsed = parseBackendResponse(res);
       let data = parsed.success && parsed.data ? (Array.isArray(parsed.data) ? parsed.data : []) : [];
+      
+      // Update pagination state
+      if (res.data && res.data.total_pages) {
+        setPagination(prev => ({
+          ...prev,
+          totalPages: res.data.total_pages,
+          totalCount: res.data.count || data.length
+        }));
+      }
 
+
+      // 🔥 LOCAL FILTER (Safety net)
       if (!isHR) {
         data = data.filter(s => Number(s.employee_id) === Number(employeeId));
       }
-
       if (employeeFilterId) {
         data = data.filter(s => Number(s.employee_id) === Number(employeeFilterId));
       }
@@ -691,13 +712,13 @@ const handleToggleStatus = async (id, currentStatus) => {
         }
 
         setEmployees(empData);
-        await fetchAllSalary(empData);
+        await fetchSalaryData(empData);
       } catch (err) {
         setError(parseBackendErrors(err));
       }
     };
     load();
-  }, [isHR, employeeId]);
+  }, [isHR, employeeId, pagination.currentPage, statusFilter]);
 
   // ================= SAVE =================
   const onSubmit = async (data) => {
@@ -714,7 +735,7 @@ const handleToggleStatus = async (id, currentStatus) => {
       setSuccess(parsed.message || "Saved successfully");
 
       setMode(isHR ? "list" : "view");
-      await fetchAllSalary(employees);
+      await fetchSalaryData();
     } catch (err) {
       setError(parseBackendErrors(err));
     }
@@ -906,7 +927,7 @@ const handleDelete = async (id) => {
         </div>
         {/* Show record count */}
         <div className="mb-2 text-sm text-gray-500">
-          Showing {salaryData.length} of {allSalaryData.length} records
+          Showing {salaryData.length} of {pagination.totalCount} records
         </div>
         {/* {isHR && ( */}
 
@@ -915,7 +936,7 @@ const handleDelete = async (id) => {
             <EntityTableRow
               key={s.id}
               row={s}
-              index={index}
+              rowNumber={(Number(pagination.currentPage) - 1) * 10 + index + 1}
               columns={salaryColumns}
               onView={(r) => {
                 setSelectedItem(r);
@@ -929,7 +950,13 @@ const handleDelete = async (id) => {
             />
           ))}
         </Table>
-        {/* )} */}
+        
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+        />
+
         {loading && <LoadingSpinner text="Loading Employee Salary Details..." />}
       </>
     );
