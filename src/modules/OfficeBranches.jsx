@@ -89,7 +89,7 @@ const branchFields = [
   <EntityTableRow
     key={b.id}
     row={b}
-    index={index}
+    rowNumber={index + 1} 
     columns={branchColumns}
     onView={(r) => {
       setSelectedBranch(r);

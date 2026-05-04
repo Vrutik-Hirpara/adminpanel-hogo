@@ -993,7 +993,7 @@ setLeads(leadsData);
               <EntityTableRow
                 key={v.id}
                 row={v}
-                index={index}
+                rowNumber={index + 1} 
                 columns={visitColumns}
                 onView={(r) => {
                   setSelectedVisit(r);

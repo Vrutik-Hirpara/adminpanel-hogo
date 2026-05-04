@@ -1814,7 +1814,7 @@ export default function EmployeeAttendance({ employeeFilterId, asSubcomponent })
                 <EntityTableRow
                   key={row.id || index}
                   row={row}
-                  index={index}
+                  rowNumber={index + 1} 
                   columns={attendanceColumns}
                   onView={(item) => {
                     setSelectedItem(item);

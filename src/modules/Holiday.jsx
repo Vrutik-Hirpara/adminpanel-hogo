@@ -160,7 +160,7 @@ export default function Holiday() {
               <EntityTableRow
                 key={h.id}
                 row={h}
-                index={index}
+                rowNumber={index + 1} 
                 columns={holidayColumns}
                 onView={(r) => {
                   setSelectedHoliday(r);

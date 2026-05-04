@@ -281,6 +281,23 @@ export const dashboardModules = [
     gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
     accentColor: "blue",
 },
+// {
+//   title: "Today's Followups",
+//   api: (employeeId) => {
+//     if (!employeeId) {
+//       return Promise.resolve({ data: { data: [] } });
+//     }
+
+//     return axios.get(
+//       `${baseURL}/today-followups/${employeeId}/`
+//     );
+//   },
+//   path: "/lead-followups",
+//   color: "from-green-500 to-green-600",
+//   icon: CalendarCheck,
+//   gradient: "bg-gradient-to-br from-green-500 to-green-600",
+//   accentColor: "green",
+// },
 {
   title: "Today's Followups",
   api: (employeeId) => {
@@ -288,9 +305,7 @@ export const dashboardModules = [
       return Promise.resolve({ data: { data: [] } });
     }
 
-    return axios.get(
-      `https://hogofilm.pythonanywhere.com/today-followups/${employeeId}/`
-    );
+    return api.get(`/today-followups/${employeeId}/`);
   },
   path: "/lead-followups",
   color: "from-green-500 to-green-600",
@@ -298,7 +313,6 @@ export const dashboardModules = [
   gradient: "bg-gradient-to-br from-green-500 to-green-600",
   accentColor: "green",
 },
-
   {
     title: "Holiday",
     api: () => HolidayAPI.getAll(),

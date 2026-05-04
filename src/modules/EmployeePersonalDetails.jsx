@@ -429,7 +429,7 @@ const onSubmit = async (data, methods) => {
                 <EntityTableRow
                   key={d.id}
                   row={d}
-                  index={index}
+                 rowNumber={index + 1} 
                   columns={personalColumns}
                   onView={(r) => {
                     setSelectedItem(r);

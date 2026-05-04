@@ -174,7 +174,7 @@ export default function Roles() {
             <EntityTableRow
               key={r.id}
               row={r}
-              index={index}
+              rowNumber={index + 1} 
               columns={roleColumns}
               onView={(role) => {
                 setSelectedRole(role);

@@ -286,7 +286,7 @@ export default function LeaveBalance({ employeeFilterId, asSubcomponent }) {
             <EntityTableRow
               key={l.id}
               row={l}
-              index={index}
+              rowNumber={index + 1} 
               columns={leaveColumns}
               onView={(r) => {
                 setSelected(r);

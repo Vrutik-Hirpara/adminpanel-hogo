@@ -713,7 +713,7 @@ export default function EmployeeDocuments({ employeeFilterId, asSubcomponent, se
             <EntityTableRow
               key={doc.id}
               row={doc}
-              index={index}
+              rowNumber={index + 1} 
               columns={[
                 ...(isHR ? [{ key: "employeeName" }] : []),
                 { key: "pancard_number" },

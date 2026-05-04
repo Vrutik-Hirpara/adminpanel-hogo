@@ -476,7 +476,7 @@ export default function Users({ employeeFilterId, asSubcomponent }) {
             <EntityTableRow
               key={u.id}
               row={u}
-              index={index}
+              rowNumber={index + 1} 
               columns={userColumns}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
               onEdit={(r) => { setSelectedItem(r); setMode("form"); }}

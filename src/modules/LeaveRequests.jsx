@@ -638,7 +638,7 @@ export default function LeaveRequests({ employeeFilterId, asSubcomponent }) {
             <EntityTableRow
               key={l.id}
               row={l}
-              index={index}
+              rowNumber={index + 1} 
               columns={leaveColumns}
               onView={(r) => { setSelectedItem(r); setMode("view"); }}
               onEdit={(r) => {

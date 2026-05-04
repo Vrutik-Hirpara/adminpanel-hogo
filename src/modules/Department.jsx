@@ -153,7 +153,7 @@ export default function Department() {
             <EntityTableRow
               key={dept.id}
               row={dept}
-              index={index}
+              rowNumber={index + 1} 
               columns={departmentColumns}
               onView={(r) => {
                 setSelectedDept(r);
