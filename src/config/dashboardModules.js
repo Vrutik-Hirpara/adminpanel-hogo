@@ -162,6 +162,7 @@ import {
 } from "lucide-react";
 
 import { themes } from "./theme.config";
+import api from "../services/api";
 
 export const dashboardModules = [
   {

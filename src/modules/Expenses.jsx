@@ -289,14 +289,14 @@ export default function Expenses() {
                     <SectionTitle title="Expenses" />
 
                     <div className="flex flex-wrap gap-3 self-end">
-                        <SearchBar
+                        {/* <SearchBar
                             value={search}
                             onChange={(val) => {
                                 setSearch(val);
                                 setPagination(prev => ({ ...prev, currentPage: 1 }));
                             }}
                             placeholder="Search expenses..."
-                        />
+                        /> */}
                         {/* {(isHR) && (
                             <ActionButtons
                                 showAdd
@@ -461,7 +461,7 @@ export default function Expenses() {
                         : []),
                     { label: "Date", name: "date", type: "date", required: true },
 
-                    { label: "Receipt Photo", name: "receipt_photo", type: "file" }, // optional
+{ label: "Receipt Photo", name: "receipt_photo", type: "file", previewKey: "receipt_photo" }
                 ]}
 
             />
